@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "I, Robot": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}
