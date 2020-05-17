@@ -31,38 +31,14 @@ namespace I_Robot
 {
     class AlphanumericsOverlay : Direct2D.WpfControl
     {
-        static readonly uint[] PixelData;
-        static readonly int NumColors = Alphanumerics.PaletteTable.Length * Alphanumerics.PaletteTable[0].Length;
-        static readonly Size2 BitmapSize = new Size2(Alphanumerics.CHAR_WIDTH * NumColors, Alphanumerics.CharacterSet.Length * Alphanumerics.CHAR_HEIGHT);
-
-        static AlphanumericsOverlay()
-        {
-            UInt32 index = 0;
-            PixelData = new uint[BitmapSize.Width * BitmapSize.Height];
-            foreach (var character in Alphanumerics.CharacterSet)
-            {
-                foreach (BYTE row in character)
-                {
-                    foreach (var palette in Alphanumerics.PaletteTable)
-                        foreach (var color in palette)
-                        {
-                            uint pixel = color.ToUint();
-                            PixelData[index++] = (row.BIT_7 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_6 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_5 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_4 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_3 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_2 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_1 ? pixel : 0);
-                            PixelData[index++] = (row.BIT_0 ? pixel : 0);
-                        }
-                }
-            }
-        }
+        static readonly int TotalColors = Alphanumerics.NUM_COLORS * Alphanumerics.NUM_PALETTES;
+        static readonly Size2 BitmapSize = new Size2(Alphanumerics.CHAR_WIDTH * TotalColors, Alphanumerics.NUM_CHARS * Alphanumerics.CHAR_HEIGHT);
+        readonly uint[] PixelData;
+        Hardware? mHardware;
 
         public AlphanumericsOverlay()
         {
-            ResourceCache.Add("CharacterBitmap", t => CreateCharacterBitmap(t));
+            PixelData = new uint[BitmapSize.Width * BitmapSize.Height];   
         }
 
         Bitmap CreateCharacterBitmap(RenderTarget renderTarget)
@@ -70,10 +46,50 @@ namespace I_Robot
             return Bitmap.New<uint>(renderTarget, BitmapSize, PixelData, new BitmapProperties(renderTarget.PixelFormat));
         }
 
+        public Hardware Hardware
+        {
+            get => mHardware;
+            set
+            {
+                if (mHardware != value)
+                {
+                    mHardware = value;
+                    if (value == null)
+                        return;
+
+                    UInt32 index = 0;
+                    foreach (var character in Hardware.Alphanumerics.CharacterSet)
+                    {
+                        foreach (BYTE row in character)
+                        {
+                            foreach (var palette in Hardware.Alphanumerics.PaletteTable)
+                                foreach (var color in palette)
+                                {
+                                    uint pixel = color.ToUint();
+                                    PixelData[index++] = (row.BIT_7 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_6 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_5 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_4 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_3 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_2 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_1 ? pixel : 0);
+                                    PixelData[index++] = (row.BIT_0 ? pixel : 0);
+                                }
+                        }
+                    }
+
+                    ResourceCache.Add("CharacterBitmap", t => CreateCharacterBitmap(t));
+                }
+            }
+        }
+
         protected override void Render(RenderTarget target)
         {
             // fill target with transparent color
             target.Clear(new RawColor4(0.0f, 0.0f, 0.0f, 0.0f));
+
+            if (Hardware == null)
+                return;
 
             if (ResourceCache["CharacterBitmap"] is Bitmap bitmap)
             {
@@ -86,14 +102,14 @@ namespace I_Robot
                 int index = 0;
                 RawRectangleF src = new RawRectangleF(0, 0, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT);
                 RawRectangleF dst = new RawRectangleF(0, 0, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT);
-                float left = !MainWindow.Hardware.Alphanumerics.ALPHA_MAP ? 0 : 4 * Alphanumerics.CHAR_WIDTH;
+                float left = !Hardware.Alphanumerics.ALPHA_MAP ? 0 : 4 * Alphanumerics.CHAR_WIDTH;
                 for (int y = 0; y < Alphanumerics.VISIBLE_ROWS; y++)
                 {
                     dst.Top = y * scale;
                     dst.Bottom = (y + 1) * scale;
                     for (int x = 0; x < Alphanumerics.COLUMNS; x++)
                     {
-                        byte c = MainWindow.Hardware.Alphanumerics.RAM[index++];
+                        byte c = Hardware.Alphanumerics.RAM[index++];
                         int character = c & 63;
                         if (character != 0)
                         {

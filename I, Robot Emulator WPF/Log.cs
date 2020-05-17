@@ -28,11 +28,6 @@ namespace I_Robot
             Trace.WriteLine(s);
             //System.Windows.Forms.MessageBox.Show(s, "Message");
         }
-
-        static public void LogCrash()
-        {
-            LogMessage("CRASH");
-            LogMessage(MainWindow.Hardware.M6809E.ToString());
-        }       
+    
     }
 }

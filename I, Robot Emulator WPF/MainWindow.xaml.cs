@@ -14,7 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using SharpDX.Direct3D11;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -29,26 +31,37 @@ namespace I_Robot
     /// </summary>
     unsafe public partial class MainWindow : Window
     {
-        static public Hardware Hardware = new Hardware();
+        readonly RomSet? Roms;
+        readonly Hardware? Hardware;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            Hardware.Reset(Hardware.RESET_TYPE.COLD);
-
             FPS.Text = "";
 
-            // start our timer
-            DispatcherTimer timer = new DispatcherTimer();
-            timer.Interval = TimeSpan.FromMilliseconds(33);
-            timer.Tick += timer_Tick;
-            timer.Start();
+            // read the ROMs
+            if (RomSet.TryGetRomSet("irobot.zip", out Roms, out string errMessage) && Roms != null)
+            {
+                // create hardware that uses the ROMs
+                Hardware = new Hardware(Roms);
+                AlphanumericsOverlay.Hardware = Hardware;
+
+                // start our timer
+                DispatcherTimer timer = new DispatcherTimer();
+                timer.Interval = TimeSpan.FromMilliseconds(33);
+                timer.Tick += timer_Tick;
+                timer.Start();
+            }
+            else
+            {
+                MessageBox.Show(errMessage, "Rom loader");
+            }
         }
 
         protected override void OnClosed(EventArgs e)
         {
-            Hardware.Dispose();
+            Hardware?.Dispose();
             base.OnClosed(e);
         }
 

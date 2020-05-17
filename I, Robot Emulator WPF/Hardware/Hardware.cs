@@ -256,8 +256,12 @@ namespace I_Robot
             }
         }
 
-        public Hardware()
+        public readonly RomSet Roms;
+
+        public Hardware(RomSet roms)
         {
+            Roms = roms;
+
             Quad_POKEY = new Quad_POKEY(this);
 
             ProgROM = new ProgROM(this);
@@ -317,7 +321,6 @@ namespace I_Robot
             }
         }
 
-
         public void Reset(RESET_TYPE type)
         {
             lock (Lock)
@@ -354,9 +357,6 @@ namespace I_Robot
                     if (mDisposed)
                         return;
 
-                    if (Registers.WatchdogCounter > 500000)
-                        Reset(Hardware.RESET_TYPE.WATCHDOG);
-
                     Quad_POKEY.Update();
 
                     if (Paused)
@@ -364,6 +364,9 @@ namespace I_Robot
                         CyclesToRun = 0;
                         continue;
                     }
+
+                    if (Registers.WatchdogCounter > 500000)
+                        Reset(Hardware.RESET_TYPE.WATCHDOG);
 
                     // compute number of cycles to run
                     if (Settings.SpeedThrottle)

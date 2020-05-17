@@ -69,28 +69,6 @@ namespace I_Robot
                   0xFE,0xE8, 0x40,0x01, 0x01,0x22,
                   0x01,0x2C, 0xFE,0xE1, 0x3F,0xFC };
 
-        static readonly ROM? Rom101;
-        static readonly ROM? Rom102;
-        static readonly ROM? Rom103;
-        static readonly ROM? Rom104;
-        static readonly bool RomsLoaded;
-
-        static Mathbox()
-        {
-            int count = 0;
-            if (I_Robot.ROM.TryLoad("136029-101.bin", 0x4000, 0x150247, out ROM? r101)) count++;
-            if (I_Robot.ROM.TryLoad("136029-102.bin", 0x4000, 0xF557F, out ROM? r102)) count++;
-            if (I_Robot.ROM.TryLoad("136029-103.bin", 0x2000, 0x6A797, out ROM? r103)) count++;
-            if (I_Robot.ROM.TryLoad("136029-104.bin", 0x2000, 0x43382, out ROM? r104)) count++;
-
-            Rom101 = r101;
-            Rom102 = r102;
-            Rom103 = r103;
-            Rom104 = r104;
-
-            RomsLoaded = (count == 4);
-        }
-
         // 6 mathbox ROM banks that are accessible by the CPU
         public readonly PinnedBuffer<byte>[] ROM = new PinnedBuffer<byte>[6] {
             new PinnedBuffer<byte>(0x2000),
@@ -108,47 +86,57 @@ namespace I_Robot
 
         public bool MB_DONE { get; private set; } = true;
 
+        // keep delegates around to prevent them from being garbage collected
         public readonly M6809E.ReadDelegate ReadRamFunction;
         public readonly M6809E.WriteDelegate WriteRamFunction;
 
         public Mathbox(Hardware hardware) : base(hardware, "Mathbox")
         {
-            if (Rom101 != null && Rom102 != null && Rom103 != null && Rom104 != null)
+            //  Mathbox     CPU           hi                lo
+            //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
+            //  3000-3FFF   1:2000-3FFF   136029-104[1000]  136029-103[1000]
+            //  4000-4FFF   2:2000-3FFF   136029-102[0000]  136029-101[0000]
+            //  5000-5FFF   3:2000-3FFF   136029-102[1000]  136029-101[1000]
+            //  6000-6FFF   4:2000-3FFF   136029-102[2000]  136029-101[2000]
+            //  7000-7FFF   5:2000-3FFF   136029-102[3000]  136029-101[3000]
+
+            // create x86 accessable bank (low endian)
+
+            UInt16 address;
+            if (Hardware.Roms.TryGetRom("136029-103", out ROM? rom103) && rom103 != null)
             {
-                //  Mathbox     CPU           hi                lo
-                //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
-                //  3000-3FFF   1:2000-3FFF   136029-104[1000]  136029-103[1000]
-                //  4000-4FFF   2:2000-3FFF   136029-102[0000]  136029-101[0000]
-                //  5000-5FFF   3:2000-3FFF   136029-102[1000]  136029-101[1000]
-                //  6000-6FFF   4:2000-3FFF   136029-102[2000]  136029-101[2000]
-                //  7000-7FFF   5:2000-3FFF   136029-102[3000]  136029-101[3000]
-
-                // create x86 accessable bank (low endian)
-                UInt16 address = 0x2000;
-                for (int s = 0; s < 0x2000; s++)
-                    Buffer16.ManagedBuffer[address++] = (UInt16)(Rom104[s] * 256 + Rom103[s]);
-                for (int s = 0; s < 0x4000; s++)
-                    Buffer16.ManagedBuffer[address++] = (UInt16)(Rom102[s] * 256 + Rom101[s]);
-
-                // create M6809E accessable banks (high endian)
                 address = 0x2000;
-                for (int bank = 0; bank < ROM.Length; bank++)
+                foreach (byte b in rom103)
+                    Buffer16.ManagedBuffer[address++] = b;
+            }
+            if (Hardware.Roms.TryGetRom("136029-104", out ROM? rom104) && rom104 != null)
+            {
+                address = 0x2000;
+                foreach (byte b in rom104)
+                    Buffer16.ManagedBuffer[address++] |= (UInt16)(b << 8);
+            }
+            if (Hardware.Roms.TryGetRom("136029-101", out ROM? rom101) && rom101 != null)
+            {
+                address = 0x4000;
+                foreach (byte b in rom101)
+                    Buffer16.ManagedBuffer[address++] = b;
+            }
+            if (Hardware.Roms.TryGetRom("136029-102", out ROM? rom102) && rom102 != null)
+            {
+                address = 0x4000;
+                foreach (byte b in rom102)
+                    Buffer16.ManagedBuffer[address++] |= (UInt16)(b << 8);
+            }
+            
+            // create M6809E accessable banks (high endian)
+            address = 0x2000;
+            for (int bank = 0; bank < ROM.Length; bank++)
+            {
+                for (int n = 0; n < 0x2000;)
                 {
-                    for (int n = 0; n < 0x2000;)
-                    {
-                        ROM[bank].ManagedBuffer[n++] = (byte)(Buffer16.ManagedBuffer[address] >> 8);
-                        ROM[bank].ManagedBuffer[n++] = (byte)(Buffer16.ManagedBuffer[address++] >> 0);
-                    }
+                    ROM[bank].ManagedBuffer[n++] = (byte)(Buffer16.ManagedBuffer[address] >> 8);
+                    ROM[bank].ManagedBuffer[n++] = (byte)(Buffer16.ManagedBuffer[address++] >> 0);
                 }
-
-                for (int n = 0; n < ROM.Length; n++)
-                {
-                    System.Diagnostics.Debug.Write($"ROM[{n}]:");
-                    for (int i = 0; i < 16; i++)
-                        System.Diagnostics.Debug.Write($" {ROM[n].pData[i].HexString()}");
-                    System.Diagnostics.Debug.WriteLine("");
-                }
-
             }
 
 #if true
@@ -165,17 +153,14 @@ namespace I_Robot
             Hardware.ProgROM.Bank_4000[4].pData[0x1FFF] = (byte)(checksum >> 0);
 #endif
 
-            // prevent delegates from being garbage collected
             ReadRamFunction = new M6809E.ReadDelegate((UInt16 address) =>
             {
-                System.Diagnostics.Debug.Assert(Hardware.Bank_2000.BankSelect == Bank_2000.BANK.MB_RAM);
                 // flip 6809 hi/lo, so x86 can read words
                 return (byte)pData[(address & 0x1FFF) ^ 1];
             });
 
             WriteRamFunction = new M6809E.WriteDelegate((UInt16 address, byte data) =>
             {
-                System.Diagnostics.Debug.Assert(Hardware.Bank_2000.BankSelect == Bank_2000.BANK.MB_RAM);
                 // flip 6809 hi/lo, so x86 can read words
                 pData[(address & 0x1FFF) ^ 1] = data;
             });

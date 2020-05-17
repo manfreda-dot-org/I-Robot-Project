@@ -15,6 +15,7 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -24,13 +25,11 @@ namespace I_Robot
     /// <summary>
     /// interface for a byte addressable ROM
     /// </summary>
-    public interface IRom8
+    public interface IRom8 : IReadOnlyList<byte>
     {
-        int Size { get; }
-
-        byte this[int index] { get; }
+        UInt32 Checksum { get; }
     }
-
+    
     public static class RomExtensions
     {
         public static UInt16 Word(this IRom8 rom, int index)
@@ -41,37 +40,28 @@ namespace I_Robot
 
     public class ROM : IRom8
     {
-        public readonly String Filename;
-        public readonly UInt32 Checksum;
-        public readonly byte[] Data;
+        #region STATIC
 
-        // hide the constructor - force user to call TryLoad() method
-        ROM(String filename)
+        static public bool FromStream(Stream stream, out ROM? rom)
         {
-            Filename = filename;
+            try
+            {
 
-            Data = System.IO.File.ReadAllBytes(filename);
-
-            // calculate checksum
-            for (int n = 0; n < Data.Length; n++)
-                Checksum += Data[n];
-
-            System.Diagnostics.Debug.WriteLine($"ROM {filename} loaded, checksum = {ChecksumString(Checksum)}");
+                using (MemoryStream memory = new MemoryStream())
+                {
+                    stream.CopyTo(memory);
+                    rom = new ROM(memory);
+                    return true;
+                }
+            }
+            catch
+            {
+                rom = null;
+                return false;
+            }
         }
 
-        public byte this[int index]
-        {
-            get { return Data[index]; }
-        }
-
-        public int Size => Data.Length;
-
-        static String ChecksumString(UInt32 checksum)
-        {
-            return "$" + checksum.ToString("X").PadLeft(8, '0');
-        }
-
-        static public bool TryLoad(String filename, out ROM? rom)
+        static public bool FromFile(String filename, out ROM? rom)
         {
             try
             {
@@ -87,13 +77,13 @@ namespace I_Robot
             }
         }
 
-        static public bool TryLoad(String filename, int size, out ROM? rom)
+        static public bool FromFile(String filename, int size, out ROM? rom)
         {
-            if (TryLoad(filename, out rom) && rom != null)
+            if (FromFile(filename, out rom) && rom != null)
             {
-                if (rom.Size != size)
+                if (rom.Count != size)
                 {
-                    Log.LogMessage($"ROM {filename} has incorrect size: expected = {size} bytes, actual = {rom.Size} bytes");
+                    Log.LogMessage($"ROM {filename} has incorrect size: expected = {size} bytes, actual = {rom.Count} bytes");
                     rom = null;
                 }
             }
@@ -101,9 +91,9 @@ namespace I_Robot
             return rom != null;
         }
 
-        static public bool TryLoad(String filename, int size, UInt32 checksum, out ROM? rom)
+        static public bool FromFile(String filename, int size, UInt32 checksum, out ROM? rom)
         {
-            if (TryLoad(filename, size, out rom) && rom != null)
+            if (FromFile(filename, size, out rom) && rom != null)
             {
                 if (rom.Checksum != checksum)
                 {
@@ -113,5 +103,46 @@ namespace I_Robot
             }
             return rom != null;
         }
+        #endregion
+
+        public UInt32 Checksum { get; private set; }
+        public readonly byte[] Data;
+        public int Count => Data.Length;
+
+        public ROM(MemoryStream stream) : this(stream.ToArray()) { }
+
+        public ROM(byte[] data)
+        {
+            Data = data;
+
+            // calculate checksum
+            for (int n = 0; n < Data.Length; n++)
+                Checksum += Data[n];
+        }
+
+        // hide the constructor - force user to call TryLoad() method
+        ROM(String filename)
+        {
+            Data = System.IO.File.ReadAllBytes(filename);
+
+            // calculate checksum
+            for (int n = 0; n < Data.Length; n++)
+                Checksum += Data[n];
+
+            System.Diagnostics.Debug.WriteLine($"ROM {filename} loaded, checksum = {ChecksumString(Checksum)}");
+        }
+
+        public byte this[int index]
+        {
+            get { return Data[index]; }
+        }
+
+        static String ChecksumString(UInt32 checksum)
+        {
+            return "$" + checksum.ToString("X").PadLeft(8, '0');
+        }
+
+        IEnumerator<byte> IEnumerable<byte>.GetEnumerator() { return ((IReadOnlyList<byte>)Data).GetEnumerator(); }
+        IEnumerator IEnumerable.GetEnumerator() { return Data.GetEnumerator(); }
     }
 }

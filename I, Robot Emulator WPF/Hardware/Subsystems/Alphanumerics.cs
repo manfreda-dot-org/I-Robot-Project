@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 using System.Windows.Media;
@@ -29,6 +30,10 @@ namespace I_Robot
     [Serializable]
     unsafe public class Alphanumerics : Hardware.Subsystem
     {
+        public const int NUM_CHARS = 64;
+        public const int NUM_PALETTES = 2;
+        public const int NUM_COLORS = 4;
+
         public const int CHAR_WIDTH = 8;
         public const int CHAR_HEIGHT = 8;
         public const int COLUMNS = 32;
@@ -38,53 +43,50 @@ namespace I_Robot
         /// <summary>
         /// Character set: 64 characters, 8x8 pixels
         /// </summary>
-        static public readonly byte[][] CharacterSet = new byte[64][];
+        public readonly byte[][] CharacterSet = new byte[NUM_CHARS][];
 
         /// <summary>
         /// Holds the Alphanumerics color ROM palette table
         /// </summary>
-        static public readonly Color[][] PaletteTable = new Color[2][];
+        public readonly Color[][] PaletteTable = new Color[NUM_PALETTES][];
 
-        static Alphanumerics()
+        /// <summary>
+        /// 1K of character RAM
+        /// </summary>
+        public readonly PinnedBuffer<byte> RAM;
+
+        bool mALPHA_MAP = false;
+
+        private Alphanumerics(Hardware hardware, PinnedBuffer<byte> ram) : base(hardware, "Alphanumerics")
         {
+            RAM = ram;
+
             // load the character ROM
-            if (ROM.TryLoad("136029-124.bin", 0x800, 0x2069D, out ROM? rom) && rom != null)
+            if (Hardware.Roms.TryGetRom("136029-124", out ROM? rom124) && rom124 != null)
             {
                 // unpack the ROM into character scanlines
                 int index = 0;
-                for (int alpha = 0; alpha < 64; alpha++)
+                for (int alpha = 0; alpha < NUM_CHARS; alpha++)
                 {
-                    CharacterSet[alpha] = new byte[8];
-                    for (int row = 0; row < 8; row++)
+                    CharacterSet[alpha] = new byte[CHAR_HEIGHT];
+                    for (int row = 0; row < CHAR_HEIGHT; row++)
                     {
-#if false
-                        byte bits = 0;
-                        if ((rom[index] & 8) != 0) bits |= 0x80;
-                        if ((rom[index] & 4) != 0) bits |= 0x40;
-                        if ((rom[index] & 2) != 0) bits |= 0x20;
-                        if ((rom[index++] & 1) != 0) bits |= 0x10;
-                        if ((rom[index] & 8) != 0) bits |= 0x08;
-                        if ((rom[index] & 4) != 0) bits |= 0x04;
-                        if ((rom[index] & 2) != 0) bits |= 0x02;
-                        if ((rom[index++] & 1) != 0) bits |= 0x01;
-#else
-                        byte bits = (byte)(rom[index++] << 4);
-                        bits |= (byte)(rom[index++] & 0xF);
-#endif
+                        byte bits = (byte)(rom124[index++] << 4);
+                        bits |= (byte)(rom124[index++] & 0xF);
                         CharacterSet[alpha][row] = bits;
                     }
                 }
             }
 
             // load the color ROM
-            if (ROM.TryLoad("136029-125.bin", 0x20, 0x42C, out rom) && rom != null)
+            if (Hardware.Roms.TryGetRom("136029-125", out ROM? rom125) && rom125 != null)
             {
-                for (int p = 0; p < 2; p++)
+                for (int p = 0; p < NUM_PALETTES; p++)
                 {
-                    PaletteTable[p] = new Color[4];
-                    for (int color = 0; color < 4; color++)
+                    PaletteTable[p] = new Color[NUM_COLORS];
+                    for (int color = 0; color < NUM_COLORS; color++)
                     {
-                        byte rrggbbii = rom[p * 16 + color + 4];
+                        byte rrggbbii = rom125[p * 16 + color + 4];
                         int i = (rrggbbii & 3) + 1; // 1-4
                         int r = (rrggbbii >> 6) & 3; // 0-3
                         int g = (rrggbbii >> 4) & 3; // 0-3
@@ -101,24 +103,6 @@ namespace I_Robot
             }
         }
 
-        /// <summary>
-        /// 1K of character RAM
-        /// </summary>
-        public readonly PinnedBuffer<byte> RAM;
-
-        /// <summary>
-        /// Gets the current text color palette selected by the program
-        /// </summary>
-        public Color[] Palette { get; private set; }
-
-        bool mALPHA_MAP = false;
-
-        private Alphanumerics(Hardware hardware, PinnedBuffer<byte> ram) : base(hardware, "Alphanumerics")
-        {
-            RAM = ram;
-            Palette = PaletteTable[0];
-        }
-
         public Alphanumerics(Hardware hardware) : this(hardware, new PinnedBuffer<byte>(0x400))
         {
         }
@@ -132,25 +116,12 @@ namespace I_Robot
             Hardware.M6809E.SetPageIO(0x1C, 0x1F, RAM.pData, RAM.pData);
 
             ALPHA_MAP = false;
-            Palette = PaletteTable[0];
         }
 
         /// <summary>
         /// ALPHA_MAP hardware signal
         /// </summary>
-        public bool ALPHA_MAP
-        {
-            get => mALPHA_MAP;
-            set
-            {
-                if (mALPHA_MAP != value)
-                {
-                    mALPHA_MAP = value;
-                    System.Diagnostics.Debug.WriteLine($"ALPHA_MAP = {(value ? 1 : 0)}");
-                    Palette = PaletteTable[value ? 1 : 0];
-                }
-            }
-        }
+        public bool ALPHA_MAP;
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
