@@ -18,6 +18,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace I_Robot
@@ -27,6 +28,7 @@ namespace I_Robot
     /// </summary>
     public interface IRom8 : IReadOnlyList<byte>
     {
+        string SHA1 { get; }
         UInt32 Checksum { get; }
     }
     
@@ -106,6 +108,7 @@ namespace I_Robot
         #endregion
 
         public UInt32 Checksum { get; private set; }
+        public string SHA1 { get; private set; }
         public readonly byte[] Data;
         public int Count => Data.Length;
 
@@ -118,6 +121,8 @@ namespace I_Robot
             // calculate checksum
             for (int n = 0; n < Data.Length; n++)
                 Checksum += Data[n];
+
+            SHA1 = BitConverter.ToString(new SHA1CryptoServiceProvider().ComputeHash(Data)).Replace("-", "");
         }
 
         // hide the constructor - force user to call TryLoad() method
