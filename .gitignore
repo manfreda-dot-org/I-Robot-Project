@@ -70,6 +70,7 @@ StyleCopReport.xml
 *.ilk
 *.meta
 *.obj
+!I, Robot Emulator 1998/*.obj
 *.iobj
 *.pch
 *.pdb
