@@ -1,4 +1,4 @@
-﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// Copyright 2020 by John Manfreda. All Rights Reserved.
 // https://www.manfreda.org/
 //
 // This program is free software: you can redistribute it and/or modify
@@ -29,7 +29,7 @@ namespace I_Robot
     unsafe public class Registers : Hardware.Subsystem
     {
         #region STRUCTURES
-        
+
         /// <summary>
         /// Reprsents the special function register at address 1000
         /// </summary>
@@ -197,8 +197,8 @@ namespace I_Robot
             /// Signal used to start the mathbox hardware
             /// </summary>
             public bool MATH_START { get { return (Value & 0x10) != 0; } }
-            
-            
+
+
             public bool ADDCON { get { return (Value & 0x08) != 0; } }
 
             /// <summary>
@@ -489,8 +489,8 @@ namespace I_Robot
                 mOUT1 = value;
                 // value.LEFT_COIN_COUNTER;
                 // value.RIGHT_COIN_COUNTER;
-                // value.LED1;
-                // value.LED2;
+                Hardware.LEDs.LED1 = value.LED1;
+                Hardware.LEDs.LED2 = value.LED2;
                 Hardware.ProgROM.BankSelect = value.ROM_4000_BANK;
             }
         }

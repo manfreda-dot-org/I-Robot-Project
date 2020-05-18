@@ -185,6 +185,7 @@ namespace I_Robot
 
         public readonly ADC ADC;
         public readonly Alphanumerics Alphanumerics;
+        public readonly LEDs LEDs;
         public readonly Mathbox Mathbox;
         public readonly Palette Palette;
         public readonly Quad_POKEY Quad_POKEY;
@@ -268,6 +269,7 @@ namespace I_Robot
 
             ADC = new ADC(this);
             Alphanumerics = new Alphanumerics(this);
+            LEDs = new LEDs(this);
             Mathbox = new Mathbox(this);
             Palette = new Palette(this);
             Registers = new Registers(this);
