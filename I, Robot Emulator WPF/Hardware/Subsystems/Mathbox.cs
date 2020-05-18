@@ -78,9 +78,9 @@ namespace I_Robot
             new PinnedBuffer<byte>(0x2000),
             new PinnedBuffer<byte>(0x2000) };
 
-        readonly PinnedBuffer<UInt16> Buffer16 = new PinnedBuffer<UInt16>(0x8000);
-        public byte* pData => (byte*)Buffer16.pData;
-        UInt16* Memory => Buffer16.pData;
+        readonly PinnedBuffer<UInt16> Memory16 = new PinnedBuffer<UInt16>(0x8000);
+        public byte* pData => (byte*)(UInt16*)Memory16;
+        UInt16* Memory => Memory16;
 
         bool mMATH_START = false;
 
@@ -112,25 +112,25 @@ namespace I_Robot
             {
                 address = 0x2000;
                 foreach (byte b in r103)
-                    Buffer16[address++] = b;
+                    Memory[address++] = b;
             }
             if (r104 != null)
             {
                 address = 0x2000;
                 foreach (byte b in r104)
-                    Buffer16[address++] |= (UInt16)(b << 8);
+                    Memory[address++] |= (UInt16)(b << 8);
             }
             if (r101 != null)
             {
                 address = 0x4000;
                 foreach (byte b in r101)
-                    Buffer16[address++] = b;
+                    Memory[address++] = b;
             }
             if (r102 != null)
             {
                 address = 0x4000;
                 foreach (byte b in r102)
-                    Buffer16[address++] |= (UInt16)(b << 8);
+                    Memory[address++] |= (UInt16)(b << 8);
             }
             
             // create M6809E accessable banks (high endian)
@@ -139,8 +139,8 @@ namespace I_Robot
             {
                 for (int n = 0; n < 0x2000;)
                 {
-                    ROM[bank][n++] = (byte)(Buffer16[address] >> 8);
-                    ROM[bank][n++] = (byte)(Buffer16[address++] >> 0);
+                    ROM[bank][n++] = (byte)(Memory[address] >> 8);
+                    ROM[bank][n++] = (byte)(Memory[address++] >> 0);
                 }
             }
 
@@ -151,11 +151,11 @@ namespace I_Robot
             // adjust the value at the end of ROM bank 4 to account for the checksum change
             UInt16 checksum = 0;
             for (int n = 0; n < 0x1FFE; n += 2)
-                checksum -= (UInt16)(Hardware.ProgROM.Bank_4000[4].pData[n] * 256 + Hardware.ProgROM.Bank_4000[4].pData[n + 1]);
+                checksum -= (UInt16)(Hardware.ProgROM.Bank_4000[4][n] * 256 + Hardware.ProgROM.Bank_4000[4][n + 1]);
             for (int n = 0; n < 0x2000; n += 2)
-                checksum -= (UInt16)(Hardware.ProgROM.Bank_4000[5].pData[n] * 256 + Hardware.ProgROM.Bank_4000[5].pData[n + 1]);
-            Hardware.ProgROM.Bank_4000[4].pData[0x1FFE] = (byte)(checksum >> 8);
-            Hardware.ProgROM.Bank_4000[4].pData[0x1FFF] = (byte)(checksum >> 0);
+                checksum -= (UInt16)(Hardware.ProgROM.Bank_4000[5][n] * 256 + Hardware.ProgROM.Bank_4000[5][n + 1]);
+            Hardware.ProgROM.Bank_4000[4][0x1FFE] = (byte)(checksum >> 8);
+            Hardware.ProgROM.Bank_4000[4][0x1FFF] = (byte)(checksum >> 0);
 #endif
 
             ReadRamFunction = new M6809E.ReadDelegate((UInt16 address) =>
@@ -179,7 +179,7 @@ namespace I_Robot
         {
             info.AddValue("MATH_START", MATH_START);
             info.AddValue("MB_DONE", MB_DONE);
-            info.AddValue("RAM", Buffer16);
+            info.AddValue("RAM", Memory16);
         }
 
         public override void Reset()

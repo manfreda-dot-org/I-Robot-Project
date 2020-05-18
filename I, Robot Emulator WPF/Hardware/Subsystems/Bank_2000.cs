@@ -92,10 +92,10 @@ namespace I_Robot
 
                 switch (bank)
                 {
-                    case BANK.COMRAM_0: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.VideoProcessor.COMRAM[0].pData); break;
-                    case BANK.COMRAM_1: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.VideoProcessor.COMRAM[1].pData); break;
+                    case BANK.COMRAM_0: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.VideoProcessor.COMRAM[0]); break;
+                    case BANK.COMRAM_1: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.VideoProcessor.COMRAM[1]); break;
                     case BANK.MB_RAM: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.Mathbox.ReadRamFunction, Hardware.Mathbox.WriteRamFunction); break;
-                    default: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.Mathbox.ROM[(byte)bank].pData, M6809E.pNullPage); break;
+                    default: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.Mathbox.ROM[(byte)bank], M6809E.pNullPage); break;
                 }
             }
         }

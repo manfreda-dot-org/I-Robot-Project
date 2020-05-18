@@ -41,10 +41,14 @@ namespace I_Robot
         /// <summary>
         /// Raw pointer to the data (unsafe)
         /// </summary>
-        public readonly T* pData;
+        readonly T* pData;
 
         public int Length => ManagedBuffer.Length;
 
+        /// <summary>
+        /// Creates a new pinned buffer from an existing buffer
+        /// </summary>
+        /// <param name="buffer">existing buffer to pin</param>
         public PinnedBuffer(T[] buffer)
         {
             // allocate managed space
@@ -58,6 +62,10 @@ namespace I_Robot
             pData = (T*)Handle.Pointer;
         }
 
+        /// <summary>
+        /// Creates a new PinnedBuffer
+        /// </summary>
+        /// <param name="size">number of elements in the buffer</param>
         public PinnedBuffer(int size) 
             : this(new T[size])
         {
@@ -81,6 +89,7 @@ namespace I_Robot
         }
 
         public static implicit operator T[](PinnedBuffer<T> r) => r.ManagedBuffer;
+        public static implicit operator T*(PinnedBuffer<T> r) => r.pData;
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {

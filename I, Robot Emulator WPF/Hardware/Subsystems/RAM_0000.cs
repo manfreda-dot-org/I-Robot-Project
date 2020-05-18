@@ -45,7 +45,7 @@ namespace I_Robot
         public override void Reset()
         {
             // setup M6809 page read/write pointers
-            Hardware.M6809E.SetPageIO(0x00, 0x07, RAM.pData, RAM.pData);
+            Hardware.M6809E.SetPageIO(0x00, 0x07, RAM, RAM);
         }
     }
 }

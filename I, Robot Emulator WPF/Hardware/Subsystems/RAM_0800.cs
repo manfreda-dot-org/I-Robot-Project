@@ -67,7 +67,7 @@ namespace I_Robot
 
                     // setup M6809 page read/write pointers
                     if (value < Bank.Length)
-                        Hardware.M6809E.SetPageIO(0x08, 0x0F, Bank[value].pData, Bank[value].pData);
+                        Hardware.M6809E.SetPageIO(0x08, 0x0F, Bank[value], Bank[value]);
                     else
                         Hardware.M6809E.SetPageIO(0x08, 0x0F, M6809E.pNullPage, M6809E.pNullPage);
                 }

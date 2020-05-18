@@ -83,7 +83,7 @@ namespace I_Robot
             Hardware.M6809E.SetPageIO(0x40, 0x5F, M6809E.pNullPage, M6809E.pNullPage);
 
             // setup fixed ROM reads 6000-FFFF
-            Hardware.M6809E.SetPageIO(0x60, 0xFF, ROM_6000.pData, M6809E.pNullPage);
+            Hardware.M6809E.SetPageIO(0x60, 0xFF, ROM_6000, M6809E.pNullPage);
 
             // setup the proper bank at 4000-5FFF
             mBankSelect = 0xFF;
@@ -105,7 +105,7 @@ namespace I_Robot
 
                     // setup M6809 page read pointers
                     if (value < Bank_4000.Length)
-                        Hardware.M6809E.SetPageIO(0x40, 0x5F, Bank_4000[value].pData, M6809E.pNullPage);
+                        Hardware.M6809E.SetPageIO(0x40, 0x5F, Bank_4000[value], M6809E.pNullPage);
                     else
                         Hardware.M6809E.SetPageIO(0x40, 0x5F, M6809E.pNullPage, M6809E.pNullPage);
                 }

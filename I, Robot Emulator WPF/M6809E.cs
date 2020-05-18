@@ -25,7 +25,7 @@ namespace I_Robot
     {
         // unused page of data to route null writes to
         static PinnedBuffer<byte> Null64k = new PinnedBuffer<byte>(0x10000);
-        static public byte* pNullPage = Null64k.pData;
+        static public byte* pNullPage = Null64k;
 
         #region M6809E.dll
 

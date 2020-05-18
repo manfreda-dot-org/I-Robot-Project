@@ -115,7 +115,7 @@ namespace I_Robot
 
         public override void Reset()
         {
-            Hardware.M6809E.SetPageIO(0x1C, 0x1F, RAM.pData, RAM.pData);
+            Hardware.M6809E.SetPageIO(0x1C, 0x1F, RAM, RAM);
 
             ALPHA_MAP = false;
         }
@@ -141,7 +141,7 @@ namespace I_Robot
 
         public override string ToString()
         {
-            byte* p = RAM.pData;
+            byte* p = RAM;
 
             sb.Clear();
 
