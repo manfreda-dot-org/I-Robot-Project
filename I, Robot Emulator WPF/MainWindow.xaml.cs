@@ -41,7 +41,7 @@ namespace I_Robot
             FPS.Text = "";
 
             // read the ROMs
-            if (RomSet.TryGetRomSet("irobot.zip", out Roms, out string errMessage) && Roms != null)
+            if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out Roms, out string errMessage) && Roms != null)
             {
                 // create hardware that uses the ROMs
                 Hardware = new Hardware(Roms);
@@ -68,7 +68,7 @@ namespace I_Robot
         void timer_Tick(object? sender, EventArgs e)
         {
             if (Settings.ShowFPS)
-                FPS.Text = Hardware.FPS.ToString("0.0 FPS");
+                FPS.Text = Hardware?.FPS.ToString("0.0 FPS") ?? "";
             else
                 FPS.Text = "";
         }
@@ -78,7 +78,7 @@ namespace I_Robot
             if (e.Key == Key.Tab)
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (e.Key == Key.F3)
-                Hardware.Reset(Hardware.RESET_TYPE.USER);
+                Hardware?.Reset(Hardware.RESET_TYPE.USER);
             if (e.Key == Key.F7)
             {
                 if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))

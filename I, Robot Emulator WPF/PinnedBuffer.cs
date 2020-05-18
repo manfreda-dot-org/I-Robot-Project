@@ -33,7 +33,7 @@ namespace I_Robot
         /// <summary>
         /// The managed data buffer
         /// </summary>
-        public readonly T[] ManagedBuffer;
+        readonly T[] ManagedBuffer;
 
         readonly Memory<T> Memory;
         readonly System.Buffers.MemoryHandle Handle;
@@ -79,6 +79,8 @@ namespace I_Robot
             get => pData[index];
             set => pData[index] = value;
         }
+
+        public static implicit operator T[](PinnedBuffer<T> r) => r.ManagedBuffer;
 
         public void GetObjectData(SerializationInfo info, StreamingContext context)
         {

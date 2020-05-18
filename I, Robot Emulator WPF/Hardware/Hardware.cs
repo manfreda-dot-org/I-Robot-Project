@@ -329,7 +329,6 @@ namespace I_Robot
                     return;
 
                 System.Diagnostics.Debug.WriteLine($"Hardware reset: {type}");
-                System.Diagnostics.Debug.Assert(ProgROM.ProgramLoaded);
 
                 foreach (Subsystem subsystem in Subsystems)
                 {

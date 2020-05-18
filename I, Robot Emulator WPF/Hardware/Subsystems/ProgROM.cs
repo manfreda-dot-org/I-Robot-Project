@@ -38,48 +38,36 @@ namespace I_Robot
 
         byte mBankSelect = 0xFF;
 
-        /// <summary>
-        /// Indicates whether or not the program ROMs loaded successfully
-        /// </summary>
-        public bool ProgramLoaded { get; private set; }
-
         public ProgROM(Hardware hardware) : base(hardware, "Program ROM")
         {
-            int count = 0;
-            if (Hardware.Roms.TryGetRom("136029-405", out ROM? r405) && r405 != null)
+            ROM? r405 = hardware.Roms["136029-405"];
+            ROM? r206 = hardware.Roms["136029-206"];
+            ROM? r207 = hardware.Roms["136029-207"];
+            ROM? r208 = hardware.Roms["136029-208"];
+            ROM? r209 = hardware.Roms["136029-209"];
+            ROM? r210 = hardware.Roms["136029-210"];
+
+            if (r405 != null)
             {
-                count++;
-                Array.Copy(r405.Data, 0x0000, Bank_4000[0].ManagedBuffer, 0x0000, 0x2000);
-                Array.Copy(r405.Data, 0x2000, Bank_4000[1].ManagedBuffer, 0x0000, 0x2000);
+                Array.Copy(r405, 0x0000, Bank_4000[0], 0x0000, 0x2000);
+                Array.Copy(r405, 0x2000, Bank_4000[1], 0x0000, 0x2000);
             }
-            if (Hardware.Roms.TryGetRom("136029-206", out ROM? r206) && r206 != null)
+            if (r206 != null)
             {
-                count++;
-                Array.Copy(r206.Data, 0x0000, Bank_4000[2].ManagedBuffer, 0x0000, 0x2000);
-                Array.Copy(r206.Data, 0x2000, Bank_4000[3].ManagedBuffer, 0x0000, 0x2000);
+                Array.Copy(r206, 0x0000, Bank_4000[2], 0x0000, 0x2000);
+                Array.Copy(r206, 0x2000, Bank_4000[3], 0x0000, 0x2000);
             }
-            if (Hardware.Roms.TryGetRom("136029-207", out ROM? r207) && r207 != null)
+            if (r207 != null)
             {
-                count++;
-                Array.Copy(r207.Data, 0x0000, Bank_4000[4].ManagedBuffer, 0x0000, 0x2000);
-                Array.Copy(r207.Data, 0x2000, Bank_4000[5].ManagedBuffer, 0x0000, 0x2000);
+                Array.Copy(r207, 0x0000, Bank_4000[4], 0x0000, 0x2000);
+                Array.Copy(r207, 0x2000, Bank_4000[5], 0x0000, 0x2000);
             }
-            if (Hardware.Roms.TryGetRom("136029-208", out ROM? r208) && r208 != null)
-            {
-                count++;
-                Array.Copy(r208.Data, 0, ROM_6000.ManagedBuffer, 0x0000, r208.Data.Length);
-            }
-            if (Hardware.Roms.TryGetRom("136029-209", out ROM? r209) && r209 != null)
-            {
-                count++;
-                Array.Copy(r209.Data, 0, ROM_6000.ManagedBuffer, 0x2000, r209.Data.Length);
-            }
-            if (Hardware.Roms.TryGetRom("136029-210", out ROM? r210) && r210 != null)
-            {
-                count++;
-                Array.Copy(r210.Data, 0, ROM_6000.ManagedBuffer, 0x6000, r210.Data.Length);
-            }
-            ProgramLoaded = (count == 6);
+            if (r208 != null)
+                Array.Copy(r208, 0, ROM_6000, 0x0000, r208.Data.Length);
+            if (r209 != null)
+                Array.Copy(r209, 0, ROM_6000, 0x2000, r209.Data.Length);
+            if (r210 != null)
+                Array.Copy(r210, 0, ROM_6000, 0x6000, r210.Data.Length);
         }
 
         public override void Dispose()

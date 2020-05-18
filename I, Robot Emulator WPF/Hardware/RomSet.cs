@@ -1,4 +1,20 @@
-﻿using System;
+﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// https://www.manfreda.org/
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.If not, see<https://www.gnu.org/licenses/>.
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -6,10 +22,16 @@ using System.IO.Compression;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the set of ROMs required to run the emulator
+    /// </summary>
     public class RomSet : IReadOnlyCollection<ROM>
     {
         static IReadOnlyList<RomInfo> RomList;
-
+        
+        /// <summary>
+        /// Represents information on a ROM that is part of the set
+        /// </summary>
         class RomInfo
         {
             public readonly string Key;
@@ -28,6 +50,7 @@ namespace I_Robot
 
         static RomSet()
         {
+            // create a list of the ROMs we are looking for
             List<RomInfo> list = new List<RomInfo>();
             list.Add(new RomInfo("136029-101", "101", 0x4000, "868BB3FE5657A4CE45C3DD04BA26A7FB5A5DED42"));
             list.Add(new RomInfo("136029-102", "102", 0x4000, "787EC3E642E1DC3417477348AFA88C764E1F2A88"));
@@ -44,6 +67,7 @@ namespace I_Robot
             RomList = list;
         }
 
+        // determins if the file in the zip archive is one of the ROM's we're looking for
         static bool FindRomInfo(ZipArchiveEntry file, out RomInfo? info)
         {
             foreach (RomInfo rom in RomList)
@@ -59,11 +83,27 @@ namespace I_Robot
             return false;
         }
 
+        /// <summary>
+        /// The filename of the rom archive
+        /// </summary>
         public readonly string Filename;
+
+        // dictionary that holds the ROMs that we've found
         readonly Dictionary<string, ROM> Dict = new Dictionary<string, ROM>();
+        
+        /// <summary>
+        /// The number of ROMs in this RomSet
+        /// </summary>
         public int Count => Dict.Count;
 
-        static public bool TryGetRomSet(string filename, out RomSet? set, out string errMessage)
+        /// <summary>
+        /// Attempts to load a rom set from a zip archive file
+        /// </summary>
+        /// <param name="filename">filename of the zip archive containing the rom set</param>
+        /// <param name="set">returns RomSet on success</param>
+        /// <param name="errMessage">error message returned on failure</param>
+        /// <returns>true if the rom set was sucessfully loaded, false if error</returns>
+        static public bool ReadRomSetFromZipArchive(string filename, out RomSet? set, out string errMessage)
         {
             set = new RomSet(filename, out errMessage);
             if (set.Count == RomList.Count)
@@ -72,6 +112,7 @@ namespace I_Robot
             return false;
         }
 
+        // private constructor -- users must call ReadRomSetFromZipArchive
         private RomSet(string filename, out string errMessage)
         {
             Filename = filename;
@@ -91,24 +132,29 @@ namespace I_Robot
                     // iterate through all files inside the archive
                     foreach (ZipArchiveEntry file in archive.Entries)
                     {
+                        // see if the current file entry is one we are looking for
                         if (FindRomInfo(file, out RomInfo? info) && info != null)
                         {
+                            // make sure the file length matches the expected size
                             if (file.Length != info.Size)
                             {
                                 errMessage = $"{filename}: {info.Key} is wrong size\nSize = {file.Length}, expected = {info.Size}";
                                 return;
                             }
 
+                            // create a ROM from the archive
                             using (Stream stream = file.Open())
                             {
                                 if (ROM.FromStream(stream, out ROM? rom) && rom != null)
                                 {
+                                    // verify the SHA1 signature matches
                                     if (rom.SHA1 != info.SHA1)
                                     {
                                         errMessage = $"{filename}: {info.Key} has bad hash\nSHA1     = {rom.SHA1}\nexpected = {info.SHA1}";
                                         return;
                                     }
 
+                                    // this ROM looks good, add it to our list
                                     Dict.Add(info.Key, rom);
                                 }
                             }
@@ -122,9 +168,10 @@ namespace I_Robot
                 return;
             }
 
+            // make sure we've sucessfully read all roms in the set
             foreach (RomInfo info in RomList)
             {
-                if (!TryGetRom(info.Key, out ROM? rom))
+                if (this[info.Key] == null)
                 {
                     errMessage = $"{filename}: Unable to locate {info.Key}";
                     return;
@@ -134,7 +181,19 @@ namespace I_Robot
             errMessage = "success";
         }
 
-        public bool TryGetRom(string index, out ROM? rom) { return Dict.TryGetValue(index, out rom); }
+        /// <summary>
+        /// Gets the ROM from the RomSet that matches the name
+        /// </summary>
+        /// <param name="name">the name of the ROM to retrieve</param>
+        /// <returns>The ROM that matches the given name, null if ROM does not exist in the set</returns>
+        public ROM? this[string name]
+        {
+            get
+            {
+                Dict.TryGetValue(name, out ROM? rom);
+                return rom;
+            }
+        }
 
         public IEnumerator<ROM> GetEnumerator() { return (IEnumerator<ROM>)RomList.GetEnumerator(); }
         IEnumerator IEnumerable.GetEnumerator() { return RomList.GetEnumerator(); }

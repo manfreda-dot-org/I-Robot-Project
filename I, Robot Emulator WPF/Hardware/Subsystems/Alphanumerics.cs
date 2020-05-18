@@ -62,7 +62,8 @@ namespace I_Robot
             RAM = ram;
 
             // load the character ROM
-            if (Hardware.Roms.TryGetRom("136029-124", out ROM? rom124) && rom124 != null)
+            ROM? rom124 = Hardware.Roms["136029-124"];
+            if (rom124 != null)
             {
                 // unpack the ROM into character scanlines
                 int index = 0;
@@ -79,7 +80,8 @@ namespace I_Robot
             }
 
             // load the color ROM
-            if (Hardware.Roms.TryGetRom("136029-125", out ROM? rom125) && rom125 != null)
+            ROM? rom125 = Hardware.Roms["136029-125"];
+            if (rom125 != null)
             {
                 for (int p = 0; p < NUM_PALETTES; p++)
                 {

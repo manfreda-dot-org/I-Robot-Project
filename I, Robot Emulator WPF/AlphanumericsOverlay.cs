@@ -46,7 +46,7 @@ namespace I_Robot
             return Bitmap.New<uint>(renderTarget, BitmapSize, PixelData, new BitmapProperties(renderTarget.PixelFormat));
         }
 
-        public Hardware Hardware
+        public Hardware? Hardware
         {
             get => mHardware;
             set
@@ -58,11 +58,11 @@ namespace I_Robot
                         return;
 
                     UInt32 index = 0;
-                    foreach (var character in Hardware.Alphanumerics.CharacterSet)
+                    foreach (var character in value.Alphanumerics.CharacterSet)
                     {
                         foreach (BYTE row in character)
                         {
-                            foreach (var palette in Hardware.Alphanumerics.PaletteTable)
+                            foreach (var palette in value.Alphanumerics.PaletteTable)
                                 foreach (var color in palette)
                                 {
                                     uint pixel = color.ToUint();

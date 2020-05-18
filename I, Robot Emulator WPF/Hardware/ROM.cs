@@ -108,7 +108,7 @@ namespace I_Robot
         #endregion
 
         public UInt32 Checksum { get; private set; }
-        public string SHA1 { get; private set; }
+        public string SHA1 { get; private set; } = "";
         public readonly byte[] Data;
         public int Count => Data.Length;
 
@@ -149,5 +149,7 @@ namespace I_Robot
 
         IEnumerator<byte> IEnumerable<byte>.GetEnumerator() { return ((IReadOnlyList<byte>)Data).GetEnumerator(); }
         IEnumerator IEnumerable.GetEnumerator() { return Data.GetEnumerator(); }
+
+        public static implicit operator byte[](ROM r) => r.Data;
     }
 }

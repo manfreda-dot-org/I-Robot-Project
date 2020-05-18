@@ -102,30 +102,35 @@ namespace I_Robot
 
             // create x86 accessable bank (low endian)
 
+            ROM? r101 = hardware.Roms["136029-101"];
+            ROM? r102 = hardware.Roms["136029-102"];
+            ROM? r103 = hardware.Roms["136029-103"];
+            ROM? r104 = hardware.Roms["136029-104"];
+
             UInt16 address;
-            if (Hardware.Roms.TryGetRom("136029-103", out ROM? rom103) && rom103 != null)
+            if (r103 != null)
             {
                 address = 0x2000;
-                foreach (byte b in rom103)
-                    Buffer16.ManagedBuffer[address++] = b;
+                foreach (byte b in r103)
+                    Buffer16[address++] = b;
             }
-            if (Hardware.Roms.TryGetRom("136029-104", out ROM? rom104) && rom104 != null)
+            if (r104 != null)
             {
                 address = 0x2000;
-                foreach (byte b in rom104)
-                    Buffer16.ManagedBuffer[address++] |= (UInt16)(b << 8);
+                foreach (byte b in r104)
+                    Buffer16[address++] |= (UInt16)(b << 8);
             }
-            if (Hardware.Roms.TryGetRom("136029-101", out ROM? rom101) && rom101 != null)
+            if (r101 != null)
             {
                 address = 0x4000;
-                foreach (byte b in rom101)
-                    Buffer16.ManagedBuffer[address++] = b;
+                foreach (byte b in r101)
+                    Buffer16[address++] = b;
             }
-            if (Hardware.Roms.TryGetRom("136029-102", out ROM? rom102) && rom102 != null)
+            if (r102 != null)
             {
                 address = 0x4000;
-                foreach (byte b in rom102)
-                    Buffer16.ManagedBuffer[address++] |= (UInt16)(b << 8);
+                foreach (byte b in r102)
+                    Buffer16[address++] |= (UInt16)(b << 8);
             }
             
             // create M6809E accessable banks (high endian)
@@ -134,14 +139,14 @@ namespace I_Robot
             {
                 for (int n = 0; n < 0x2000;)
                 {
-                    ROM[bank].ManagedBuffer[n++] = (byte)(Buffer16.ManagedBuffer[address] >> 8);
-                    ROM[bank].ManagedBuffer[n++] = (byte)(Buffer16.ManagedBuffer[address++] >> 0);
+                    ROM[bank][n++] = (byte)(Buffer16[address] >> 8);
+                    ROM[bank][n++] = (byte)(Buffer16[address++] >> 0);
                 }
             }
 
 #if true
             // now patch the self test so our emulation results passs
-            Array.Copy(Mathbox.SelfTestPatch, 0, Hardware.ProgROM.Bank_4000[4].ManagedBuffer, 0x5CAD - 0x4000, SelfTestPatch.Length);
+            Array.Copy(Mathbox.SelfTestPatch, 0, Hardware.ProgROM.Bank_4000[4], 0x5CAD - 0x4000, SelfTestPatch.Length);
 
             // adjust the value at the end of ROM bank 4 to account for the checksum change
             UInt16 checksum = 0;
