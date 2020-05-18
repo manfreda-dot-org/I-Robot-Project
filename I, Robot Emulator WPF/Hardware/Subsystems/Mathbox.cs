@@ -219,7 +219,7 @@ namespace I_Robot
                                 Pitch((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.MATRIX_MULTIPLY:
-                                MatrixMultiply((Int16*)&Memory[Memory[0x7B]], (Int16*)&Memory[Memory[0x7C]], (Int16*)&Memory[Memory[0x7D]]);
+                                MatrixMultiply((Matrix*)&Memory[Memory[0x7B]], (Matrix*)&Memory[Memory[0x7C]], (Matrix*)&Memory[Memory[0x7D]]);
                                 break;
                             default:
                                 // RasterizeObject(Memory[0]);
@@ -313,17 +313,17 @@ namespace I_Robot
         /// <param name="pA">pointer to first matrix</param>
         /// <param name="pB">pointer to second matrix</param>
         /// <param name="pC">pointer to result matrix</param>
-        void MatrixMultiply(Int16* pA, Int16* pB, Int16* pC)
+        void MatrixMultiply(Matrix* pA, Matrix* pB, Matrix* pC)
         {
-            pC[0] = (Int16)((pA[0] * pB[0] + pA[1] * pB[1] + pA[2] * pB[2]) >> 14);
-            pC[1] = (Int16)((pA[0] * pB[3] + pA[1] * pB[4] + pA[2] * pB[5]) >> 14);
-            pC[2] = (Int16)((pA[0] * pB[6] + pA[1] * pB[7] + pA[2] * pB[8]) >> 14);
-            pC[3] = (Int16)((pA[3] * pB[0] + pA[4] * pB[1] + pA[5] * pB[2]) >> 14);
-            pC[4] = (Int16)((pA[3] * pB[3] + pA[4] * pB[4] + pA[5] * pB[5]) >> 14);
-            pC[5] = (Int16)((pA[3] * pB[6] + pA[4] * pB[7] + pA[5] * pB[8]) >> 14);
-            pC[6] = (Int16)((pA[6] * pB[0] + pA[7] * pB[1] + pA[8] * pB[2]) >> 14);
-            pC[7] = (Int16)((pA[6] * pB[3] + pA[7] * pB[4] + pA[8] * pB[5]) >> 14);
-            pC[8] = (Int16)((pA[6] * pB[6] + pA[7] * pB[7] + pA[8] * pB[8]) >> 14);
+            pC->M11 = (Int16)((pA->M11 * pB->M11 + pA->M12 * pB->M12 + pA->M13 * pB->M13) >> 14);
+            pC->M12 = (Int16)((pA->M11 * pB->M21 + pA->M12 * pB->M22 + pA->M13 * pB->M23) >> 14);
+            pC->M13 = (Int16)((pA->M11 * pB->M31 + pA->M12 * pB->M32 + pA->M13 * pB->M33) >> 14);
+            pC->M21 = (Int16)((pA->M21 * pB->M11 + pA->M22 * pB->M12 + pA->M23 * pB->M13) >> 14);
+            pC->M22 = (Int16)((pA->M21 * pB->M21 + pA->M22 * pB->M22 + pA->M23 * pB->M23) >> 14);
+            pC->M23 = (Int16)((pA->M21 * pB->M31 + pA->M22 * pB->M32 + pA->M23 * pB->M33) >> 14);
+            pC->M31 = (Int16)((pA->M31 * pB->M11 + pA->M32 * pB->M12 + pA->M33 * pB->M13) >> 14);
+            pC->M32 = (Int16)((pA->M31 * pB->M21 + pA->M32 * pB->M22 + pA->M33 * pB->M23) >> 14);
+            pC->M33 = (Int16)((pA->M31 * pB->M31 + pA->M32 * pB->M32 + pA->M33 * pB->M33) >> 14);
         }
     }
 }
