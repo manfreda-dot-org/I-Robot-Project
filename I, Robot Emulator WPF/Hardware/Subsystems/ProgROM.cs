@@ -21,11 +21,17 @@ using System.Text;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the program ROMs on the I, Robot PCB
+    /// There are 40K of fixed ROM and 6 x 8k banks of ROM
+    /// </summary>
     [Serializable]
     unsafe public class ProgROM : Hardware.Subsystem
     {
+        public const int NUM_BANKS = 6;
+
         // there are 6 ROM banks from 4000 to 5FFF
-        public readonly PinnedBuffer<byte>[] Bank_4000 = new PinnedBuffer<byte>[6] {
+        public readonly PinnedBuffer<byte>[] Bank_4000 = new PinnedBuffer<byte>[NUM_BANKS] {
             new PinnedBuffer<byte>(0x2000),
             new PinnedBuffer<byte>(0x2000),
             new PinnedBuffer<byte>(0x2000),

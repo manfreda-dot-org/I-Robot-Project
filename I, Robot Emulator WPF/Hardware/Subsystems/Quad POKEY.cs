@@ -30,6 +30,10 @@ using Vortice.XAudio2;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Emulates the Quad-Pokey chip on the I, Robot PCB
+    /// Heavily based on Ron Fries POKEY Chip Emulator V2.3
+    /// </summary>
     [Serializable]
     unsafe public class Quad_POKEY : Hardware.Subsystem
     {

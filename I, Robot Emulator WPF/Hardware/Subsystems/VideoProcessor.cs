@@ -21,6 +21,9 @@ using System.Text;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the video processor circuit on the I, Robot PCB
+    /// </summary>
     [Serializable]
     unsafe public class VideoProcessor : Hardware.Subsystem
     {
@@ -53,6 +56,9 @@ namespace I_Robot
 
         }
 
+        /// <summary>
+        /// Hardware signal that tells the video processor to execute the display list in COMRAM
+        /// </summary>
         public bool EXT_START
         {
             set

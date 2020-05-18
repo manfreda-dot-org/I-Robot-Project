@@ -22,7 +22,7 @@ using System.Text;
 namespace I_Robot
 {
     /// <summary>
-    /// Represents standard RAM from addresses 0000 - 07FF
+    /// Represents the 2k of memory from address 0000 - 07FF
     /// </summary>
     [Serializable]
     unsafe public class RAM_0000 : Hardware.Subsystem

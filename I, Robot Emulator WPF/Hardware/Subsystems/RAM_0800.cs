@@ -21,10 +21,15 @@ using System.Text;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the 3 x 2k banks of memory from address 0800 - 0FFF
+    /// </summary>
     [Serializable]
     unsafe public class RAM_0800 : Hardware.Subsystem
     {
-        public readonly PinnedBuffer<byte>[] Bank = new PinnedBuffer<byte>[3] {
+        public const int NUM_BANKS = 3;
+
+        public readonly PinnedBuffer<byte>[] Bank = new PinnedBuffer<byte>[NUM_BANKS] {
             new PinnedBuffer<byte>(0x800),
             new PinnedBuffer<byte>(0x800),
             new PinnedBuffer<byte>(0x800) };
@@ -55,6 +60,9 @@ namespace I_Robot
             BankSelect = 0;
         }
 
+        /// <summary>
+        /// Gets/sets the currently selected bank number
+        /// </summary>
         public byte BankSelect
         {
             get { return mBankSelect; }

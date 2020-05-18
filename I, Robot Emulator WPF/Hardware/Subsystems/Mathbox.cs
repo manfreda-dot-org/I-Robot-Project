@@ -25,9 +25,22 @@ using System.Windows.Markup.Localizer;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the Mathbox hardware on the I, Robot PCB
+    /// 
+    /// The Mathbox is capable of performing the following operations
+    /// - Yaw a matrix by an angle
+    /// - Pitch a matrix by an angle
+    /// - Roll a matrix by an angle
+    /// - Perform a fast matrix multiply
+    /// - converts playfield data into a set of display list commands for the video processor
+    /// </summary>
     [Serializable]
     unsafe public class Mathbox : Hardware.Subsystem
     {
+        /// <summary>
+        /// enumeration of commands that are recognized by the Mathbox
+        /// </summary>
         public enum COMMAND : UInt16
         {
             START_PLAYFIELD = 0x8400,
@@ -38,6 +51,9 @@ namespace I_Robot
             MATRIX_MULTIPLY = 0xC000,
         }
 
+        /// <summary>
+        /// Represents a 3x3 matrix as used by the Mathbox
+        /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 2)]
         struct Matrix
         {
@@ -78,12 +94,28 @@ namespace I_Robot
             new PinnedBuffer<byte>(0x2000),
             new PinnedBuffer<byte>(0x2000) };
 
+        /// <summary>
+        /// A full 32k x 16 bits of Mathbox memory
+        /// Lower 8k x 16 bits of memory are RAM
+        /// remaining memory is from mathbox ROMs
+        /// </summary>
         readonly PinnedBuffer<UInt16> Memory16 = new PinnedBuffer<UInt16>(0x8000);
-        public byte* pData => (byte*)(UInt16*)Memory16;
-        UInt16* Memory => Memory16;
+
+        /// <summary>
+        /// Byte pointer to mathbox memory
+        /// </summary>
+        readonly byte* pData;
+
+        /// <summary>
+        /// Word pointer to mathbox memory
+        /// </summary>
+        readonly UInt16* Memory;
 
         bool mMATH_START = false;
 
+        /// <summary>
+        /// Hardware signal that indicates when the mathbox is done
+        /// </summary>
         public bool MB_DONE { get; private set; } = true;
 
         // keep delegates around to prevent them from being garbage collected
@@ -92,6 +124,10 @@ namespace I_Robot
 
         public Mathbox(Hardware hardware) : base(hardware, "Mathbox")
         {
+            Memory = Memory16;
+            pData = (byte*)Memory;
+
+
             //  Mathbox     CPU           hi                lo
             //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
             //  3000-3FFF   1:2000-3FFF   136029-104[1000]  136029-103[1000]
@@ -100,13 +136,12 @@ namespace I_Robot
             //  6000-6FFF   4:2000-3FFF   136029-102[2000]  136029-101[2000]
             //  7000-7FFF   5:2000-3FFF   136029-102[3000]  136029-101[3000]
 
-            // create x86 accessable bank (low endian)
-
             ROM? r101 = hardware.Roms["136029-101"];
             ROM? r102 = hardware.Roms["136029-102"];
             ROM? r103 = hardware.Roms["136029-103"];
             ROM? r104 = hardware.Roms["136029-104"];
 
+            // create x86 accessable bank (low endian)
             UInt16 address;
             if (r103 != null)
             {
@@ -185,8 +220,13 @@ namespace I_Robot
         public override void Reset()
         {
             MB_DONE = true;
+            
+            // NOTE: 6809 I/O is not handled here, it is handled by Bank_2000 subsystem
         }
 
+        /// <summary>
+        /// Hardware signal that kicks off mathbox execution
+        /// </summary>
         public bool MATH_START
         {
             get => mMATH_START;

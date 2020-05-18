@@ -22,10 +22,15 @@ using System.Windows.Media;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the 64 x 9-bit color palette on the I, Robot video PCB
+    /// </summary>
     [Serializable]
     unsafe public class Palette : Hardware.Subsystem
     {
-        public readonly Color[] Color = new Color[64];
+        public const int NUM_COLORS = 64;
+
+        public readonly Color[] Color = new Color[NUM_COLORS];
         readonly M6809E.WriteDelegate Write18xx;
 
         public Palette(Hardware hardware) : base(hardware, "Palette")

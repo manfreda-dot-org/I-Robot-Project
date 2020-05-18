@@ -20,9 +20,15 @@ using System.Runtime.Serialization;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the bank switch hardware for addresses 2000 - 3FFF on the I, Robot PCB
+    /// </summary>
     [Serializable]
     unsafe public class Bank_2000 : Hardware.Subsystem
     {
+        /// <summary>
+        /// Enumeration of the possible banks of memory that can be switched in from 2000 - 3FFF
+        /// </summary>
         public enum BANK : byte
         {
             MB_ROM_0 = 0,
@@ -36,6 +42,9 @@ namespace I_Robot
             COMRAM_1,
         }
 
+        /// <summary>
+        /// Gets the currently selected bank of memory
+        /// </summary>
         public BANK BankSelect { get; private set; }
 
         public Bank_2000(Hardware hardware) : base(hardware, "Bank 2000 - 3FFF")
@@ -80,6 +89,9 @@ namespace I_Robot
             }
         }
 
+        /// <summary>
+        /// Performs a bank switch, according to latest values in OUT0 and STATWR
+        /// </summary>
         public void BankSwitch()
         {
             BANK bank = CurrentBank;

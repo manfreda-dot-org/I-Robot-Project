@@ -24,8 +24,8 @@ using System.Windows.Media;
 namespace I_Robot
 {
     /// <summary>
-    /// Simulates the 32x32 alphanumerics video overlay
-    /// 1K of ram is emulated, but only the first 29 lines are visible
+    /// Simulates the 32x32 alphanumerics video overlay on the I, Robot PCB
+    /// A full 1K of ram is emulated, however only the first 29 lines are visible on the screen
     /// </summary>
     [Serializable]
     unsafe public class Alphanumerics : Hardware.Subsystem
@@ -41,6 +41,7 @@ namespace I_Robot
         public const int VISIBLE_ROWS = 29;
 
         /// <summary>
+        /// Holds the raw bitmaps for the character set
         /// Character set: 64 characters, 8x8 pixels
         /// </summary>
         public readonly byte[][] CharacterSet = new byte[NUM_CHARS][];
@@ -53,14 +54,10 @@ namespace I_Robot
         /// <summary>
         /// 1K of character RAM
         /// </summary>
-        public readonly PinnedBuffer<byte> RAM;
+        public readonly PinnedBuffer<byte> RAM = new PinnedBuffer<byte>(0x400);
 
-        bool mALPHA_MAP = false;
-
-        private Alphanumerics(Hardware hardware, PinnedBuffer<byte> ram) : base(hardware, "Alphanumerics")
+        public Alphanumerics(Hardware hardware) : base(hardware, "Alphanumerics")
         {
-            RAM = ram;
-
             // load the character ROM
             ROM? rom124 = Hardware.Roms["136029-124"];
             if (rom124 != null)
@@ -105,10 +102,6 @@ namespace I_Robot
             }
         }
 
-        public Alphanumerics(Hardware hardware) : this(hardware, new PinnedBuffer<byte>(0x400))
-        {
-        }
-
         public override void Dispose()
         {
         }
@@ -127,7 +120,7 @@ namespace I_Robot
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("ALPHA_MAP", mALPHA_MAP);
+            info.AddValue("ALPHA_MAP", ALPHA_MAP);
             info.AddValue("ALPHA_RAM", RAM);
         }
 

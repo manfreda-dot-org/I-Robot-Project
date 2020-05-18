@@ -22,23 +22,32 @@ using System.Text;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the ADC chip on the I, Robot PCB
+    /// This chip is responsible performing ADC conversions on the hall effect joystick
+    /// </summary>
     [Serializable]
     unsafe public class ADC : Hardware.Subsystem
     {
         readonly M6809E.ReadDelegate Read13xx;
         readonly M6809E.WriteDelegate Write1Bxx;
 
+        /// <summary>
+        /// Current ADC result from last conversion
+        /// </summary>
         byte ADC_RESULT = 0x80;
 
         public ADC(Hardware hardware) : base(hardware, "ADC")
         {
             Read13xx = new M6809E.ReadDelegate((UInt16 address) =>
                 {
+                    // return the last ADC result
                     return ADC_RESULT;
                 });
 
             Write1Bxx = new M6809E.WriteDelegate((UInt16 address, byte data) =>
                 {
+                    // writes to this range kickff ADC conversions of joystick values
                     if ((address & 0x1) == 0)
                         ADC_RESULT = Joystick.ADC_Y;
                     else

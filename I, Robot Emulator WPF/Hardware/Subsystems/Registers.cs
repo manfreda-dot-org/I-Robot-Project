@@ -29,40 +29,54 @@ namespace I_Robot
     unsafe public class Registers : Hardware.Subsystem
     {
         #region STRUCTURES
+        
+        /// <summary>
+        /// Reprsents the special function register at address 1000
+        /// </summary>
         public struct REGISTER_1000
         {
             public byte Value;
             public REGISTER_1000(byte value) { Value = value; }
 
-            // active low
+            /// <summary>
+            /// Right coin input signal, active low
+            /// </summary>
             public bool COIN_R
             {
                 get { return (Value & 0x80) == 0; }
                 set { if (!value) Value |= 0x80; else Value &= 0x7F; }
             }
 
-            // active low
+            /// <summary>
+            /// Left coin input signal, active low
+            /// </summary>
             public bool COIN_L
             {
                 get { return (Value & 0x40) == 0; }
                 set { if (!value) Value |= 0x40; else Value &= 0xBF; }
             }
 
-            // active low
+            /// <summary>
+            /// Auxiliary coin input signal, active low
+            /// </summary>
             public bool COIN_AUX
             {
                 get { return (Value & 0x20) == 0; }
                 set { if (!value) Value |= 0x20; else Value &= 0xDF; }
             }
 
-            // active low
+            /// <summary>
+            /// Test switch input signal, active low
+            /// </summary>
             public bool TEST
             {
                 get { return (Value & 0x10) == 0; }
                 set { if (!value) Value |= 0x10; else Value &= 0xEF; }
             }
 
-            // active low
+            /// <summary>
+            /// Coin tamper input signal, active low
+            /// </summary>
             public bool COIN_TAMPER
             {
                 get { return (Value & 0x08) == 0; }
@@ -74,26 +88,35 @@ namespace I_Robot
             public override string ToString() { return Value.HexString(); }
         }
 
+        /// <summary>
+        /// Reprsents the special function register at address 1040
+        /// </summary>
         public struct REGISTER_1040
         {
             public byte Value;
             public REGISTER_1040(byte value) { Value = value; }
 
-            // active low
+            /// <summary>
+            /// Player 1 start button signal, active low
+            /// </summary>
             public bool START_1
             {
                 get { return (Value & 0x80) == 0; }
                 set { if (!value) Value |= 0x80; else Value &= 0x7F; }
             }
 
-            // active low
+            /// <summary>
+            /// Player 2 start button signal, active low
+            /// </summary>
             public bool START_2
             {
                 get { return (Value & 0x40) == 0; }
                 set { if (!value) Value |= 0x40; else Value &= 0xBF; }
             }
 
-            // active low
+            /// <summary>
+            /// Fire button signal, active low
+            /// </summary>
             public bool FIRE
             {
                 get { return (Value & 0x10) == 0; }
@@ -106,25 +129,35 @@ namespace I_Robot
 
         }
 
+        /// <summary>
+        /// Reprsents the special function register at address 1080
+        /// </summary>
         public struct REGISTER_1080
         {
             public byte Value;
             public REGISTER_1080(byte value) { Value = value; }
 
+            /// <summary>
+            /// VBLANK hardware signal
+            /// </summary>
             public bool VBLANK
             {
                 get { return (Value & 0x80) != 0; }
                 set { if (value) Value |= 0x80; else Value &= 0x7F; }
             }
 
-            // active low
+            /// <summary>
+            /// Video processor done hardware signal, active low
+            /// </summary>
             public bool EXT_DONE
             {
                 get { return (Value & 0x40) == 0; }
                 set { if (!value) Value |= 0x40; else Value &= 0xBF; }
             }
 
-            // active high
+            /// <summary>
+            /// Mathbox done hardware signal, active high
+            /// </summary>
             public bool MB_DONE
             {
                 get { return (Value & 0x20) != 0; }
@@ -137,36 +170,91 @@ namespace I_Robot
 
         }
 
+        /// <summary>
+        /// Reprsents the special function register at address 1140
+        /// </summary>
         public struct REGISER_1140
         {
             public byte Value;
             public REGISER_1140(byte value) { Value = value; }
 
+            /// <summary>
+            /// signal that selects the bank of COMRAM to use
+            /// </summary>
             public bool EXT_COM_SWAP { get { return (Value & 0x80) != 0; } }
+
+            /// <summary>
+            /// Signal used to indicate a recall operation on NVRAM
+            /// </summary>
             public bool RECALL { get { return (Value & 0x40) != 0; } }
+
+            /// <summary>
+            /// Cocktail flip signal, not used by program
+            /// </summary>
             public bool COCKTAIL { get { return (Value & 0x20) != 0; } }
+
+            /// <summary>
+            /// Signal used to start the mathbox hardware
+            /// </summary>
             public bool MATH_START { get { return (Value & 0x10) != 0; } }
+            
+            
             public bool ADDCON { get { return (Value & 0x08) != 0; } }
+
+            /// <summary>
+            /// Signal used to start the video processor
+            /// </summary>
             public bool EXT_START { get { return (Value & 0x04) != 0; } }
+
+
             public bool COM_RAM_SEL { get { return (Value & 0x02) != 0; } }
+
+            /// <summary>
+            /// Signal that indicates whether the video RAM should be erased 
+            /// </summary>
             public bool ERASE { get { return (Value & 0x01) != 0; } }
 
             public static implicit operator byte(REGISER_1140 r) => r.Value;
             public static implicit operator REGISER_1140(byte b) => new REGISER_1140(b);
             public override string ToString() { return Value.HexString(); }
-
         }
 
+        /// <summary>
+        /// Reprsents the special function register at address 1180
+        /// </summary>
         public struct REGISTER_1180
         {
             public byte Value;
             public REGISTER_1180(byte value) { Value = value; }
 
+            /// <summary>
+            /// Signal that toggles between the two alphanumerics color palettes
+            /// </summary>
             public bool ALPHA_MAP { get { return (Value & 0x80) != 0; } }
+
+            /// <summary>
+            /// Signal that selects a bank of ram at 0800 - 0FFF
+            /// </summary>
             public byte RAM_800_BANK { get { return (byte)((Value >> 5) & 3); } }
+
+            /// <summary>
+            /// OUT4 signal, used to select memory bank at 2000 - 3FFF
+            /// </summary>
             public bool OUT4 { get { return (Value & 0x10) != 0; } }
+
+            /// <summary>
+            /// OUT3 signal, used to select memory bank at 2000 - 3FFF
+            /// </summary>
             public bool OUT3 { get { return (Value & 0x08) != 0; } }
+
+            /// <summary>
+            /// MPAGE2 signal, used to select memory bank at 2000 - 3FFF
+            /// </summary>
             public bool MPAGE2 { get { return (Value & 0x04) != 0; } }
+
+            /// <summary>
+            /// MPAGE1 signal, used to select memory bank at 2000 - 3FFF
+            /// </summary>
             public bool MPAGE1 { get { return (Value & 0x02) != 0; } }
 
             public static implicit operator byte(REGISTER_1180 r) => r.Value;
@@ -175,15 +263,37 @@ namespace I_Robot
 
         }
 
+        /// <summary>
+        /// Reprsents the special function register at address 11C0
+        /// </summary>
         public struct REGISTER_11C0
         {
             public byte Value;
             public REGISTER_11C0(byte value) { Value = value; }
 
+            /// <summary>
+            /// Hardware signal to toggle the left coin counter mechanism
+            /// </summary>
             public bool LEFT_COIN_COUNTER { get { return (Value & 0x80) != 0; } }
+
+            /// <summary>
+            /// Hardware signal to toggle the right coin counter mechanism
+            /// </summary>
             public bool RIGHT_COIN_COUNTER { get { return (Value & 0x40) != 0; } }
+
+            /// <summary>
+            /// Hardware signal to enable the LED on the START 1 button
+            /// </summary>
             public bool LED2 { get { return (Value & 0x20) != 0; } }
+
+            /// <summary>
+            /// Hardware signal to enable the LED on the START 2 button
+            /// </summary>
             public bool LED1 { get { return (Value & 0x10) != 0; } }
+
+            /// <summary>
+            /// Hardware signal to select a bank of program ROM at 4000 - 5FFF
+            /// </summary>
             public byte ROM_4000_BANK { get { return (byte)((Value >> 1) & 7); } }
 
             public static implicit operator byte(REGISTER_11C0 r) => r.Value;
@@ -198,6 +308,11 @@ namespace I_Robot
         readonly M6809E.WriteDelegate Write1Axx;
 
         UInt64 Watchdog = 0;
+
+        /// <summary>
+        /// Gets the current value in the Watchdog counter
+        /// Represents the number of CPU clock cycles since the watchdog was last petted
+        /// </summary>
         public UInt64 WatchdogCounter => Hardware.M6809E.Clock - Watchdog;
 
         REGISER_1140 mSTATWR = 0x00;
@@ -263,6 +378,9 @@ namespace I_Robot
             OUT1 = 0x00;
         }
 
+        /// <summary>
+        /// Register reads coin inputs and test switch
+        /// </summary>
         public REGISTER_1000 INRD1
         {
             get
@@ -276,6 +394,9 @@ namespace I_Robot
             }
         }
 
+        /// <summary>
+        /// Register reads start buttons and fire button
+        /// </summary>
         public REGISTER_1040 INRD2
         {
             get
@@ -288,6 +409,9 @@ namespace I_Robot
             }
         }
 
+        /// <summary>
+        /// Register reads the status of VBLANK, the mathbox, and the video processor
+        /// </summary>
         public REGISTER_1080 STATRD
         {
             get
@@ -300,11 +424,29 @@ namespace I_Robot
             }
         }
 
+        /// <summary>
+        /// Reads the value of DIP SWITCH 3J
+        /// </summary>
         public byte DIP_SWITCH_3J { get => Settings.DipSwitch3J; }
+
+        /// <summary>
+        /// Writes to this register reset the IRQ line
+        /// </summary>
         public byte CLEAR_IRQ { set { Hardware.M6809E.IRQ = false; } }
+
+        /// <summary>
+        /// Writes to this register reset the hardware watchdog
+        /// </summary>
         public byte CLEAR_WATCHDOG { set { Watchdog = Hardware.M6809E.Clock; } }
+
+        /// <summary>
+        /// Writes to this register reset the FIRQ line
+        /// </summary>
         public byte CLEAR_FIRQ { set { Hardware.M6809E.FIRQ = false; } }
 
+        /// <summary>
+        /// Writes to this register control bank switching at 2000 - 3FFF, mathbox start, and video processor start
+        /// </summary>
         public REGISER_1140 STATWR
         {
             get => mSTATWR;
@@ -318,6 +460,9 @@ namespace I_Robot
             }
         }
 
+        /// <summary>
+        /// Writes to this register control alphanumerics palette, RAM 0800 - 0FFF bank select, and bank select at 2000 - 3FFF
+        /// </summary>
         public REGISTER_1180 OUT0
         {
             get => mOUT0;
@@ -333,12 +478,19 @@ namespace I_Robot
             }
         }
 
+        /// <summary>
+        /// Writes to this register control the coin counters, 2 LEDs, and the bank select at 4000 - 5FFF
+        /// </summary>
         public REGISTER_11C0 OUT1
         {
             get => mOUT1;
             set
             {
                 mOUT1 = value;
+                // value.LEFT_COIN_COUNTER;
+                // value.RIGHT_COIN_COUNTER;
+                // value.LED1;
+                // value.LED2;
                 Hardware.ProgROM.BankSelect = value.ROM_4000_BANK;
             }
         }

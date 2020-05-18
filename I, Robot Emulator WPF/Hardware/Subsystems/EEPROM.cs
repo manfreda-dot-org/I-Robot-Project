@@ -21,6 +21,10 @@ using System.Text;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// Represents the 256 nibbles of non-volatile storage on the I, Robot PCB
+    /// The class persists the non-volatile data in the user properties file
+    /// </summary>
     [Serializable]
     public class EEPROM : Hardware.Subsystem
     {
