@@ -29,6 +29,8 @@ namespace I_Robot
     public class LEDs : Hardware.Subsystem
     {
         static byte[] keys = new byte[256];
+        static bool? mLED1 = null;
+        static bool? mLED2 = null;
 
         [DllImport("user32.dll", SetLastError = true)] static extern bool GetKeyboardState(byte[] lpKeyState);
         [DllImport("user32.dll")] static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
@@ -36,7 +38,7 @@ namespace I_Robot
         const int KEYEVENTF_EXTENDEDKEY = 0x1;
         const int KEYEVENTF_KEYUP = 0x2;
 
-        public LEDs(Hardware hardware) : base (hardware, "LEDs")
+        public LEDs(Hardware hardware) : base(hardware, "LEDs")
         {
             GetKeyboardState(keys);
         }
@@ -63,14 +65,28 @@ namespace I_Robot
 
         public bool LED1
         {
-            get => ((keys[(byte)VK.NUMLOCK] & 1) != 0);
-            set => Set(VK.NUMLOCK, value);
+            get => mLED1 ?? false;
+            set
+            {
+                if (mLED1 != value)
+                {
+                    mLED1 = value;
+                    Set(VK.NUMLOCK, value);
+                }
+            }
         }
 
         public bool LED2
         {
-            get => ((keys[(byte)VK.SCROLL] & 1) != 0);
-            set => Set(VK.SCROLL, value);
+            get => mLED2 ?? false;
+            set
+            {
+                if (mLED2 != value)
+                {
+                    mLED2 = value;
+                    Set(VK.SCROLL, value);
+                }
+            }
         }
 
         public override void Dispose()
