@@ -44,7 +44,6 @@ namespace I_Robot
             {
                 // create hardware that uses the ROMs
                 Hardware = new Hardware(Roms);
-                AlphanumericsOverlay.Hardware = Hardware;
 
                 // start our timer
                 DispatcherTimer timer = new DispatcherTimer();
@@ -70,42 +69,6 @@ namespace I_Robot
             LeftCoinCounter.Text = $"Left coin counter: {String.Format("{0:n0}", Settings.LeftCoinCounter)}";
             RightCoinCounter.Text = $"Right coin counter: {String.Format("{0:n0}", Settings.RightCoinCounter)}";
         }
-
-        protected override void OnKeyDown(KeyEventArgs e)
-        {
-            if (e.Key == Key.Tab)
-                Settings.TestSwitch = !Settings.TestSwitch;
-            if (e.Key == Key.F3)
-                Hardware?.Reset(Hardware.RESET_TYPE.USER);
-            if (e.Key == Key.F7)
-            {
-                if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
-                {
-                    // save state
-                    using (FileStream stream = new FileStream("irobot.sav", FileMode.Create))
-                    {
-                        IFormatter formatter = new BinaryFormatter();
-                        formatter.Serialize(stream, Hardware);
-                        stream.Close();
-                    }
-                }
-                else
-                {
-                    // load state
-                    using (FileStream stream = new FileStream("irobot.sav", FileMode.Open))
-                    {
-                        //                        IFormatter formatter = new BinaryFormatter();
-                        //                        Hardware = (Hardware)formatter.Deserialize(stream);
-                        //                        stream.Close();
-                    }
-                }
-            }
-            if (e.Key == Key.System && e.SystemKey == Key.F10)
-                Settings.SpeedThrottle = !Settings.SpeedThrottle;
-
-            base.OnKeyDown(e);
-        }
-
 
         private void MenuItem_GameSettingsOpened(object sender, RoutedEventArgs e)
         {

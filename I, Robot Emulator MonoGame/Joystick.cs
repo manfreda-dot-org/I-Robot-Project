@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -28,16 +29,16 @@ namespace I_Robot
 
         class KeyboardJoystick
         {
-            Axis X = new Axis(Key.Left, Key.Right);
-            Axis Y = new Axis(Key.Down, Key.Up);
+            Axis X = new Axis(Keys.Left, Keys.Right);
+            Axis Y = new Axis(Keys.Down, Keys.Up);
 
             class Axis
             {
-                readonly Key Positive;
-                readonly Key Negative;
+                readonly Keys Positive;
+                readonly Keys Negative;
                 double Delta = 0;
 
-                public Axis(Key positive, Key negative)
+                public Axis(Keys positive, Keys negative)
                 {
                     Positive = positive;
                     Negative = negative;
@@ -45,12 +46,12 @@ namespace I_Robot
 
                 int GetKeyboardDirection()
                 {
-                    if (Keyboard.IsKeyDown(Positive))
+                    if (Keyboard.IsPressed(Positive))
                     {
-                        if (!Keyboard.IsKeyDown(Negative))
+                        if (!Keyboard.IsPressed(Negative))
                             return 1;
                     }
-                    else if (Keyboard.IsKeyDown(Negative))
+                    else if (Keyboard.IsPressed(Negative))
                         return -1;
                     return 0;
                 }

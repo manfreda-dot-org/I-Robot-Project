@@ -14,20 +14,33 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
-using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
-using System.Windows;
+using Microsoft.Xna.Framework.Input;
 
 namespace I_Robot
 {
     /// <summary>
-    /// Interaction logic for App.xaml
+    /// Keyboard handling for emulator
     /// </summary>
-    public partial class App : Application
+    static class Keyboard
     {
+        static KeyboardState currentKeyState;
+        static KeyboardState previousKeyState;
+
+        public static KeyboardState GetState()
+        {
+            previousKeyState = currentKeyState;
+            currentKeyState = Microsoft.Xna.Framework.Input.Keyboard.GetState();
+            return currentKeyState;
+        }
+
+        public static bool IsPressed(Keys key)
+        {
+            return currentKeyState.IsKeyDown(key);
+        }
+
+        public static bool HasBeenPressed(Keys key)
+        {
+            return currentKeyState.IsKeyDown(key) && !previousKeyState.IsKeyDown(key);
+        }
     }
 }

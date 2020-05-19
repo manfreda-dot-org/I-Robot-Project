@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
@@ -386,9 +387,9 @@ namespace I_Robot
             get
             {
                 REGISTER_1000 reg = 0xFF;
-                reg.COIN_L = Keyboard.IsKeyDown(Key.D5);
-                reg.COIN_R = Keyboard.IsKeyDown(Key.D6);
-                reg.COIN_AUX = Keyboard.IsKeyDown(Key.D7);
+                reg.COIN_L = Keyboard.IsPressed(Keys.D5);
+                reg.COIN_R = Keyboard.IsPressed(Keys.D6);
+                reg.COIN_AUX = Keyboard.IsPressed(Keys.D7);
                 reg.TEST = Settings.TestSwitch;
                 return reg;
             }
@@ -402,9 +403,9 @@ namespace I_Robot
             get
             {
                 REGISTER_1040 reg = 0xFF;
-                reg.START_1 = Keyboard.IsKeyDown(Key.D1);
-                reg.START_2 = Keyboard.IsKeyDown(Key.D2);
-                reg.FIRE = Keyboard.IsKeyDown(Key.LeftCtrl);
+                reg.START_1 = Keyboard.IsPressed(Keys.D1);
+                reg.START_2 = Keyboard.IsPressed(Keys.D2);
+                reg.FIRE = Keyboard.IsPressed(Keys.LeftControl);
                 return reg;
             }
         }

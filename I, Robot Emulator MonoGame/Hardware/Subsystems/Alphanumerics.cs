@@ -14,12 +14,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
-using System.Windows.Media;
 
 namespace I_Robot
 {
@@ -49,7 +49,12 @@ namespace I_Robot
         /// <summary>
         /// Holds the Alphanumerics color ROM palette table
         /// </summary>
-        public readonly Color[][] PaletteTable = new Color[NUM_PALETTES][];
+        readonly Color[][] PaletteTable = new Color[NUM_PALETTES][];
+        
+        /// <summary>
+        /// Currently selected color palette
+        /// </summary>
+        public Color[] Palette => PaletteTable[ALPHA_MAP ? 1 : 0];
 
         /// <summary>
         /// 1K of character RAM
@@ -82,7 +87,7 @@ namespace I_Robot
             {
                 for (int p = 0; p < NUM_PALETTES; p++)
                 {
-                    PaletteTable[p] = new Color[NUM_COLORS];
+                    PaletteTable[p] = new Microsoft.Xna.Framework.Color[NUM_COLORS];
                     for (int color = 0; color < NUM_COLORS; color++)
                     {
                         byte rrggbbii = rom125[p * 16 + color + 4];
@@ -96,7 +101,7 @@ namespace I_Robot
                         g = Math.Min(255 * g * i / 12, 255);
                         b = Math.Min(255 * b * i / 12, 255);
 
-                        PaletteTable[p][color] = System.Windows.Media.Color.FromRgb((byte)r, (byte)g, (byte)b);
+                        PaletteTable[p][color] = new Microsoft.Xna.Framework.Color(r, g, b);
                     }
                 }
             }

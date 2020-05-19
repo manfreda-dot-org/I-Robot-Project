@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
@@ -55,6 +56,8 @@ namespace I_Robot
         // scan lines 240 - 255.
 
         ////////////////////////////////////////////////////////////////////////////////
+
+        public static readonly Size NATIVE_RESOLUTION = new Size(Alphanumerics.COLUMNS * Alphanumerics.CHAR_WIDTH, Alphanumerics.VISIBLE_ROWS * Alphanumerics.CHAR_HEIGHT);
 
         // Video clocks 320 x 256 pixels per frame, at 5 MHz
         public const double DOT_CLOCK = 5000000;

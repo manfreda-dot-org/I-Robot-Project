@@ -62,8 +62,5 @@
                 <MenuItem x:Name="Menu_FreePlay" Header="Free play" IsCheckable="True" Click="Menu_FreePlay_Click" />
             </MenuItem>
         </Menu>
-        <Grid>
-            <local:AlphanumericsOverlay x:Name="AlphanumericsOverlay" OpacityMask="Black" />
-        </Grid>
     </DockPanel>
 </Window>
