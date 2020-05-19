@@ -212,7 +212,7 @@ namespace I_Robot
             /// <summary>
             /// Signal that indicates whether the video RAM should be erased 
             /// </summary>
-            public bool ERASE { get { return (Value & 0x01) != 0; } }
+            public bool ERASE { get { return (Value & 0x01) == 0; } }
 
             public static implicit operator byte(REGISER_1140 r) => r.Value;
             public static implicit operator REGISER_1140(byte b) => new REGISER_1140(b);
@@ -272,14 +272,14 @@ namespace I_Robot
             public REGISTER_11C0(byte value) { Value = value; }
 
             /// <summary>
-            /// Hardware signal to toggle the left coin counter mechanism
-            /// </summary>
-            public bool LEFT_COIN_COUNTER { get { return (Value & 0x80) != 0; } }
-
-            /// <summary>
             /// Hardware signal to toggle the right coin counter mechanism
             /// </summary>
-            public bool RIGHT_COIN_COUNTER { get { return (Value & 0x40) != 0; } }
+            public bool RIGHT_COIN_COUNTER { get { return (Value & 0x80) != 0; } }
+
+            /// <summary>
+            /// Hardware signal to toggle the left coin counter mechanism
+            /// </summary>
+            public bool LEFT_COIN_COUNTER { get { return (Value & 0x40) != 0; } }
 
             /// <summary>
             /// Hardware signal to enable the LED on the START 1 button
@@ -487,8 +487,9 @@ namespace I_Robot
             set
             {
                 mOUT1 = value;
-                // value.LEFT_COIN_COUNTER;
-                // value.RIGHT_COIN_COUNTER;
+
+                Hardware.CoinCounters.LEFT_COIN_COUNTER = value.LEFT_COIN_COUNTER;
+                Hardware.CoinCounters.RIGHT_COIN_COUNTER = value.RIGHT_COIN_COUNTER;
                 Hardware.LEDs.LED1 = value.LED1;
                 Hardware.LEDs.LED2 = value.LED2;
                 Hardware.ProgROM.BankSelect = value.ROM_4000_BANK;

@@ -199,5 +199,17 @@ namespace I_Robot
             get { return (DipSwitch5E & 0x80) == 0; }
             set { DipSwitch5E = WriteFlag(!value, DipSwitch5E, 0x80); }
         }
+
+        static public uint LeftCoinCounter
+        {
+            get => Properties.Settings.Default.LeftCoinCounter;
+            set => Properties.Settings.Default.LeftCoinCounter = value;
+        }
+
+        static public uint RightCoinCounter
+        {
+            get => Properties.Settings.Default.RightCoinCounter;
+            set => Properties.Settings.Default.RightCoinCounter = value;
+        }
     }
 }

@@ -154,5 +154,29 @@ namespace I_Robot.Properties {
                 this["EEPROM"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public uint LeftCoinCounter {
+            get {
+                return ((uint)(this["LeftCoinCounter"]));
+            }
+            set {
+                this["LeftCoinCounter"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("0")]
+        public uint RightCoinCounter {
+            get {
+                return ((uint)(this["RightCoinCounter"]));
+            }
+            set {
+                this["RightCoinCounter"] = value;
+            }
+        }
     }
 }

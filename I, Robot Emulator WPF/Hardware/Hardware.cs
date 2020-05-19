@@ -175,6 +175,9 @@ namespace I_Robot
             }
         }
 
+        public readonly LEDs LEDs;
+        public readonly CoinCounters CoinCounters;
+
         public readonly M6809E M6809E = new M6809E();
 
         public readonly RAM_0000 RAM_0000;
@@ -185,7 +188,6 @@ namespace I_Robot
 
         public readonly ADC ADC;
         public readonly Alphanumerics Alphanumerics;
-        public readonly LEDs LEDs;
         public readonly Mathbox Mathbox;
         public readonly Palette Palette;
         public readonly Quad_POKEY Quad_POKEY;
@@ -263,13 +265,15 @@ namespace I_Robot
         {
             Roms = roms;
 
+            CoinCounters = new CoinCounters(this);
+            LEDs = new LEDs(this);
+
             Quad_POKEY = new Quad_POKEY(this);
 
             ProgROM = new ProgROM(this);
 
             ADC = new ADC(this);
             Alphanumerics = new Alphanumerics(this);
-            LEDs = new LEDs(this);
             Mathbox = new Mathbox(this);
             Palette = new Palette(this);
             Registers = new Registers(this);
