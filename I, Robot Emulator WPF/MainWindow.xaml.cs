@@ -37,8 +37,7 @@ namespace I_Robot
         public MainWindow()
         {
             InitializeComponent();
-
-            FPS.Text = "";
+            Style = (Style)FindResource(typeof(Window));
 
             // read the ROMs
             if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out Roms, out string errMessage) && Roms != null)
@@ -67,10 +66,9 @@ namespace I_Robot
 
         void timer_Tick(object? sender, EventArgs e)
         {
-            if (Settings.ShowFPS)
-                FPS.Text = Hardware?.FPS.ToString("0.0 FPS") ?? "";
-            else
-                FPS.Text = "";
+            FPS.Text = Hardware?.FPS.ToString("FPS: 0.0") ?? "";
+            LeftCoinCounter.Text = $"Left coin counter: {Settings.LeftCoinCounter}";
+            RightCoinCounter.Text = $"Right coin counter: {Settings.RightCoinCounter}";
         }
 
         protected override void OnKeyDown(KeyEventArgs e)
@@ -235,9 +233,6 @@ namespace I_Robot
             Menu_ShowPolygons.IsEnabled = !Settings.Wireframe;
 
             Menu_WireframeMode.IsChecked = Settings.Wireframe;
-
-            Menu_ShowFPS.IsChecked = Settings.ShowFPS;
-
         }
 
         private void Menu_SpeedThrottle_Click(object sender, RoutedEventArgs e)
@@ -268,11 +263,6 @@ namespace I_Robot
         private void Menu_WireframeMode_Click(object sender, RoutedEventArgs e)
         {
             Settings.Wireframe = !Settings.Wireframe;
-        }
-
-        private void Menu_ShowFPS_Click(object sender, RoutedEventArgs e)
-        {
-            Settings.ShowFPS = !Settings.ShowFPS;
         }
     }
 }

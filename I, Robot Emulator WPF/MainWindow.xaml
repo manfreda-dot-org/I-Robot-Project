@@ -5,13 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:I_Robot"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800" Background="#FF9A9A9A" WindowStyle="SingleBorderWindow" FontSize="18">
+        Title="I, Emulator" Height="512" Width="800" Background="#FF9A9A9A" WindowStyle="ThreeDBorderWindow" FontWeight="Normal" WindowStartupLocation="CenterScreen" WindowState="Normal">
     <DockPanel>
-        <Menu DockPanel.Dock="Top" FontSize="18">
+        <StatusBar DockPanel.Dock="Bottom">
+            <TextBlock x:Name="FPS" Padding="10,0,0,0" Width="150">FPS:</TextBlock>
+            <TextBlock x:Name="LeftCoinCounter" Padding="30,0,0,0">Left coin counter:</TextBlock>
+            <TextBlock x:Name="RightCoinCounter" Padding="30,0,0,0">Right coin counter:</TextBlock>
+        </StatusBar>
+        <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
                 <MenuItem x:Name="Menu_Exit" Header="E_xit" Click="Menu_Exit_Click"/>
             </MenuItem>
             <MenuItem x:Name="Menu_EmulationSettings" Header="Emulation" SubmenuOpened="Menu_EmulationSettings_SubmenuOpened">
+                <MenuItem x:Name="Menu_SoundEnabled" Header="Sound enabled" Click="Menu_SoundEnabled_Click" />
+                <Separator />
                 <MenuItem Header="Rendering">
                     <MenuItem x:Name="Menu_ShowDots" Header="Show dots" IsCheckable="True" Click="Menu_ShowDots_Click"/>
                     <MenuItem x:Name="Menu_ShowVectors" Header="Show vectors" IsCheckable="True" Click="Menu_ShowVectors_Click" />
@@ -20,10 +27,7 @@
                     <MenuItem x:Name="Menu_WireframeMode" Header="Wireframe mode" IsCheckable="True" Click="Menu_WireframeMode_Click" />
                 </MenuItem>
                 <Separator />
-                <MenuItem x:Name="Menu_SoundEnabled" Header="Sound enabled" Click="Menu_SoundEnabled_Click" />
-                <Separator />
                 <MenuItem x:Name="Menu_SpeedThrottle" Header="Speed throttle" Click="Menu_SpeedThrottle_Click" />
-                <MenuItem x:Name="Menu_ShowFPS" Header="Show FPS"  IsCheckable="True" Click="Menu_ShowFPS_Click" />
             </MenuItem>
             <MenuItem Header="Settings" SubmenuOpened="MenuItem_GameSettingsOpened">
                 <MenuItem x:Name="Menu_TestSwitch" Header="Test switch" IsCheckable="True" Click="Menu_TestSwitch_Click"/>
@@ -60,7 +64,6 @@
         </Menu>
         <Grid>
             <local:AlphanumericsOverlay x:Name="AlphanumericsOverlay" />
-            <TextBlock x:Name="FPS" HorizontalAlignment="Left" Margin="10,0,0,10" Text="FPS" TextWrapping="Wrap" VerticalAlignment="Bottom" FontSize="22" Foreground="Yellow" RenderTransformOrigin="0.333,0.147"/>
         </Grid>
     </DockPanel>
 </Window>

@@ -130,16 +130,6 @@ namespace I_Robot
             }
         }
 
-        static public bool ShowFPS
-        {
-            get => Properties.Settings.Default.ShowFPS;
-            set
-            {
-                Properties.Settings.Default.ShowFPS = value;
-                Properties.Settings.Default.Save();
-            }
-        } 
-
         static public bool Wireframe
         {
             get => Properties.Settings.Default.Wireframe;
