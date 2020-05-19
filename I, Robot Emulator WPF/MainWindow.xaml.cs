@@ -67,8 +67,8 @@ namespace I_Robot
         void timer_Tick(object? sender, EventArgs e)
         {
             FPS.Text = Hardware?.FPS.ToString("FPS: 0.0") ?? "";
-            LeftCoinCounter.Text = $"Left coin counter: {Settings.LeftCoinCounter}";
-            RightCoinCounter.Text = $"Right coin counter: {Settings.RightCoinCounter}";
+            LeftCoinCounter.Text = $"Left coin counter: {String.Format("{0:n0}", Settings.LeftCoinCounter)}";
+            RightCoinCounter.Text = $"Right coin counter: {String.Format("{0:n0}", Settings.RightCoinCounter)}";
         }
 
         protected override void OnKeyDown(KeyEventArgs e)

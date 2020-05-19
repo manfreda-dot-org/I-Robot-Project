@@ -5,12 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:I_Robot"
         mc:Ignorable="d"
-        Title="I, Emulator" Height="512" Width="800" Background="#FF9A9A9A" WindowStyle="ThreeDBorderWindow" FontWeight="Normal" WindowStartupLocation="CenterScreen" WindowState="Normal">
+        Title="I, Emulator" Height="512" Width="800" Background="#FF6B6863" WindowStyle="ThreeDBorderWindow" FontWeight="Normal" WindowStartupLocation="CenterScreen" WindowState="Normal">
     <DockPanel>
         <StatusBar DockPanel.Dock="Bottom">
-            <TextBlock x:Name="FPS" Padding="10,0,0,0" Width="150">FPS:</TextBlock>
-            <TextBlock x:Name="LeftCoinCounter" Padding="30,0,0,0">Left coin counter:</TextBlock>
+            <TextBlock x:Name="LeftCoinCounter" Padding="10,0,0,0">Left coin counter:</TextBlock>
             <TextBlock x:Name="RightCoinCounter" Padding="30,0,0,0">Right coin counter:</TextBlock>
+            <TextBlock x:Name="FPS" Padding="30,0,0,0">FPS:</TextBlock>
         </StatusBar>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="_File">
@@ -63,7 +63,7 @@
             </MenuItem>
         </Menu>
         <Grid>
-            <local:AlphanumericsOverlay x:Name="AlphanumericsOverlay" />
+            <local:AlphanumericsOverlay x:Name="AlphanumericsOverlay" OpacityMask="Black" />
         </Grid>
     </DockPanel>
 </Window>
