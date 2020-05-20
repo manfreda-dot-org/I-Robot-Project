@@ -123,7 +123,7 @@ namespace GameManagement
 
                 var p = Position;
                 p.X += size.X / 2;
-                screen.ScreenManager.SpriteBatch?.DrawString(font, Text, p, color, 0, origin, scale, SpriteEffects.None, 0);
+                screen.ScreenManager.SpriteBatch.DrawString(font, Text, p, color, 0, origin, scale, SpriteEffects.None, 0);
             }
         }
 

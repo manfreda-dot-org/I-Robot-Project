@@ -28,11 +28,19 @@ namespace I_Robot
     /// </summary>
     public class Game : Microsoft.Xna.Framework.Game
     {
-        static public Hardware? Hardware;
-        static public AlphanumericsRenderer? AlphanumericsOverlay;
+        Hardware? mHardware;
+        public Hardware Hardware
+        {
+            get
+            {
+                if (mHardware == null)
+                    throw new Exception();
+                return mHardware;
+            }
+        }
 
         GraphicsDeviceManager Graphics;
-        ScreenManager ScreenManager;
+        public ScreenManager? ScreenManager;
         ScreenFactory ScreenFactory;
 
         /// <summary>
@@ -41,54 +49,47 @@ namespace I_Robot
         public Game()
         {
             Content.RootDirectory = "Content";
-
             Graphics = new GraphicsDeviceManager(this);
             TargetElapsedTime = TimeSpan.FromTicks(333333);
 
             // Create the screen factory and add it to the Services
             ScreenFactory = new ScreenFactory();
             Services.AddService(typeof(IScreenFactory), ScreenFactory);
-
-            // Create the screen manager component.
-            ScreenManager = new ScreenManager(this);
-            Components.Add(ScreenManager);
         }
 
         protected override void Initialize()
         {
             base.Initialize();
-
-            // read the ROMs
-            if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out RomSet? roms, out string errMsg) && roms != null)
-            {
-                // create hardware that uses the ROMs
-                Hardware = new Hardware(roms);
-                AlphanumericsOverlay = new AlphanumericsRenderer(Hardware, GraphicsDevice);
-            }
-            else
-            {
-                string message = $"UNABLE    TO    CREATE\n\n{errMsg}";
-                MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message);
-                ScreenManager.AddScreen(dialog, null);
-            }
         }
 
         protected override void LoadContent()
         {
             base.LoadContent();
 
-            AddInitialScreens();
+            // Create the screen manager component.
+            ScreenManager = new ScreenManager(this);
+            Components.Add(ScreenManager);
+
+            // read the ROMs
+            if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out RomSet? roms, out string? errMsg) && roms != null)
+            {
+                // create hardware that uses the ROMs
+                mHardware = new Hardware(roms);
+            }
+
+            LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));
+
+            if (errMsg != null)
+            {
+                string message = $"ROMSET    MISSING\n\n{errMsg}";
+                MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message, false);
+                ScreenManager.AddScreen(dialog, null);
+            }
         }
 
         protected override void UnloadContent()
         {
             base.UnloadContent();
-            AlphanumericsOverlay?.Dispose();
-        }
-
-        private void AddInitialScreens()
-        {
-            LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));
         }
 
         /// <summary>

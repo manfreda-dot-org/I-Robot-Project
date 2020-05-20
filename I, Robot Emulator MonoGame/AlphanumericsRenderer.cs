@@ -1,4 +1,4 @@
-﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// Copyright 2020 by John Manfreda. All Rights Reserved.
 // https://www.manfreda.org/
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using GameManagement;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
@@ -23,11 +24,9 @@ namespace I_Robot
     /// <summary>
     /// Renders the alphanumerics overlay
     /// </summary>
-    public class AlphanumericsRenderer : IDisposable
+    class AlphanumericsRenderer : IDisposable
     {
-        /// <summary>
-        /// The machine hardware
-        /// </summary>
+        readonly IRobotScreen Screen;
         readonly Hardware Hardware;
 
         /// <summary>
@@ -42,24 +41,25 @@ namespace I_Robot
 
         readonly SpriteBatch SpriteBatch;
 
-        public AlphanumericsRenderer(Hardware hardware, GraphicsDevice device)
+        public AlphanumericsRenderer(IRobotScreen screen)
         {
-            Hardware = hardware;
+            Screen = screen;
+            Hardware = screen.Hardware;
 
             // create a spriteback for use later
-            SpriteBatch = new SpriteBatch(device);
+            SpriteBatch = screen.SpriteBatch;
 
             // create the character set texture, and fill with game font
-            CharacterSet = new Texture2D(device, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT * Alphanumerics.NUM_CHARS);
+            CharacterSet = new Texture2D(screen.Game.GraphicsDevice, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT * Alphanumerics.NUM_CHARS);
             CharacterSet.SetData(PixelMap);
 
             // create an overlay for us to render onto
             Overlay = new RenderTarget2D(
-                device, 
+                screen.Game.GraphicsDevice, 
                 Hardware.NATIVE_RESOLUTION.Width, 
                 Hardware.NATIVE_RESOLUTION.Height, 
-                false, 
-                device.PresentationParameters.BackBufferFormat, 
+                false,
+                screen.Game.GraphicsDevice.PresentationParameters.BackBufferFormat, 
                 DepthFormat.Depth24);
         }
 

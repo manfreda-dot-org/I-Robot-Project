@@ -103,17 +103,17 @@ namespace I_Robot
         /// <param name="set">returns RomSet on success</param>
         /// <param name="errMessage">error message returned on failure</param>
         /// <returns>true if the rom set was sucessfully loaded, false if error</returns>
-        static public bool ReadRomSetFromZipArchive(string filename, out RomSet? set, out string errMessage)
+        static public bool ReadRomSetFromZipArchive(string filename, out RomSet? set, out string? errMessage)
         {
             set = new RomSet(filename, out errMessage);
-            if (set.Count == RomList.Count)
+            if (errMessage == null)
                 return true;
             set = null;
             return false;
         }
 
         // private constructor -- users must call ReadRomSetFromZipArchive
-        private RomSet(string filename, out string errMessage)
+        private RomSet(string filename, out string? errMessage)
         {
             Filename = filename;
 
@@ -178,7 +178,8 @@ namespace I_Robot
                 }
             }
 
-            errMessage = "success";
+            // success
+            errMessage = null;
         }
 
         /// <summary>

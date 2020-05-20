@@ -67,7 +67,8 @@ namespace I_Robot
             MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message);
             dialog.Accepted += new System.EventHandler<PlayerIndexEventArgs>((object? sender, PlayerIndexEventArgs e) =>
             {
-                I_Robot.Game.Hardware?.Reset(Hardware.RESET_TYPE.USER);
+                if (this.Game is I_Robot.Game game)
+                    game.Hardware.Reset(Hardware.RESET_TYPE.USER);
                 OnCancel(sender, e);
             });
             ScreenManager.AddScreen(dialog, null);

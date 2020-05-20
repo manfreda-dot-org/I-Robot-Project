@@ -42,7 +42,7 @@ namespace GameManagement
         /// A default SpriteBatch shared by all the screens. This saves
         /// each screen having to bother creating their own local instance.
         /// </summary>
-        public SpriteBatch? SpriteBatch { get; private set; }
+        public readonly SpriteBatch SpriteBatch;
 
 
         /// <summary>
@@ -72,6 +72,9 @@ namespace GameManagement
         public ScreenManager(Game game)
             : base(game)
         {
+            SpriteBatch = new SpriteBatch(GraphicsDevice);
+            Initialize();
+            LoadContent();
         }
 
 
@@ -93,8 +96,6 @@ namespace GameManagement
         {
             // Load content belonging to the screen manager.
             ContentManager content = Game.Content;
-
-            SpriteBatch = new SpriteBatch(GraphicsDevice);
             Font = content.Load<SpriteFont>("menufont");
             BlankTexture = content.Load<Texture2D>("blank");
 
@@ -255,9 +256,9 @@ namespace GameManagement
         /// </summary>
         public void FadeBackBufferToBlack(float alpha)
         {
-            SpriteBatch?.Begin();
-            SpriteBatch?.Draw(BlankTexture, GraphicsDevice.Viewport.Bounds, Color.Black * alpha);
-            SpriteBatch?.End();
+            SpriteBatch.Begin();
+            SpriteBatch.Draw(BlankTexture, GraphicsDevice.Viewport.Bounds, Color.Black * alpha);
+            SpriteBatch.End();
         }
 
         /// <summary>

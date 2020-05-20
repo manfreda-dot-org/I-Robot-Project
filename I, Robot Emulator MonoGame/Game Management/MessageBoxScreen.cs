@@ -122,8 +122,7 @@ namespace GameManagement
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            if ((ScreenManager.SpriteBatch is SpriteBatch spriteBatch)
-                && (ScreenManager.Font is SpriteFont font))
+            if (ScreenManager.Font is SpriteFont font)
             {
                 // Darken down any other screens that were drawn beneath the popup.
                 ScreenManager.FadeBackBufferToBlack(TransitionAlpha * 2 / 3);
@@ -146,16 +145,16 @@ namespace GameManagement
                 // Fade the popup alpha during transitions.
                 Color color = Color.White * TransitionAlpha;
 
-                spriteBatch.Begin();
+                SpriteBatch.Begin();
 
                 // Draw the background rectangle.
                 if (GradientTexture != null)
-                    spriteBatch.Draw(GradientTexture, backgroundRectangle, color);
+                    SpriteBatch.Draw(GradientTexture, backgroundRectangle, color);
 
                 // Draw the message box text.
-                spriteBatch.DrawString(font, Message, textPosition, color);
+                SpriteBatch.DrawString(font, Message, textPosition, color);
 
-                spriteBatch.End();
+                SpriteBatch.End();
             }
         }
     }

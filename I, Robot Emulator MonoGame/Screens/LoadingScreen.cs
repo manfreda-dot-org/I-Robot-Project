@@ -35,7 +35,7 @@ namespace I_Robot
     ///   next screen, which may take a long time to load its data. The loading
     ///   screen will be the only thing displayed while this load is taking place.
     /// </summary>
-    class LoadingScreen : Screen
+    class LoadingScreen : IRobotScreen
     {
         bool LoadingIsSlow;
         bool OtherScreensAreGone;
@@ -124,9 +124,9 @@ namespace I_Robot
             // to bother drawing the message.
             if (LoadingIsSlow)
             {
-                if (ScreenManager.SpriteBatch is SpriteBatch spriteBatch)
+                SpriteFont? font = ScreenManager.Font;
+                if (font != null)
                 {
-                    SpriteFont? font = ScreenManager.Font;
 
                     const string message = "Loading...";
 
@@ -139,9 +139,9 @@ namespace I_Robot
                     Color color = Color.White * TransitionAlpha;
 
                     // Draw the text.
-                    spriteBatch.Begin();
-                    spriteBatch.DrawString(font, message, textPosition, color);
-                    spriteBatch.End();
+                    SpriteBatch.Begin();
+                    SpriteBatch.DrawString(font, message, textPosition, color);
+                    SpriteBatch.End();
                 }
             }
         }

@@ -16,6 +16,7 @@
 
 using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace GameManagement
 {
@@ -41,6 +42,7 @@ namespace GameManagement
 
         public readonly Game Game;
         public readonly ScreenManager ScreenManager;
+        public readonly SpriteBatch SpriteBatch;
 
         /// <summary>
         /// Normally when one screen is brought up over the top of another,
@@ -100,6 +102,7 @@ namespace GameManagement
         {
             Game = screenManager.Game;
             ScreenManager = screenManager;
+            SpriteBatch = screenManager.SpriteBatch;
         }
 
         /// <summary>

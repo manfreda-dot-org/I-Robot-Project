@@ -208,12 +208,11 @@ namespace GameManagement
             // make sure our entries are in the right place before we draw them
             UpdateMenuEntryLocations();
 
-            if ((ScreenManager.SpriteBatch is SpriteBatch spriteBatch)
-                && (ScreenManager.GraphicsDevice is GraphicsDevice graphics))
+            if (ScreenManager.GraphicsDevice is GraphicsDevice graphics)
             {
                 SpriteFont? font = ScreenManager.Font;
 
-                spriteBatch.Begin();
+                SpriteBatch.Begin();
 
                 // Draw each menu entry in turn.
                 for (int i = 0; i < MenuItemList.Count; i++)
@@ -238,9 +237,9 @@ namespace GameManagement
 
                 titlePosition.Y -= transitionOffset * 100;
 
-                spriteBatch.DrawString(font, Title, titlePosition, titleColor, 0, titleOrigin, titleScale, SpriteEffects.None, 0);
+                SpriteBatch.DrawString(font, Title, titlePosition, titleColor, 0, titleOrigin, titleScale, SpriteEffects.None, 0);
 
-                spriteBatch.End();
+                SpriteBatch.End();
             }
         }
     }
