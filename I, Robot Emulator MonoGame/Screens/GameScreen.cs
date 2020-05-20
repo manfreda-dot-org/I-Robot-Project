@@ -39,7 +39,7 @@ namespace I_Robot
 
         float pauseAlpha;
 
-        InputAction pauseAction;
+        InputAction PauseAction;
 
         /// <summary>
         /// Constructor.
@@ -49,12 +49,11 @@ namespace I_Robot
             TransitionOnTime = TimeSpan.FromSeconds(1.5);
             TransitionOffTime = TimeSpan.FromSeconds(0.5);
 
-            pauseAction = new InputAction(
+            PauseAction = new InputAction(
                 new Buttons[] { Buttons.Start, Buttons.Back },
                 new Keys[] { Keys.Escape },
                 true);
         }
-
 
         /// <summary>
         /// Load graphics content for the game.
@@ -99,21 +98,17 @@ namespace I_Robot
         /// property, so the game will stop updating when the pause menu is active,
         /// or if you tab away to a different application.
         /// </summary>
-        public override void Update(GameTime gameTime, bool otherScreenHasFocus,
-                                                       bool coveredByOtherScreen)
+        public override void Update(GameTime gameTime, bool otherScreenHasFocus, bool coveredByOtherScreen)
         {
             base.Update(gameTime, otherScreenHasFocus, false);
 
             // Gradually fade in or out depending on whether we are covered by the pause screen.
             if (coveredByOtherScreen)
-                pauseAlpha = Math.Min(pauseAlpha + 1f / 32, 1);
+                pauseAlpha = Math.Min(pauseAlpha + 1f / 16, 1);
             else
-                pauseAlpha = Math.Max(pauseAlpha - 1f / 32, 0);
+                pauseAlpha = Math.Max(pauseAlpha - 1f / 16, 0);
 
             Game.Hardware.Paused = !IsActive;
-            if (IsActive)
-            {
-            }
         }
 
         /// <summary>
@@ -139,51 +134,14 @@ namespace I_Robot
                                        input.GamePadWasConnected[playerIndex];
 
             PlayerIndex player;
-            if (pauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
+            if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
                 Game.Hardware.Paused = true;
                 ScreenManager?.AddScreen(new MainMenuScreen(), ControllingPlayer);
             }
 
-#if false
-            else
-            {
-                // Otherwise move the player position.
-                Vector2 movement = Vector2.Zero;
 
-                if (keyboardState.IsKeyDown(Keys.Left))
-                    movement.X--;
-
-                if (keyboardState.IsKeyDown(Keys.Right))
-                    movement.X++;
-
-                if (keyboardState.IsKeyDown(Keys.Up))
-                    movement.Y--;
-
-                if (keyboardState.IsKeyDown(Keys.Down))
-                    movement.Y++;
-
-                Vector2 thumbstick = gamePadState.ThumbSticks.Left;
-
-                movement.X += thumbstick.X;
-                movement.Y -= thumbstick.Y;
-
-                if (input.TouchState.Count > 0)
-                {
-                    Vector2 touchPosition = input.TouchState[0].Position;
-                    Vector2 direction = touchPosition - playerPosition;
-                    direction.Normalize();
-                    movement += direction;
-                }
-
-                if (movement.Length() > 1)
-                    movement.Normalize();
-
-                playerPosition += movement * 8f;
-            }
-#else
             Keyboard.GetState();
-
             if (Keyboard.HasBeenPressed(Keys.Tab))
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (Keyboard.HasBeenPressed(Keys.F3))
@@ -213,7 +171,6 @@ namespace I_Robot
             }
             if (Keyboard.HasBeenPressed(Keys.F10))
                 Settings.SpeedThrottle = !Settings.SpeedThrottle;
-#endif
         }
 
 
@@ -222,35 +179,20 @@ namespace I_Robot
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-#if false
-            // This game has a blue background. Why? Because!
-            ScreenManager?.GraphicsDevice.Clear(ClearOptions.Target,
-                                               Color.CornflowerBlue, 0, 0);
-
-            // Our player and enemy are both actually just text strings.
-            if (ScreenManager?.SpriteBatch is SpriteBatch spriteBatch)
-            {
-                spriteBatch.Begin();
-                spriteBatch.DrawString(gameFont, "// TODO", playerPosition, Color.Green);
-                spriteBatch.DrawString(gameFont, "Insert Gameplay Here", enemyPosition, Color.DarkRed);
-                spriteBatch.End();
-            }
-
-            // If the game is transitioning on or off, fade it out to black.
-            if (TransitionPosition > 0 || pauseAlpha > 0)
-            {
-                float alpha = MathHelper.Lerp(1f - TransitionAlpha, 1f, pauseAlpha / 2);
-
-                ScreenManager?.FadeBackBufferToBlack(alpha);
-            }
-#else
             if (ScreenManager?.GraphicsDevice is GraphicsDevice device)
             {
-                device.Clear(Color.CornflowerBlue);
+                device.Clear(ClearOptions.Target, Color.CornflowerBlue, 0, 0);
 
                 Game.AlphanumericsOverlay?.Draw(device);
+
+                // If the game is transitioning on or off, fade it out to black.
+                if (TransitionPosition > 0 || pauseAlpha > 0)
+                {
+                    float alpha = MathHelper.Lerp(1f - TransitionAlpha, 1f, pauseAlpha);
+
+                    ScreenManager?.FadeBackBufferToBlack(alpha * 0.75f);
+                }
             }
-#endif
         }
     }
 }

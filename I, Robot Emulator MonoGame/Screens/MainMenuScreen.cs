@@ -15,7 +15,7 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using GameManagement;
-using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace I_Robot
 {
@@ -37,12 +37,6 @@ namespace I_Robot
         }
 
         string SoundString => $"SOUND:    {(Settings.SoundEnabled ? "ENABLED" : "DISABLED")}";
-
-        void PlayGameMenuSelected(object? sender, PlayerIndexEventArgs e)
-        {
-            if (ScreenManager is ScreenManager screenManager)
-                LoadingScreen.Load(screenManager, true, e.PlayerIndex, new GameScreen());
-        }
 
         void SoundMenuSelected(object? sender, PlayerIndexEventArgs e)
         {

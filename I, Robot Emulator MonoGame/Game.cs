@@ -88,16 +88,8 @@ namespace I_Robot
 
         private void AddInitialScreens()
         {
-#if false
-            // Activate the first screens.
-            ScreenManager.AddScreen(new BackgroundScreen(), null);
-
-            // We have different menus for Windows Phone to take advantage of the touch interface
-            ScreenManager.AddScreen(new MainMenuScreen(), null);
-#else
             if (ScreenManager is ScreenManager screenManager)
                 LoadingScreen.Load(screenManager, true, null, new GameScreen());
-#endif
         }
 
         /// <summary>
