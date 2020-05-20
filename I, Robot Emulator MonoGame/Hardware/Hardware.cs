@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -365,13 +366,13 @@ namespace I_Robot
                     if (mDisposed)
                         return;
 
-                    Quad_POKEY.Update();
-
                     if (Paused)
                     {
                         CyclesToRun = 0;
                         continue;
                     }
+
+                    Quad_POKEY.Update();
 
                     if (Registers.WatchdogCounter > 500000)
                         Reset(Hardware.RESET_TYPE.WATCHDOG);
