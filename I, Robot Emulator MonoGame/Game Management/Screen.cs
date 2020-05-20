@@ -111,30 +111,6 @@ namespace GameManagement
         public PlayerIndex? ControllingPlayer { get; internal set; }
 
         /// <summary>
-        /// Gets the gestures the screen is interested in. Screens should be as specific
-        /// as possible with gestures to increase the accuracy of the gesture engine.
-        /// For example, most menus only need Tap or perhaps Tap and VerticalDrag to operate.
-        /// These gestures are handled by the ScreenManager when screens change and
-        /// all gestures are placed in the InputState passed to the HandleInput method.
-        /// </summary>
-        public GestureType EnabledGestures
-        {
-            get { return enabledGestures; }
-            protected set
-            {
-                enabledGestures = value;
-
-                // the screen manager handles this during screen changes, but
-                // if this screen is active and the gesture types are changing,
-                // we have to update the TouchPanel ourself.
-                if (ScreenState == State.Active)
-                    TouchPanel.EnabledGestures = value;
-            }
-        }
-
-        GestureType enabledGestures = GestureType.None;
-
-        /// <summary>
         /// Gets whether or not this screen is serializable. If this is true,
         /// the screen will be recorded into the screen manager's state and
         /// its Serialize and Deserialize methods will be called as appropriate.
