@@ -183,12 +183,10 @@ namespace GameManagement
             }
         }
 
-
         /// <summary>
         /// Updates the menu.
         /// </summary>
-        public override void Update(GameTime gameTime, bool otherScreenHasFocus,
-                                                       bool coveredByOtherScreen)
+        public override void Update(GameTime gameTime, bool otherScreenHasFocus, bool coveredByOtherScreen)
         {
             base.Update(gameTime, otherScreenHasFocus, coveredByOtherScreen);
 
@@ -210,7 +208,8 @@ namespace GameManagement
             // make sure our entries are in the right place before we draw them
             UpdateMenuEntryLocations();
 
-            if ((ScreenManager?.SpriteBatch is SpriteBatch spriteBatch)
+            if ((ScreenManager is ScreenManager screenManager)
+                && (ScreenManager?.SpriteBatch is SpriteBatch spriteBatch)
                 && (ScreenManager?.GraphicsDevice is GraphicsDevice graphics))
             {
                 SpriteFont? font = ScreenManager?.Font;
@@ -235,8 +234,8 @@ namespace GameManagement
                 // Draw the menu title centered on the screen
                 Vector2 titlePosition = new Vector2(graphics.Viewport.Width / 2, 80);
                 Vector2 titleOrigin = font?.MeasureString(Title) / 2 ?? Vector2.Zero;
-                Color titleColor = new Color(192, 192, 192) * TransitionAlpha;
-                float titleScale = 1.25f;
+                Color titleColor = new Color(255, 64, 64) * TransitionAlpha;
+                float titleScale = 1.5f;
 
                 titlePosition.Y -= transitionOffset * 100;
 
