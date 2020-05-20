@@ -16,8 +16,6 @@
 
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Input.Touch;
-using System.Collections.Generic;
 
 namespace GameManagement
 {
@@ -38,11 +36,6 @@ namespace GameManagement
         public readonly GamePadState[] LastGamePadStates;
 
         public readonly bool[] GamePadWasConnected;
-
-        public TouchCollection TouchState;
-
-        public readonly List<GestureSample> Gestures = new List<GestureSample>();
-        
 
         /// <summary>
         /// Constructs a new input state.
@@ -76,16 +69,6 @@ namespace GameManagement
                     GamePadWasConnected[i] = true;
                 }
             }
-
-            // Get the raw touch state from the TouchPanel
-            TouchState = TouchPanel.GetState();
-
-            // Read in any detected gestures into our list for the screens to later process
-            Gestures.Clear();
-            while (TouchPanel.IsGestureAvailable)
-            {
-                Gestures.Add(TouchPanel.ReadGesture());
-            }
         }
 
 
@@ -99,11 +82,7 @@ namespace GameManagement
         {
             if (controllingPlayer.HasValue)
             {
-                // Read input from the specified player.
                 playerIndex = controllingPlayer.Value;
-
-                int i = (int)playerIndex;
-
                 return CurrentKeyboardStates.IsKeyDown(key);
             }
             else
@@ -158,10 +137,7 @@ namespace GameManagement
                 // Read input from the specified player.
                 playerIndex = controllingPlayer.Value;
 
-                int i = (int)playerIndex;
-
-                return (CurrentKeyboardStates.IsKeyDown(key) &&
-                        LastKeyboardStates.IsKeyUp(key));
+                return (CurrentKeyboardStates.IsKeyDown(key) && LastKeyboardStates.IsKeyUp(key));
             }
             else
             {

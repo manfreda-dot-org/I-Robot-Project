@@ -97,7 +97,7 @@ namespace I_Robot
         /// </summary>
         protected override void Draw(GameTime gameTime)
         {
-            Graphics.GraphicsDevice.Clear(Color.Black);
+//            Graphics.GraphicsDevice.Clear(Color.Black);
 
             // The real drawing happens inside the screen manager component.
             base.Draw(gameTime);
