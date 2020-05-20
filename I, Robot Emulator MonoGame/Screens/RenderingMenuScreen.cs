@@ -15,7 +15,6 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using GameManagement;
-using Microsoft.Xna.Framework;
 
 namespace I_Robot
 {
@@ -46,7 +45,7 @@ namespace I_Robot
         void ShowDotsMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
             Settings.ShowDots = !Settings.ShowDots;
-            if (sender is MenuItem item ) item.Text = ShowDotsText;
+            if (sender is MenuItem item) item.Text = ShowDotsText;
         }
 
         void ShowVectorsMenuSelected(object? sender, PlayerIndexEventArgs e)

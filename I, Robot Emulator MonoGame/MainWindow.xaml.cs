@@ -40,7 +40,7 @@ namespace I_Robot
             Style = (Style)FindResource(typeof(Window));
 
             // read the ROMs
-            if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out Roms, out string errMessage) && Roms != null)
+            if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out Roms, out string? errMessage) && Roms != null)
             {
                 // create hardware that uses the ROMs
                 Hardware = new Hardware(Roms);

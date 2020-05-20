@@ -124,25 +124,20 @@ namespace I_Robot
             // to bother drawing the message.
             if (LoadingIsSlow)
             {
-                SpriteFont? font = ScreenManager.Font;
-                if (font != null)
-                {
+                const string message = "Loading...";
 
-                    const string message = "Loading...";
+                // Center the text in the viewport.
+                Viewport viewport = ScreenManager.GraphicsDevice.Viewport;
+                Vector2 viewportSize = new Vector2(viewport.Width, viewport.Height);
+                Vector2 textSize = MenuFont.MeasureString(message);
+                Vector2 textPosition = (viewportSize - textSize) / 2;
 
-                    // Center the text in the viewport.
-                    Viewport viewport = ScreenManager.GraphicsDevice.Viewport;
-                    Vector2 viewportSize = new Vector2(viewport.Width, viewport.Height);
-                    Vector2 textSize = font?.MeasureString(message) ?? Vector2.Zero;
-                    Vector2 textPosition = (viewportSize - textSize) / 2;
+                Color color = Color.White * TransitionAlpha;
 
-                    Color color = Color.White * TransitionAlpha;
-
-                    // Draw the text.
-                    SpriteBatch.Begin();
-                    SpriteBatch.DrawString(font, message, textPosition, color);
-                    SpriteBatch.End();
-                }
+                // Draw the text.
+                SpriteBatch.Begin();
+                SpriteBatch.DrawString(MenuFont, message, textPosition, color);
+                SpriteBatch.End();
             }
         }
     }

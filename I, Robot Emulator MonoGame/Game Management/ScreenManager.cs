@@ -15,7 +15,6 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using System.Diagnostics;
 using System.Collections.Generic;
@@ -31,12 +30,10 @@ namespace GameManagement
     {
         private const string StateFilename = "ScreenManagerState.xml";
 
-        List<Screen> Screens = new List<Screen>();
-        List<Screen> TempScreensList = new List<Screen>();
+        readonly List<Screen> Screens = new List<Screen>();
+        readonly List<Screen> TempScreensList = new List<Screen>();
 
-        InputState Input = new InputState();
-
-        bool isInitialized;
+        readonly InputState Input = new InputState();
 
         /// <summary>
         /// A default SpriteBatch shared by all the screens. This saves
@@ -44,13 +41,20 @@ namespace GameManagement
         /// </summary>
         public readonly SpriteBatch SpriteBatch;
 
+        /// <summary>
+        /// Default in-game font shared by all screens
+        /// </summary>
+        public readonly SpriteFont GameFont;
 
         /// <summary>
-        /// A default font shared by all the screens. This saves
-        /// each screen having to bother loading their own local copy.
+        /// Default menu font shared by all the screens
         /// </summary>
-        public SpriteFont? Font { get; private set; }
+        public readonly SpriteFont MenuFont;
 
+        /// <summary>
+        /// Gets a blank texture that can be used by the screens.
+        /// </summary>
+        public readonly Texture2D BlankTexture;
 
         /// <summary>
         /// If true, the manager prints out a list of all the screens
@@ -59,45 +63,23 @@ namespace GameManagement
         /// </summary>
         public bool TraceEnabled { get; set; }
 
-
-        /// <summary>
-        /// Gets a blank texture that can be used by the screens.
-        /// </summary>
-        public Texture2D? BlankTexture { get; private set; }
-
-
         /// <summary>
         /// Constructs a new screen manager component.
         /// </summary>
         public ScreenManager(Game game)
             : base(game)
         {
+            System.Diagnostics.Debug.Assert(GraphicsDevice != null, "ScreenManager cannot be created prior to Game.LoadContent()");
             SpriteBatch = new SpriteBatch(GraphicsDevice);
+
             Initialize();
-            LoadContent();
-        }
 
-
-        /// <summary>
-        /// Initializes the screen manager component.
-        /// </summary>
-        public override void Initialize()
-        {
-            base.Initialize();
-
-            isInitialized = true;
-        }
-
-
-        /// <summary>
-        /// Load your graphics content.
-        /// </summary>
-        protected override void LoadContent()
-        {
             // Load content belonging to the screen manager.
-            ContentManager content = Game.Content;
-            Font = content.Load<SpriteFont>("menufont");
-            BlankTexture = content.Load<Texture2D>("blank");
+            GameFont = Game.Content.Load<SpriteFont>("gamefont");
+            MenuFont = Game.Content.Load<SpriteFont>("menufont");
+            BlankTexture = Game.Content.Load<Texture2D>("blank");
+
+            LoadContent();
 
             // Tell each of the screens to load their content.
             foreach (Screen screen in Screens)
@@ -210,11 +192,7 @@ namespace GameManagement
             screen.ControllingPlayer = controllingPlayer;
             screen.IsExiting = false;
 
-            // If we have a graphics device, tell the screen to load content.
-            if (isInitialized)
-            {
-                screen.Activate(false);
-            }
+            screen.Activate(false);
 
             Screens.Add(screen);
         }
@@ -229,10 +207,7 @@ namespace GameManagement
         public void RemoveScreen(Screen screen)
         {
             // If we have a graphics device, tell the screen to unload content.
-            if (isInitialized)
-            {
-                screen.Unload();
-            }
+            screen.Unload();
 
             Screens.Remove(screen);
             TempScreensList.Remove(screen);

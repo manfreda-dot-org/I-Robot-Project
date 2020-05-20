@@ -44,7 +44,7 @@ namespace I_Robot
         string DifficultyText => $"DIFFICULTY:    {(Settings.GameDifficulty == Settings.Difficulty.Easy ? "EASY" : "MEDIUM")}";
         string DemoModeText => $"DEMO    MODE:    {(Settings.DemoMode ? "ENABLED" : "DISABLED")}";
         string FreePlayText => $"COIN    SETTINGS:    {(Settings.FreePlay ? "FREE    PLAY" : "1    COIN    1    CREDIT")}";
-        string LivesText=> $"LIVES    PER    COIN:    {sLives[(int)Settings.LivesPerCredit]}";
+        string LivesText => $"LIVES    PER    COIN:    {sLives[(int)Settings.LivesPerCredit]}";
         string BonusText => $"BONUS    LIVES:    {sExtraLives[(int)Settings.BonusLifeInterval]}";
         string MinGameTimeText => $"MINIMUM    GAME    TIME:    {(Settings.MinimumGameTime ? "ENABLED" : "DISABLED")}";
         string LanguageText => $"LANGUAGE:    {(Settings.GameLanguage == Settings.Language.English ? "ENGLISH" : "GERMAN")}";
@@ -85,7 +85,7 @@ namespace I_Robot
 
         void MinGameTimeMenuEntrySelected(object? sender, PlayerIndexEventArgs e)
         {
-            Settings.MinimumGameTime= !Settings.MinimumGameTime;
+            Settings.MinimumGameTime = !Settings.MinimumGameTime;
             if (sender is MenuItem item) item.Text = MinGameTimeText;
         }
 

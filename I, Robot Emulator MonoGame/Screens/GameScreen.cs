@@ -37,7 +37,6 @@ namespace I_Robot
         readonly AlphanumericsRenderer AlphanumericsOverlay;
 
         ContentManager? Content;
-        SpriteFont? gameFont;
 
         float pauseAlpha;
 
@@ -70,8 +69,6 @@ namespace I_Robot
             {
                 if (Content == null)
                     Content = new ContentManager(Game.Services, "Content");
-
-                gameFont = Content.Load<SpriteFont>("gamefont");
 
                 // A real game would probably have more content than this sample, so
                 // it would take longer to load. We simulate that by delaying for a

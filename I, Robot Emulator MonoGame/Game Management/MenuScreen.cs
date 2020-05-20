@@ -53,7 +53,7 @@ namespace GameManagement
             TransitionOffTime = TimeSpan.FromSeconds(0.5);
 
             MenuUp = new InputAction(
-                new Buttons[] { Buttons.DPadUp, Buttons.LeftThumbstickUp }, 
+                new Buttons[] { Buttons.DPadUp, Buttons.LeftThumbstickUp },
                 new Keys[] { Keys.Up },
                 true);
             MenuDown = new InputAction(
@@ -164,7 +164,7 @@ namespace GameManagement
             for (int i = 0; i < MenuItemList.Count; i++)
             {
                 MenuItem menuEntry = MenuItemList[i];
-                
+
                 // each entry is to be centered horizontally
                 position.X = ScreenManager.GraphicsDevice.Viewport.Width / 2 - menuEntry.GetWidth(this) / 2;
 
@@ -210,8 +210,6 @@ namespace GameManagement
 
             if (ScreenManager.GraphicsDevice is GraphicsDevice graphics)
             {
-                SpriteFont? font = ScreenManager.Font;
-
                 SpriteBatch.Begin();
 
                 // Draw each menu entry in turn.
@@ -231,13 +229,13 @@ namespace GameManagement
 
                 // Draw the menu title centered on the screen
                 Vector2 titlePosition = new Vector2(graphics.Viewport.Width / 2, 80);
-                Vector2 titleOrigin = font?.MeasureString(Title) / 2 ?? Vector2.Zero;
+                Vector2 titleOrigin = MenuFont.MeasureString(Title) / 2;
                 Color titleColor = new Color(255, 64, 64) * TransitionAlpha;
                 float titleScale = 1.5f;
 
                 titlePosition.Y -= transitionOffset * 100;
 
-                SpriteBatch.DrawString(font, Title, titlePosition, titleColor, 0, titleOrigin, titleScale, SpriteEffects.None, 0);
+                SpriteBatch.DrawString(MenuFont, Title, titlePosition, titleColor, 0, titleOrigin, titleScale, SpriteEffects.None, 0);
 
                 SpriteBatch.End();
             }

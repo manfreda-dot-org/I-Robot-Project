@@ -62,8 +62,8 @@ namespace GameManagement
             SpacingAfter = 1 + after;
         }
 
-        public MenuItem(string text, EventHandler<PlayerIndexEventArgs> callback, float before = 0, float after = 0 )
-            : this (text, before, after)
+        public MenuItem(string text, EventHandler<PlayerIndexEventArgs> callback, float before = 0, float after = 0)
+            : this(text, before, after)
         {
             Selected += callback;
         }
@@ -107,7 +107,7 @@ namespace GameManagement
 
             // Pulsate the size of the selected menu entry.
             double time = gameTime.TotalGameTime.TotalSeconds;
-            
+
             float pulsate = (float)Math.Sin(time * 6) + 1;
 
             float scale = 1 + pulsate * 0.05f * Fade;
@@ -116,15 +116,12 @@ namespace GameManagement
             color *= screen.TransitionAlpha;
 
             // Draw text, centered on the middle of each line.
-            if (screen.ScreenManager.Font is SpriteFont font)
-            {
-                Vector2 size = font.MeasureString(Text);
-                Vector2 origin = new Vector2(size.X / 2, size.Y / 2);
+            Vector2 size = screen.MenuFont.MeasureString(Text);
+            Vector2 origin = new Vector2(size.X / 2, size.Y / 2);
 
-                var p = Position;
-                p.X += size.X / 2;
-                screen.ScreenManager.SpriteBatch.DrawString(font, Text, p, color, 0, origin, scale, SpriteEffects.None, 0);
-            }
+            var p = Position;
+            p.X += size.X / 2;
+            screen.ScreenManager.SpriteBatch.DrawString(screen.MenuFont, Text, p, color, 0, origin, scale, SpriteEffects.None, 0);
         }
 
 
@@ -133,7 +130,7 @@ namespace GameManagement
         /// </summary>
         public virtual int GetHeight(MenuScreen screen)
         {
-            return screen.ScreenManager.Font?.LineSpacing ?? 0;
+            return screen.MenuFont.LineSpacing;
         }
 
 
@@ -142,7 +139,7 @@ namespace GameManagement
         /// </summary>
         public virtual int GetWidth(MenuScreen screen)
         {
-            return (int)(screen.ScreenManager.Font?.MeasureString(Text).X ?? 0);
+            return (int)screen.MenuFont.MeasureString(Text).X;
         }
     }
 }

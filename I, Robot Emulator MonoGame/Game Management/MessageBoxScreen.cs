@@ -122,40 +122,37 @@ namespace GameManagement
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            if (ScreenManager.Font is SpriteFont font)
-            {
-                // Darken down any other screens that were drawn beneath the popup.
-                ScreenManager.FadeBackBufferToBlack(TransitionAlpha * 2 / 3);
+            // Darken down any other screens that were drawn beneath the popup.
+            ScreenManager.FadeBackBufferToBlack(TransitionAlpha * 2 / 3);
 
-                // Center the message text in the viewport.
-                Viewport viewport = ScreenManager.GraphicsDevice.Viewport;
-                Vector2 viewportSize = new Vector2(viewport.Width, viewport.Height);
-                Vector2 textSize = font.MeasureString(Message);
-                Vector2 textPosition = (viewportSize - textSize) / 2;
+            // Center the message text in the viewport.
+            Viewport viewport = ScreenManager.GraphicsDevice.Viewport;
+            Vector2 viewportSize = new Vector2(viewport.Width, viewport.Height);
+            Vector2 textSize = MenuFont.MeasureString(Message);
+            Vector2 textPosition = (viewportSize - textSize) / 2;
 
-                // The background includes a border somewhat larger than the text itself.
-                const int hPad = 32;
-                const int vPad = 16;
+            // The background includes a border somewhat larger than the text itself.
+            const int hPad = 32;
+            const int vPad = 16;
 
-                Rectangle backgroundRectangle = new Rectangle((int)textPosition.X - hPad,
-                                                              (int)textPosition.Y - vPad,
-                                                              (int)textSize.X + hPad * 2,
-                                                              (int)textSize.Y + vPad * 2);
+            Rectangle backgroundRectangle = new Rectangle((int)textPosition.X - hPad,
+                                                          (int)textPosition.Y - vPad,
+                                                          (int)textSize.X + hPad * 2,
+                                                          (int)textSize.Y + vPad * 2);
 
-                // Fade the popup alpha during transitions.
-                Color color = Color.White * TransitionAlpha;
+            // Fade the popup alpha during transitions.
+            Color color = Color.White * TransitionAlpha;
 
-                SpriteBatch.Begin();
+            SpriteBatch.Begin();
 
-                // Draw the background rectangle.
-                if (GradientTexture != null)
-                    SpriteBatch.Draw(GradientTexture, backgroundRectangle, color);
+            // Draw the background rectangle.
+            if (GradientTexture != null)
+                SpriteBatch.Draw(GradientTexture, backgroundRectangle, color);
 
-                // Draw the message box text.
-                SpriteBatch.DrawString(font, Message, textPosition, color);
+            // Draw the message box text.
+            SpriteBatch.DrawString(MenuFont, Message, textPosition, color);
 
-                SpriteBatch.End();
-            }
+            SpriteBatch.End();
         }
     }
 }
