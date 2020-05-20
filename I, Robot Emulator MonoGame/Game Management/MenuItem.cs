@@ -101,7 +101,7 @@ namespace GameManagement
             // Draw the selected entry in yellow, otherwise white.
             Color color = Color.White;
             if (!IsSelectable)
-                color = Color.LightGray;
+                color = Color.Gray;
             if (isSelected)
                 color = Color.Yellow;
 
