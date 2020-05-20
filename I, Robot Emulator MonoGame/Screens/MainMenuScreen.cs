@@ -33,6 +33,7 @@ namespace I_Robot
             MenuItems.Add(new MenuItem("GAME    OPTIONS", OptionsMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("RENDERING", RenderingMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("EMULATION", EmulationMenuSelected, 0.5f));
+            MenuItems.Add(new MenuItem("RESET    GAME", OnResetMachine, 1));
             MenuItems.Add(new MenuItem("QUIT", QuitMenuSelected, 1));
         }
 
@@ -60,21 +61,24 @@ namespace I_Robot
             ScreenManager.AddScreen(new EmulationMenuScreen(ScreenManager), e.PlayerIndex);
         }
 
+        void OnResetMachine(object? sender, PlayerIndexEventArgs e)
+        {
+            const string message = "Are you sure you want to quit?\n\n";
+            MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message);
+            dialog.Accepted += new System.EventHandler<PlayerIndexEventArgs>((object? sender, PlayerIndexEventArgs e) =>
+            {
+                I_Robot.Game.Hardware?.Reset(Hardware.RESET_TYPE.USER);
+                OnCancel(sender, e);
+            });
+            ScreenManager.AddScreen(dialog, null);
+        }
+
         void QuitMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
             const string message = "Are you sure you want to quit?\n\n";
-            MessageBoxScreen confirmExitMessageBox = new MessageBoxScreen(ScreenManager, message);
-            confirmExitMessageBox.Accepted += ConfirmExitMessageBoxAccepted;
-            ScreenManager.AddScreen(confirmExitMessageBox, null);
-        }
-
-        /// <summary>
-        /// Event handler for when the user selects ok on the "are you sure
-        /// you want to exit" message box.
-        /// </summary>
-        void ConfirmExitMessageBoxAccepted(object? sender, PlayerIndexEventArgs e)
-        {
-            Game.Exit();
+            MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message);
+            dialog.Accepted += new System.EventHandler<PlayerIndexEventArgs>((object? sender, PlayerIndexEventArgs e) => { Game.Exit(); });
+            ScreenManager.AddScreen(dialog, null);
         }
     }
 }
