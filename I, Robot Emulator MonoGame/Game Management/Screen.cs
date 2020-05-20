@@ -39,6 +39,9 @@ namespace GameManagement
             Hidden,
         }
 
+        public readonly Game Game;
+        public readonly ScreenManager ScreenManager;
+
         /// <summary>
         /// Normally when one screen is brought up over the top of another,
         /// the first screen will transition off to make room for the new
@@ -95,13 +98,9 @@ namespace GameManagement
 
         public Screen(ScreenManager screenManager)
         {
+            Game = screenManager.Game;
             ScreenManager = screenManager;
         }
-
-        /// <summary>
-        /// Gets the manager that this screen belongs to.
-        /// </summary>
-        public readonly ScreenManager ScreenManager;
 
         /// <summary>
         /// Gets the index of the player who is currently controlling this screen,

@@ -74,7 +74,7 @@ namespace I_Robot
         /// </summary>
         void ConfirmExitMessageBoxAccepted(object? sender, PlayerIndexEventArgs e)
         {
-            ScreenManager.Game.Exit();
+            Game.Exit();
         }
     }
 }

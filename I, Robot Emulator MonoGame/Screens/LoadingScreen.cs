@@ -96,7 +96,7 @@ namespace I_Robot
                 // Once the load has finished, we use ResetElapsedTime to tell
                 // the  game timing mechanism that we have just finished a very
                 // long frame, and that it should not try to catch up.
-                ScreenManager.Game.ResetElapsedTime();
+                Game.ResetElapsedTime();
             }
         }
 

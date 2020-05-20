@@ -84,7 +84,7 @@ namespace GameManagement
         public override void Activate(bool instancePreserved)
         {
             if (!instancePreserved)
-                GradientTexture = ScreenManager.Game.Content.Load<Texture2D>("gradient");
+                GradientTexture = Game.Content.Load<Texture2D>("gradient");
         }
 
 

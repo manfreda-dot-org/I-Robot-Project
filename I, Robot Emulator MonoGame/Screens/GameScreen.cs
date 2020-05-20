@@ -60,12 +60,12 @@ namespace I_Robot
         /// </summary>
         public override void Activate(bool instancePreserved)
         {
-            Game.Hardware.Paused = false;
+            I_Robot.Game.Hardware.Paused = false;
 
             if (!instancePreserved)
             {
                 if (Content == null)
-                    Content = new ContentManager(ScreenManager.Game.Services, "Content");
+                    Content = new ContentManager(Game.Services, "Content");
 
                 gameFont = Content.Load<SpriteFont>("gamefont");
 
@@ -77,7 +77,7 @@ namespace I_Robot
                 // once the load has finished, we use ResetElapsedTime to tell the game's
                 // timing mechanism that we have just finished a very long frame, and that
                 // it should not try to catch up.
-                ScreenManager.Game.ResetElapsedTime();
+                Game.ResetElapsedTime();
             }
         }
 
@@ -105,7 +105,7 @@ namespace I_Robot
             else
                 pauseAlpha = Math.Max(pauseAlpha - 1f / 16, 0);
 
-            Game.Hardware.Paused = !IsActive;
+            I_Robot.Game.Hardware.Paused = !IsActive;
         }
 
         /// <summary>
@@ -133,7 +133,7 @@ namespace I_Robot
             PlayerIndex player;
             if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
-                Game.Hardware.Paused = true;
+                I_Robot.Game.Hardware.Paused = true;
                 ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
             }
 
@@ -142,7 +142,7 @@ namespace I_Robot
             if (Keyboard.HasBeenPressed(Keys.Tab))
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (Keyboard.HasBeenPressed(Keys.F3))
-                Game.Hardware?.Reset(Hardware.RESET_TYPE.USER);
+                I_Robot.Game.Hardware?.Reset(Hardware.RESET_TYPE.USER);
             if (Keyboard.HasBeenPressed(Keys.F7))
             {
                 if (Keyboard.IsPressed(Keys.LeftShift) || Keyboard.IsPressed(Keys.RightShift))
@@ -151,7 +151,7 @@ namespace I_Robot
                     using (FileStream stream = new FileStream("irobot.sav", FileMode.Create))
                     {
                         IFormatter formatter = new BinaryFormatter();
-                        formatter.Serialize(stream, Game.Hardware);
+                        formatter.Serialize(stream, I_Robot.Game.Hardware);
                         stream.Close();
                     }
                 }
@@ -180,7 +180,7 @@ namespace I_Robot
             {
                 device.Clear(ClearOptions.Target, Color.CornflowerBlue, 0, 0);
 
-                Game.AlphanumericsOverlay?.Draw(device);
+                I_Robot.Game.AlphanumericsOverlay?.Draw(device);
 
                 // If the game is transitioning on or off, fade it out to black.
                 if (TransitionPosition > 0 || pauseAlpha > 0)
