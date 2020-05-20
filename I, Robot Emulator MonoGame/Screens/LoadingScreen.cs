@@ -45,7 +45,7 @@ namespace I_Robot
         /// <summary>
         /// The constructor is private: loading screens should be activated via the static Load method instead.
         /// </summary>
-        private LoadingScreen(ScreenManager screenManager, bool loadingIsSlow, Screen[] screensToLoad)
+        private LoadingScreen(ScreenManager screenManager, bool loadingIsSlow, Screen[] screensToLoad) : base (screenManager)
         {
             this.LoadingIsSlow = loadingIsSlow;
             this.ScreensToLoad = screensToLoad;
@@ -85,18 +85,18 @@ namespace I_Robot
             // off, it is time to actually perform the load.
             if (OtherScreensAreGone)
             {
-                ScreenManager?.RemoveScreen(this);
+                ScreenManager.RemoveScreen(this);
 
                 foreach (Screen screen in ScreensToLoad)
                 {
                     if (screen != null)
-                        ScreenManager?.AddScreen(screen, ControllingPlayer);
+                        ScreenManager.AddScreen(screen, ControllingPlayer);
                 }
 
                 // Once the load has finished, we use ResetElapsedTime to tell
                 // the  game timing mechanism that we have just finished a very
                 // long frame, and that it should not try to catch up.
-                ScreenManager?.Game.ResetElapsedTime();
+                ScreenManager.Game.ResetElapsedTime();
             }
         }
 
@@ -111,7 +111,7 @@ namespace I_Robot
             // method, rather than in Update, because it isn't enough just for the
             // screens to be gone: in order for the transition to look good we must
             // have actually drawn a frame without them before we perform the load.
-            if ((ScreenState == State.Active) && (ScreenManager?.GetScreens().Length == 1))
+            if ((ScreenState == State.Active) && (ScreenManager.GetScreens().Length == 1))
             {
                 OtherScreensAreGone = true;
             }
@@ -124,15 +124,14 @@ namespace I_Robot
             // to bother drawing the message.
             if (LoadingIsSlow)
             {
-                if ((ScreenManager is ScreenManager screenManager) &&
-                    (ScreenManager?.SpriteBatch is SpriteBatch spriteBatch))
+                if (ScreenManager.SpriteBatch is SpriteBatch spriteBatch)
                 {
-                    SpriteFont? font = ScreenManager?.Font;
+                    SpriteFont? font = ScreenManager.Font;
 
                     const string message = "Loading...";
 
                     // Center the text in the viewport.
-                    Viewport viewport = screenManager.GraphicsDevice.Viewport;
+                    Viewport viewport = ScreenManager.GraphicsDevice.Viewport;
                     Vector2 viewportSize = new Vector2(viewport.Width, viewport.Height);
                     Vector2 textSize = font?.MeasureString(message) ?? Vector2.Zero;
                     Vector2 textPosition = (viewportSize - textSize) / 2;

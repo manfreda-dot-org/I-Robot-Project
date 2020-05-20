@@ -20,10 +20,9 @@ using Microsoft.Xna.Framework.Input;
 namespace GameManagement
 {
     /// <summary>
-    /// Helper for reading input from keyboard, gamepad, and touch input. This class 
-    /// tracks both the current and previous state of the input devices, and implements 
-    /// query methods for high level input actions such as "move up through the menu"
-    /// or "pause the game".
+    /// Helper for reading input from keyboard, gamepad. This class tracks both the
+    /// current and previous state of the input devices, and implements query methods
+    /// for high level input actions such as "move up through the menu" or "pause the game".
     /// </summary>
     public class InputState
     {

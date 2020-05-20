@@ -116,14 +116,14 @@ namespace GameManagement
             color *= screen.TransitionAlpha;
 
             // Draw text, centered on the middle of each line.
-            if (screen.ScreenManager?.Font is SpriteFont font)
+            if (screen.ScreenManager.Font is SpriteFont font)
             {
                 Vector2 size = font.MeasureString(Text);
                 Vector2 origin = new Vector2(size.X / 2, size.Y / 2);
 
                 var p = Position;
                 p.X += size.X / 2;
-                screen.ScreenManager?.SpriteBatch?.DrawString(font, Text, p, color, 0, origin, scale, SpriteEffects.None, 0);
+                screen.ScreenManager.SpriteBatch?.DrawString(font, Text, p, color, 0, origin, scale, SpriteEffects.None, 0);
             }
         }
 
@@ -133,7 +133,7 @@ namespace GameManagement
         /// </summary>
         public virtual int GetHeight(MenuScreen screen)
         {
-            return screen.ScreenManager?.Font?.LineSpacing ?? 0;
+            return screen.ScreenManager.Font?.LineSpacing ?? 0;
         }
 
 
@@ -142,7 +142,7 @@ namespace GameManagement
         /// </summary>
         public virtual int GetWidth(MenuScreen screen)
         {
-            return (int)(screen.ScreenManager?.Font?.MeasureString(Text).X ?? 0);
+            return (int)(screen.ScreenManager.Font?.MeasureString(Text).X ?? 0);
         }
     }
 }

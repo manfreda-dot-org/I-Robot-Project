@@ -44,7 +44,7 @@ namespace I_Robot
         /// <summary>
         /// Constructor.
         /// </summary>
-        public GameScreen()
+        public GameScreen(ScreenManager screenManager) : base(screenManager)
         {
             TransitionOnTime = TimeSpan.FromSeconds(1.5);
             TransitionOffTime = TimeSpan.FromSeconds(0.5);
@@ -62,25 +62,22 @@ namespace I_Robot
         {
             Game.Hardware.Paused = false;
 
-            if (ScreenManager is ScreenManager screenManager)
+            if (!instancePreserved)
             {
-                if (!instancePreserved)
-                {
-                    if (Content == null)
-                        Content = new ContentManager(screenManager.Game.Services, "Content");
+                if (Content == null)
+                    Content = new ContentManager(ScreenManager.Game.Services, "Content");
 
-                    gameFont = Content.Load<SpriteFont>("gamefont");
+                gameFont = Content.Load<SpriteFont>("gamefont");
 
-                    // A real game would probably have more content than this sample, so
-                    // it would take longer to load. We simulate that by delaying for a
-                    // while, giving you a chance to admire the beautiful loading screen.
-                    Thread.Sleep(1000);
+                // A real game would probably have more content than this sample, so
+                // it would take longer to load. We simulate that by delaying for a
+                // while, giving you a chance to admire the beautiful loading screen.
+                Thread.Sleep(1000);
 
-                    // once the load has finished, we use ResetElapsedTime to tell the game's
-                    // timing mechanism that we have just finished a very long frame, and that
-                    // it should not try to catch up.
-                    screenManager.Game.ResetElapsedTime();
-                }
+                // once the load has finished, we use ResetElapsedTime to tell the game's
+                // timing mechanism that we have just finished a very long frame, and that
+                // it should not try to catch up.
+                ScreenManager.Game.ResetElapsedTime();
             }
         }
 
@@ -137,7 +134,7 @@ namespace I_Robot
             if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
                 Game.Hardware.Paused = true;
-                ScreenManager?.AddScreen(new MainMenuScreen(), ControllingPlayer);
+                ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
             }
 
 
@@ -179,7 +176,7 @@ namespace I_Robot
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            if (ScreenManager?.GraphicsDevice is GraphicsDevice device)
+            if (ScreenManager.GraphicsDevice is GraphicsDevice device)
             {
                 device.Clear(ClearOptions.Target, Color.CornflowerBlue, 0, 0);
 
@@ -190,7 +187,7 @@ namespace I_Robot
                 {
                     float alpha = MathHelper.Lerp(1f - TransitionAlpha, 1f, pauseAlpha);
 
-                    ScreenManager?.FadeBackBufferToBlack(alpha * 0.75f);
+                    ScreenManager.FadeBackBufferToBlack(alpha * 0.75f);
                 }
             }
         }

@@ -40,8 +40,8 @@ namespace GameManagement
         /// Constructor automatically includes the standard "A=ok, B=cancel"
         /// usage text prompt.
         /// </summary>
-        public MessageBoxScreen(string message)
-            : this(message, true)
+        public MessageBoxScreen(ScreenManager screenManager, string message)
+            : this(screenManager, message, true)
         { }
 
 
@@ -49,7 +49,7 @@ namespace GameManagement
         /// Constructor lets the caller specify whether to include the standard
         /// "A=ok, B=cancel" usage text prompt.
         /// </summary>
-        public MessageBoxScreen(string message, bool includeUsageText)
+        public MessageBoxScreen(ScreenManager screenManager, string message, bool includeUsageText) : base(screenManager)
         {
             const string usageText = "\n\nA button, Space, Enter = ok" +
                                      "\nB button, Esc = cancel";
@@ -84,7 +84,7 @@ namespace GameManagement
         public override void Activate(bool instancePreserved)
         {
             if (!instancePreserved)
-                GradientTexture = ScreenManager?.Game.Content.Load<Texture2D>("gradient");
+                GradientTexture = ScreenManager.Game.Content.Load<Texture2D>("gradient");
         }
 
 
@@ -122,12 +122,11 @@ namespace GameManagement
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            if ((ScreenManager is ScreenManager screenManager)
-                && (screenManager?.SpriteBatch is SpriteBatch spriteBatch)
-                && (screenManager.Font is SpriteFont font))
+            if ((ScreenManager.SpriteBatch is SpriteBatch spriteBatch)
+                && (ScreenManager.Font is SpriteFont font))
             {
                 // Darken down any other screens that were drawn beneath the popup.
-                screenManager.FadeBackBufferToBlack(TransitionAlpha * 2 / 3);
+                ScreenManager.FadeBackBufferToBlack(TransitionAlpha * 2 / 3);
 
                 // Center the message text in the viewport.
                 Viewport viewport = ScreenManager.GraphicsDevice.Viewport;

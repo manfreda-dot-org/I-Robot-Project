@@ -51,6 +51,6 @@ namespace GameManagement
         /// </summary>
         /// <param name="screenType">The type of screen to create.</param>
         /// <returns>The newly created screen.</returns>
-        Screen? CreateScreen(Type screenType);
+        Screen? CreateScreen(Type screenType, ScreenManager screenManager);
     }
 }

@@ -23,8 +23,8 @@ namespace I_Robot
         readonly MenuHeading LeftCounterHeading;
         readonly MenuHeading RightCounterHeading;
 
-        public EmulationMenuScreen()
-            : base("EMULATION")
+        public EmulationMenuScreen(ScreenManager screenManager)
+            : base(screenManager, "EMULATION")
         {
             // create our menu entries
             MenuItems.Add(new MenuItem(TestSwitchText, TestSwitchMenuEntrySelected));

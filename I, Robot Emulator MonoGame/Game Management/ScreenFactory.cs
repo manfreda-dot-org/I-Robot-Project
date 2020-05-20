@@ -24,10 +24,10 @@ namespace GameManagement
     /// </summary>
     public class ScreenFactory : IScreenFactory
     {
-        public Screen? CreateScreen(Type screenType)
+        public Screen? CreateScreen(Type screenType, ScreenManager screenManager)
         {
             // All of our screens have empty constructors so we can just use Activator
-            return Activator.CreateInstance(screenType) as Screen;
+            return Activator.CreateInstance(screenType, screenManager) as Screen;
 
             // If we had more complex screens that had constructors or needed properties set,
             // we could do that before handing the screen back to the ScreenManager. For example

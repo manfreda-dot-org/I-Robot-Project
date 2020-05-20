@@ -17,7 +17,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input.Touch;
 using System.Diagnostics;
 using System.Collections.Generic;
 
@@ -73,9 +72,6 @@ namespace GameManagement
         public ScreenManager(Game game)
             : base(game)
         {
-            // we must set EnabledGestures before we can query for them, but
-            // we don't assume the game wants to read them.
-            TouchPanel.EnabledGestures = GestureType.None;
         }
 
 
@@ -211,7 +207,6 @@ namespace GameManagement
         public void AddScreen(Screen screen, PlayerIndex? controllingPlayer)
         {
             screen.ControllingPlayer = controllingPlayer;
-            screen.ScreenManager = this;
             screen.IsExiting = false;
 
             // If we have a graphics device, tell the screen to load content.
@@ -221,9 +216,6 @@ namespace GameManagement
             }
 
             Screens.Add(screen);
-
-            // update the TouchPanel to respond to gestures this screen is interested in
-            TouchPanel.EnabledGestures = screen.EnabledGestures;
         }
 
 
@@ -243,13 +235,6 @@ namespace GameManagement
 
             Screens.Remove(screen);
             TempScreensList.Remove(screen);
-
-            // if there is a screen still in the manager, update TouchPanel
-            // to respond to gestures that screen is interested in.
-            if (Screens.Count > 0)
-            {
-                TouchPanel.EnabledGestures = Screens[Screens.Count - 1].EnabledGestures;
-            }
         }
 
 

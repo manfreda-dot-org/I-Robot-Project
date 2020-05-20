@@ -26,8 +26,8 @@ namespace I_Robot
     /// </summary>
     class RenderingMenuScreen : MenuScreen
     {
-        public RenderingMenuScreen()
-            : base("RENDERING")
+        public RenderingMenuScreen(ScreenManager screenManager)
+            : base(screenManager, "RENDERING")
         {
             // Create our menu items
             MenuItems.Add(new MenuItem(ShowDotsText, ShowDotsMenuSelected));

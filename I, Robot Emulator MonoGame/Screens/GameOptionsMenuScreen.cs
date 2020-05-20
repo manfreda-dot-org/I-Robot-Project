@@ -27,8 +27,8 @@ namespace I_Robot
         /// <summary>
         /// Constructor.
         /// </summary>
-        public GameOptionsMenuScreen()
-            : base("GAME OPTIONS")
+        public GameOptionsMenuScreen(ScreenManager screenManager)
+            : base(screenManager, "GAME OPTIONS")
         {
             // create our menu entries
             MenuItems.Add(new MenuItem(DifficultyText, DifficultyMenuEntrySelected));

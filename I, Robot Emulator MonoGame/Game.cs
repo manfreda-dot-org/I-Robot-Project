@@ -68,8 +68,8 @@ namespace I_Robot
             else
             {
                 string message = $"UNABLE    TO    CREATE\n\n{errMsg}";
-                MessageBoxScreen dialog = new MessageBoxScreen(message);
-                ScreenManager?.AddScreen(dialog, null);
+                MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message);
+                ScreenManager.AddScreen(dialog, null);
             }
         }
 
@@ -88,8 +88,7 @@ namespace I_Robot
 
         private void AddInitialScreens()
         {
-            if (ScreenManager is ScreenManager screenManager)
-                LoadingScreen.Load(screenManager, true, null, new GameScreen());
+            LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));
         }
 
         /// <summary>

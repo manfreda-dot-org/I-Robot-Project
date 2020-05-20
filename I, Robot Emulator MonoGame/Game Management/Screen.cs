@@ -16,7 +16,6 @@
 
 using System;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input.Touch;
 
 namespace GameManagement
 {
@@ -94,11 +93,15 @@ namespace GameManagement
         public bool IsActive => (!otherScreenHasFocus && (ScreenState == State.TransitionOn || ScreenState == State.Active));
         bool otherScreenHasFocus;
 
+        public Screen(ScreenManager screenManager)
+        {
+            ScreenManager = screenManager;
+        }
 
         /// <summary>
         /// Gets the manager that this screen belongs to.
         /// </summary>
-        public ScreenManager? ScreenManager { get; internal set; }
+        public readonly ScreenManager ScreenManager;
 
         /// <summary>
         /// Gets the index of the player who is currently controlling this screen,
@@ -158,7 +161,7 @@ namespace GameManagement
                 ScreenState = State.TransitionOff;
 
                 if (!UpdateTransition(gameTime, TransitionOffTime, 1))
-                    ScreenManager?.RemoveScreen(this); // When the transition finishes, remove the screen.
+                    ScreenManager.RemoveScreen(this); // When the transition finishes, remove the screen.
             }
             else if (coveredByOtherScreen)
             {
@@ -233,7 +236,7 @@ namespace GameManagement
         {
             if (TransitionOffTime == TimeSpan.Zero)
                 // If the screen has a zero transition time, remove it immediately.
-                ScreenManager?.RemoveScreen(this);
+                ScreenManager.RemoveScreen(this);
             else
                 // Otherwise flag that it should transition off and then exit.
                 IsExiting = true;

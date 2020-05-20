@@ -24,8 +24,8 @@ namespace I_Robot
     /// </summary>
     class MainMenuScreen : MenuScreen
     {
-        public MainMenuScreen()
-            : base("MAIN    MENU")
+        public MainMenuScreen(ScreenManager screenManager)
+            : base(screenManager, "MAIN    MENU")
         {
             // Create our menu entries.
             MenuItems.Add(new MenuItem("RETURN    TO    GAME", OnCancel));
@@ -47,25 +47,25 @@ namespace I_Robot
 
         void OptionsMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
-            ScreenManager?.AddScreen(new GameOptionsMenuScreen(), e.PlayerIndex);
+            ScreenManager.AddScreen(new GameOptionsMenuScreen(ScreenManager), e.PlayerIndex);
         }
 
         void RenderingMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
-            ScreenManager?.AddScreen(new RenderingMenuScreen(), e.PlayerIndex);
+            ScreenManager.AddScreen(new RenderingMenuScreen(ScreenManager), e.PlayerIndex);
         }
 
         void EmulationMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
-            ScreenManager?.AddScreen(new EmulationMenuScreen(), e.PlayerIndex);
+            ScreenManager.AddScreen(new EmulationMenuScreen(ScreenManager), e.PlayerIndex);
         }
 
         void QuitMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
             const string message = "Are you sure you want to quit?\n\n";
-            MessageBoxScreen confirmExitMessageBox = new MessageBoxScreen(message);
+            MessageBoxScreen confirmExitMessageBox = new MessageBoxScreen(ScreenManager, message);
             confirmExitMessageBox.Accepted += ConfirmExitMessageBoxAccepted;
-            ScreenManager?.AddScreen(confirmExitMessageBox, null);
+            ScreenManager.AddScreen(confirmExitMessageBox, null);
         }
 
         /// <summary>
@@ -74,7 +74,7 @@ namespace I_Robot
         /// </summary>
         void ConfirmExitMessageBoxAccepted(object? sender, PlayerIndexEventArgs e)
         {
-            ScreenManager?.Game.Exit();
+            ScreenManager.Game.Exit();
         }
     }
 }

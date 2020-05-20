@@ -45,7 +45,7 @@ namespace GameManagement
             get { return MenuItemList; }
         }
 
-        public MenuScreen(string title)
+        public MenuScreen(ScreenManager screenManager, string title) : base(screenManager)
         {
             this.Title = title;
 
@@ -166,7 +166,7 @@ namespace GameManagement
                 MenuItem menuEntry = MenuItemList[i];
                 
                 // each entry is to be centered horizontally
-                position.X = ScreenManager?.GraphicsDevice.Viewport.Width / 2 - menuEntry.GetWidth(this) / 2 ?? 0;
+                position.X = ScreenManager.GraphicsDevice.Viewport.Width / 2 - menuEntry.GetWidth(this) / 2;
 
                 if (ScreenState == State.TransitionOn)
                     position.X -= transitionOffset * 256;
@@ -208,11 +208,10 @@ namespace GameManagement
             // make sure our entries are in the right place before we draw them
             UpdateMenuEntryLocations();
 
-            if ((ScreenManager is ScreenManager screenManager)
-                && (ScreenManager?.SpriteBatch is SpriteBatch spriteBatch)
-                && (ScreenManager?.GraphicsDevice is GraphicsDevice graphics))
+            if ((ScreenManager.SpriteBatch is SpriteBatch spriteBatch)
+                && (ScreenManager.GraphicsDevice is GraphicsDevice graphics))
             {
-                SpriteFont? font = ScreenManager?.Font;
+                SpriteFont? font = ScreenManager.Font;
 
                 spriteBatch.Begin();
 
