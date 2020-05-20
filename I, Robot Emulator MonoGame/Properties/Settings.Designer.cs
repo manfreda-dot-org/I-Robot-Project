@@ -166,5 +166,17 @@ namespace I_Robot.Properties {
                 this["RightCoinCounter"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("False")]
+        public bool ShowFPS {
+            get {
+                return ((bool)(this["ShowFPS"]));
+            }
+            set {
+                this["ShowFPS"] = value;
+            }
+        }
     }
 }

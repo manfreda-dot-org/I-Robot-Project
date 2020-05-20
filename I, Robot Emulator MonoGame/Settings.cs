@@ -36,18 +36,18 @@ namespace I_Robot
 
         public enum BonusLives : byte
         {
-            Every_30000 = 0x00,
-            Every_50000 = 0x04,
-            None = 0x08,
-            Every_20000 = 0x0C,
+            Every_30000 = 0,
+            Every_50000 = 1,
+            None = 2,
+            Every_20000 = 3
         }
 
         public enum Lives : byte
         {
-            _4 = 0x00,
-            _5 = 0x10,
-            _2 = 0x20,
-            _3 = 0x30
+            _4 = 0,
+            _5 = 1,
+            _2 = 2,
+            _3 = 3
         }
 
         static public bool SpeedThrottle
@@ -59,6 +59,16 @@ namespace I_Robot
                 Properties.Settings.Default.Save();
             }
         }
+
+        static public bool ShowFPS
+        {
+            get => Properties.Settings.Default.ShowFPS;
+            set
+            {
+                Properties.Settings.Default.ShowFPS = value;
+                Properties.Settings.Default.Save();
+            }
+        } 
 
         static public bool TestSwitch
         {
@@ -168,14 +178,14 @@ namespace I_Robot
 
         static public BonusLives BonusLifeInterval
         {
-            get { return (BonusLives)(DipSwitch5E & 0x0C); }
-            set { DipSwitch5E = (byte)((DipSwitch5E & 0xF3) | (byte)value); }
+            get { return (BonusLives)((DipSwitch5E >> 2) & 0x03); }
+            set { DipSwitch5E = (byte)((DipSwitch5E & 0xF3) | (((byte)value & 3) << 2)); }
         }
 
         static public Lives LivesPerCredit
         {
-            get { return (Lives)(DipSwitch5E & 0x30); }
-            set { DipSwitch5E = (byte)((DipSwitch5E & 0xCF) | (byte)value); }
+            get { return (Lives)((DipSwitch5E >> 4) & 3); }
+            set { DipSwitch5E = (byte)((DipSwitch5E & 0xCF) | (((byte)value & 3) << 4)); }
         }
 
         static public Difficulty GameDifficulty
