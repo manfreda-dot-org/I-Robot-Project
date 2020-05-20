@@ -23,7 +23,7 @@ namespace I_Robot
     /// <summary>
     /// Renders the alphanumerics overlay
     /// </summary>
-    class AlphanumericsRenderer : IDisposable
+    public class AlphanumericsRenderer : IDisposable
     {
         /// <summary>
         /// The machine hardware

@@ -1,4 +1,4 @@
-﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// Copyright 2020 by John Manfreda. All Rights Reserved.
 // https://www.manfreda.org/
 //
 // This program is free software: you can redistribute it and/or modify
@@ -14,24 +14,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
-using GameManagement;
+using Microsoft.Xna.Framework;
 using System;
 
-namespace I_Robot
+namespace GameManagement
 {
     /// <summary>
-    /// The main class.
+    /// Custom event argument which includes the index of the player who
+    /// triggered the event. This is used by the MenuEntry.Selected event.
     /// </summary>
-    public static class Program
+    class PlayerIndexEventArgs : EventArgs
     {
         /// <summary>
-        /// The main entry point for the application.
+        /// The index of the player who triggered this event.
         /// </summary>
-        [STAThread]
-        static void Main()
+        public readonly PlayerIndex PlayerIndex;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public PlayerIndexEventArgs(PlayerIndex playerIndex)
         {
-            using (Game game = new Game())
-                game.Run();
+            PlayerIndex = playerIndex;
         }
     }
 }

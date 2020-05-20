@@ -14,24 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
-using GameManagement;
-using System;
-
-namespace I_Robot
+namespace GameManagement
 {
     /// <summary>
-    /// The main class.
+    /// An unselectable MenuItem
+    /// Used to display heading text, info, etc
     /// </summary>
-    public static class Program
+    class MenuHeading : MenuItem
     {
-        /// <summary>
-        /// The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
+        public MenuHeading(string text, float before = 0, float after = 0)
+            : base(text, before, after)
         {
-            using (Game game = new Game())
-                game.Run();
         }
     }
 }
