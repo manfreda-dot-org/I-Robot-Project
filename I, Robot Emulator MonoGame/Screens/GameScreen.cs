@@ -32,15 +32,10 @@ namespace I_Robot
     /// placeholder to get the idea across: you'll probably want to
     /// put some more interesting gameplay in here!
     /// </summary>
-    class GameplayScreen : Screen
+    class GameScreen : Screen
     {
-        ContentManager? content;
+        ContentManager? Content;
         SpriteFont? gameFont;
-
-        Vector2 playerPosition = new Vector2(100, 100);
-        Vector2 enemyPosition = new Vector2(100, 100);
-
-        Random random = new Random();
 
         float pauseAlpha;
 
@@ -49,7 +44,7 @@ namespace I_Robot
         /// <summary>
         /// Constructor.
         /// </summary>
-        public GameplayScreen()
+        public GameScreen()
         {
             TransitionOnTime = TimeSpan.FromSeconds(1.5);
             TransitionOffTime = TimeSpan.FromSeconds(0.5);
@@ -72,10 +67,10 @@ namespace I_Robot
             {
                 if (!instancePreserved)
                 {
-                    if (content == null)
-                        content = new ContentManager(screenManager.Game.Services, "Content");
+                    if (Content == null)
+                        Content = new ContentManager(screenManager.Game.Services, "Content");
 
-                    gameFont = content.Load<SpriteFont>("gamefont");
+                    gameFont = Content.Load<SpriteFont>("gamefont");
 
                     // A real game would probably have more content than this sample, so
                     // it would take longer to load. We simulate that by delaying for a
@@ -95,7 +90,7 @@ namespace I_Robot
         /// </summary>
         public override void Unload()
         {
-            content?.Unload();
+            Content?.Unload();
         }
 
 
@@ -147,7 +142,7 @@ namespace I_Robot
             if (pauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
                 Game.Hardware.Paused = true;
-                ScreenManager?.AddScreen(new PauseMenuScreen(), ControllingPlayer);
+                ScreenManager?.AddScreen(new MainMenuScreen(), ControllingPlayer);
             }
 
 #if false

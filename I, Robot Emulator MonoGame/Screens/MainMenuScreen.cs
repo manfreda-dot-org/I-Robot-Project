@@ -28,12 +28,12 @@ namespace I_Robot
             : base("MAIN    MENU")
         {
             // Create our menu entries.
-            MenuItems.Add(new MenuItem("PLAY    GAME", PlayGameMenuSelected));
-            MenuItems.Add(new MenuItem(SoundString, SoundMenuSelected, 0.5f));
+            MenuItems.Add(new MenuItem("RETURN    TO    GAME", OnCancel));
+            MenuItems.Add(new MenuItem(SoundString, SoundMenuSelected, 1f));
             MenuItems.Add(new MenuItem("GAME    OPTIONS", OptionsMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("RENDERING", RenderingMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("EMULATION", EmulationMenuSelected, 0.5f));
-            MenuItems.Add(new MenuItem("QUIT", OnCancel, 1));
+            MenuItems.Add(new MenuItem("QUIT", QuitMenuSelected, 1));
         }
 
         string SoundString => $"SOUND:    {(Settings.SoundEnabled ? "ENABLED" : "DISABLED")}";
@@ -41,7 +41,7 @@ namespace I_Robot
         void PlayGameMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
             if (ScreenManager is ScreenManager screenManager)
-                LoadingScreen.Load(screenManager, true, e.PlayerIndex, new GameplayScreen());
+                LoadingScreen.Load(screenManager, true, e.PlayerIndex, new GameScreen());
         }
 
         void SoundMenuSelected(object? sender, PlayerIndexEventArgs e)
@@ -66,12 +66,12 @@ namespace I_Robot
             ScreenManager?.AddScreen(new EmulationMenuScreen(), e.PlayerIndex);
         }
 
-        protected override void OnCancel(PlayerIndex playerIndex)
+        void QuitMenuSelected(object? sender, PlayerIndexEventArgs e)
         {
             const string message = "Are you sure you want to quit?\n\n";
             MessageBoxScreen confirmExitMessageBox = new MessageBoxScreen(message);
             confirmExitMessageBox.Accepted += ConfirmExitMessageBoxAccepted;
-            ScreenManager?.AddScreen(confirmExitMessageBox, playerIndex);
+            ScreenManager?.AddScreen(confirmExitMessageBox, null);
         }
 
         /// <summary>

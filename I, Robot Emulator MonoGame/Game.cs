@@ -96,7 +96,7 @@ namespace I_Robot
             ScreenManager.AddScreen(new MainMenuScreen(), null);
 #else
             if (ScreenManager is ScreenManager screenManager)
-                LoadingScreen.Load(screenManager, true, null, new GameplayScreen());
+                LoadingScreen.Load(screenManager, true, null, new GameScreen());
 #endif
         }
 
