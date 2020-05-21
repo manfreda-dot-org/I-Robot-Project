@@ -14,11 +14,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Windows.Media;
 
 namespace I_Robot
 {
@@ -56,7 +54,7 @@ namespace I_Robot
                 byte r = (byte)(((data >> 6) & 3) * i);
                 byte g = (byte)(((data >> 4) & 3) * i);
                 byte b = (byte)(((data >> 2) & 3) * i);
-                Color[index] = System.Windows.Media.Color.FromRgb(r, g, b);
+                Color[index] = new Color(r, g, b);
             });
         }
 
@@ -68,7 +66,7 @@ namespace I_Robot
         {
             uint[] array = new uint[Color.Length];
             for (int n = 0; n < array.Length; n++)
-                array[n] = Color[n].ToUint();
+                array[n] = Color[n].PackedValue;
             info.AddValue("PALETTE", array);
         }
 

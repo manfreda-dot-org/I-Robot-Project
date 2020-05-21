@@ -28,16 +28,5 @@ namespace I_Robot
         public static string HexString(this Int16 w) { return w.ToString("X4"); }
         public static string HexString(this UInt32 d) { return d.ToString("X8"); }
         public static string HexString(this Int32 d) { return d.ToString("X8"); }
-
-
-        public static uint ToUint(this System.Windows.Media.Color c)
-        {
-            return (0xFF000000 | (uint)((c.R << 16) | (c.G << 8) | (c.B << 0)));
-        }
-
-        public static System.Windows.Media.Color ToColor(uint value)
-        {
-            return System.Windows.Media.Color.FromArgb((byte)(value >> 24), (byte)(value >> 16), (byte)(value >> 8), (byte)(value >> 0));
-        }
     }
 }
