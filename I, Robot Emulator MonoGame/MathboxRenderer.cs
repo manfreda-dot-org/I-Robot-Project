@@ -14,8 +14,6 @@ namespace I_Robot
         readonly Game Game;
         readonly ScreenManager ScreenManager;
 
-        SpriteBatch? SpriteBatch;
-
         // two video buffers on game hardware
         readonly RenderTarget2D[] Buffers = new RenderTarget2D[2];
 
@@ -57,6 +55,9 @@ namespace I_Robot
 
         void Mathbox.IInterpreter.EraseVideoBuffer()
         {
+            // this is essentially the same as "starting" a new display list
+            // so we should clear/cache the old one while we build the new one
+
         }
 
         void Mathbox.IInterpreter.RasterizeObject(ushort address)

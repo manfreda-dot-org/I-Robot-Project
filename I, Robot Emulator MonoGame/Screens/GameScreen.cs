@@ -180,7 +180,8 @@ namespace I_Robot
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            // render to any textures
+            // perform any texture rendering first
+            // all of this needs to be done before SetRenderTarget(null) is called
             MathboxRenderer.Render(GraphicsDevice);
             Alphanumerics.Render(GraphicsDevice);
 
