@@ -207,38 +207,34 @@ namespace GameManagement
         {
             // make sure our entries are in the right place before we draw them
             UpdateMenuEntryLocations();
+            SpriteBatch.Begin();
 
-            if (ScreenManager.GraphicsDevice is GraphicsDevice graphics)
+            // Draw each menu entry in turn.
+            for (int i = 0; i < MenuItemList.Count; i++)
             {
-                SpriteBatch.Begin();
+                MenuItem menuEntry = MenuItemList[i];
 
-                // Draw each menu entry in turn.
-                for (int i = 0; i < MenuItemList.Count; i++)
-                {
-                    MenuItem menuEntry = MenuItemList[i];
+                bool isSelected = IsActive && (i == SelectedItem);
 
-                    bool isSelected = IsActive && (i == SelectedItem);
-
-                    menuEntry.Draw(this, isSelected, gameTime);
-                }
-
-                // Make the menu slide into place during transitions, using a
-                // power curve to make things look more interesting (this makes
-                // the movement slow down as it nears the end).
-                float transitionOffset = (float)Math.Pow(TransitionPosition, 2);
-
-                // Draw the menu title centered on the screen
-                Vector2 titlePosition = new Vector2(graphics.Viewport.Width / 2, 80);
-                Vector2 titleOrigin = MenuFont.MeasureString(Title) / 2;
-                Color titleColor = new Color(255, 64, 64) * TransitionAlpha;
-                float titleScale = 1.5f;
-
-                titlePosition.Y -= transitionOffset * 100;
-
-                SpriteBatch.DrawString(MenuFont, Title, titlePosition, titleColor, 0, titleOrigin, titleScale, SpriteEffects.None, 0);
-
-                SpriteBatch.End();
+                menuEntry.Draw(this, isSelected, gameTime);
             }
+
+            // Make the menu slide into place during transitions, using a
+            // power curve to make things look more interesting (this makes
+            // the movement slow down as it nears the end).
+            float transitionOffset = (float)Math.Pow(TransitionPosition, 2);
+
+            // Draw the menu title centered on the screen
+            Vector2 titlePosition = new Vector2(ScreenManager.GraphicsDevice.Viewport.Width / 2, 80);
+            Vector2 titleOrigin = MenuFont.MeasureString(Title) / 2;
+            Color titleColor = new Color(255, 64, 64) * TransitionAlpha;
+            float titleScale = 1.5f;
+
+            titlePosition.Y -= transitionOffset * 100;
+
+            SpriteBatch.DrawString(MenuFont, Title, titlePosition, titleColor, 0, titleOrigin, titleScale, SpriteEffects.None, 0);
+
+            SpriteBatch.End();
         }
     }
 }

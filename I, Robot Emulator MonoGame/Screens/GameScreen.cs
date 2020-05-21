@@ -180,10 +180,14 @@ namespace I_Robot
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            ScreenManager.GraphicsDevice.Clear(ClearOptions.Target, Color.CornflowerBlue, 0, 0);
+            // render to any textures
+            MathboxRenderer.Render(GraphicsDevice);
+            Alphanumerics.Render(GraphicsDevice);
 
-            MathboxRenderer.Draw(ScreenManager.GraphicsDevice);
-            Alphanumerics.Draw(ScreenManager.GraphicsDevice);
+            // now assemble the screen
+            GraphicsDevice.SetRenderTarget(null);
+            MathboxRenderer.Draw(GraphicsDevice);
+            Alphanumerics.Draw(GraphicsDevice);
 
             // If the game is transitioning on or off, fade it out to black.
             if (TransitionPosition > 0 || pauseAlpha > 0)

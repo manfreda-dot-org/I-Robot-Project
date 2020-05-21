@@ -1,4 +1,5 @@
 ﻿using GameManagement;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Media;
 using System;
@@ -13,8 +14,13 @@ namespace I_Robot
         readonly Game Game;
         readonly ScreenManager ScreenManager;
 
+        SpriteBatch? SpriteBatch;
+
         // two video buffers on game hardware
-        readonly RenderTarget2D[] VideoBuffer = new RenderTarget2D[2];
+        readonly RenderTarget2D[] Buffers = new RenderTarget2D[2];
+
+        public RenderTarget2D VideoBuffer;
+        public Texture2D Texture => Buffers[0];
 
         // Pointer to Mathbox memory
         UInt16* Memory;
@@ -28,9 +34,9 @@ namespace I_Robot
             Game = game;
 
             // create our render target buffers
-            for (int n = 0; n < VideoBuffer.Length; n++)
+            for (int n = 0; n < Buffers.Length; n++)
             {
-                VideoBuffer[n] = new RenderTarget2D(
+                Buffers[n] = new RenderTarget2D(
                     Game.GraphicsDevice,
                     Game.GraphicsDevice.Viewport.Width,
                     Game.GraphicsDevice.Viewport.Height,
@@ -46,6 +52,7 @@ namespace I_Robot
 
         void Mathbox.IInterpreter.SetVideoBuffer(int index)
         {
+            VideoBuffer = Buffers[index];
         }
 
         void Mathbox.IInterpreter.EraseVideoBuffer()
@@ -65,9 +72,21 @@ namespace I_Robot
         }
         #endregion
 
+        /// <summary>
+        /// Renders alphanumerics onto the overlay itself in native resolution
+        /// </summary>
+        /// <param name="graphicsDevice"></param>
+        public void Render(GraphicsDevice graphicsDevice)
+        {
+            graphicsDevice.SetRenderTarget(Buffers[0]);
+            graphicsDevice.Clear(Color.Transparent);
+        }
+
         public void Draw(GraphicsDevice graphicsDevice)
         {
-
+            ScreenManager.SpriteBatch.Begin();
+            ScreenManager.SpriteBatch.Draw(Texture, Vector2.Zero, Color.White);
+            ScreenManager.SpriteBatch.End();
         }
     }
 }

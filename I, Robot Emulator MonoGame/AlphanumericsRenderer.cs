@@ -17,6 +17,7 @@
 using GameManagement;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct3D9;
 using System;
 
 namespace I_Robot
@@ -34,6 +35,8 @@ namespace I_Robot
         /// </summary>
         readonly RenderTarget2D Overlay;
 
+        public Texture2D Texture => Overlay;
+
         /// <summary>
         /// Texture containing the alphanumerics characters
         /// </summary>
@@ -50,7 +53,7 @@ namespace I_Robot
 
             // create an overlay for us to render onto
             Overlay = new RenderTarget2D(
-                screen.Game.GraphicsDevice,
+                screen.GraphicsDevice,
                 Hardware.NATIVE_RESOLUTION.Width,
                 Hardware.NATIVE_RESOLUTION.Height);
         }
@@ -90,14 +93,13 @@ namespace I_Robot
         }
 
         /// <summary>
-        /// Renders the actual overlay itself in native resolution
+        /// Renders alphanumerics onto the overlay itself in native resolution
         /// </summary>
         /// <param name="graphicsDevice"></param>
-        void DrawCharactersOnOverlay(GraphicsDevice graphicsDevice)
+        public void Render(GraphicsDevice graphicsDevice)
         {
             // Set the render target
             graphicsDevice.SetRenderTarget(Overlay);
-            graphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
             graphicsDevice.Clear(Color.Transparent);
 
             Screen.SpriteBatch.Begin();
@@ -125,28 +127,11 @@ namespace I_Robot
                 }
             }
             Screen.SpriteBatch.End();
-
-            // Drop the render target
-            graphicsDevice.SetRenderTarget(null);
-        }
-
-        Rectangle OverlayDestRect(GraphicsDevice graphicsDevice)
-        {
-            int dstWidth = graphicsDevice.PresentationParameters.BackBufferWidth;
-            int dstHeight = graphicsDevice.PresentationParameters.BackBufferHeight;
-            float scale_x = (float)dstWidth / Hardware.NATIVE_RESOLUTION.Width;
-            float scale_y = (float)dstHeight / Hardware.NATIVE_RESOLUTION.Height;
-            float scale = Math.Min(scale_x, scale_y);
-            int w = (int)Math.Round(Hardware.NATIVE_RESOLUTION.Width * scale);
-            int h = (int)Math.Round(Hardware.NATIVE_RESOLUTION.Height * scale);
-            return new Rectangle((dstWidth - w) / 2, (dstHeight - h) / 2, w, h);
         }
 
         public void Draw(GraphicsDevice graphicsDevice)
         {
-            // render to overlay
-            DrawCharactersOnOverlay(graphicsDevice);
-
+            // determine location of overlay
             int dstWidth = graphicsDevice.PresentationParameters.BackBufferWidth;
             int dstHeight = graphicsDevice.PresentationParameters.BackBufferHeight;
             float scale_x = (float)dstWidth / Hardware.NATIVE_RESOLUTION.Width;
@@ -157,7 +142,7 @@ namespace I_Robot
 
             // draw overlay ontop of screen
             Screen.SpriteBatch.Begin();
-            Screen.SpriteBatch.Draw(Overlay, OverlayDestRect(graphicsDevice), null, Color.White);
+            Screen.SpriteBatch.Draw(Texture, new Rectangle((dstWidth - w) / 2, (dstHeight - h) / 2, w, h), null, Color.White);
             Screen.SpriteBatch.End();
         }
     }
