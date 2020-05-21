@@ -52,10 +52,7 @@ namespace I_Robot
             Overlay = new RenderTarget2D(
                 screen.Game.GraphicsDevice,
                 Hardware.NATIVE_RESOLUTION.Width,
-                Hardware.NATIVE_RESOLUTION.Height,
-                false,
-                screen.Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.Depth24);
+                Hardware.NATIVE_RESOLUTION.Height);
         }
 
         public void Dispose()
