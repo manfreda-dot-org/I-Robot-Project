@@ -265,7 +265,7 @@ namespace I_Robot
 
         public readonly RomSet Roms;
 
-        public Hardware(RomSet roms)
+        public Hardware(RomSet roms, Mathbox.IInterpreter interpreter)
         {
             Roms = roms;
 
@@ -278,7 +278,7 @@ namespace I_Robot
 
             ADC = new ADC(this);
             Alphanumerics = new Alphanumerics(this);
-            Mathbox = new Mathbox(this);
+            Mathbox = new Mathbox(this, interpreter);
             Palette = new Palette(this);
             Registers = new Registers(this);
             VideoProcessor = new VideoProcessor(this);

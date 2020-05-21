@@ -208,12 +208,12 @@ namespace I_Robot
             public bool EXT_START { get { return (Value & 0x04) != 0; } }
 
 
-            public bool COM_RAM_SEL { get { return (Value & 0x02) != 0; } }
+            public bool BUFSEL { get { return (Value & 0x02) != 0; } }
 
             /// <summary>
             /// Signal that indicates whether the video RAM should be erased 
             /// </summary>
-            public bool ERASE { get { return (Value & 0x01) == 0; } }
+            public bool ERASE { get { return (Value & 0x01) != 0; } }
 
             public static implicit operator byte(REGISER_1140 r) => r.Value;
             public static implicit operator REGISER_1140(byte b) => new REGISER_1140(b);
@@ -456,8 +456,12 @@ namespace I_Robot
                 mSTATWR = value;
 
                 Hardware.Bank_2000.BankSwitch();
-                Hardware.Mathbox.MATH_START = mSTATWR.MATH_START;
-                Hardware.VideoProcessor.EXT_START = mSTATWR.EXT_START;
+
+                Hardware.Mathbox.BUFSEL = value.BUFSEL;
+                Hardware.Mathbox.ERASE = value.ERASE;
+                Hardware.Mathbox.MATH_START = value.MATH_START;
+
+                Hardware.VideoProcessor.EXT_START = value.EXT_START;
             }
         }
 

@@ -15,13 +15,8 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
-using System.Printing.IndexedProperties;
-using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Windows.Markup.Localizer;
 
 namespace I_Robot
 {
@@ -38,6 +33,41 @@ namespace I_Robot
     [Serializable]
     unsafe public class Mathbox : Hardware.Subsystem
     {
+        public interface IInterpreter
+        {
+            /// <summary>
+            /// Sets pointer to mathbox memory
+            /// </summary>
+            public UInt16 * pMemory { set; }
+
+            /// <summary>
+            /// Sets the current video buffer being renderd to
+            /// </summary>
+            /// <param name="index"></param>
+            public void SetVideoBuffer(int index);
+
+            /// <summary>
+            /// Erases the selected video buffer
+            /// </summary>
+            public void EraseVideoBuffer();
+
+            /// <summary>
+            /// This command kicks off playfield rasterization
+            /// </summary>
+            void RasterizePlayfield();
+
+            /// <summary>
+            /// This command performas an unknown function, likely related to rasterization
+            /// </summary>
+            void UnknownCommand();
+
+            /// <summary>
+            /// Rasterizes the object at the given address, using the current lighting vector, camera vector, etc
+            /// </summary>
+            /// <param name="address"></param>
+            void RasterizeObject(UInt16 address);
+        }
+
         /// <summary>
         /// enumeration of commands that are recognized by the Mathbox
         /// </summary>
@@ -55,7 +85,7 @@ namespace I_Robot
         /// Represents a 3x3 matrix as used by the Mathbox
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 2)]
-        struct Matrix
+        public struct Matrix
         {
             public Int16 M11, M12, M13;
             public Int16 M21, M22, M23;
@@ -111,7 +141,14 @@ namespace I_Robot
         /// </summary>
         readonly UInt16* Memory;
 
+        /// <summary>
+        /// Interface to provided interpreter that intercepts rendering commands
+        /// </summary>
+        readonly IInterpreter Interpreter;
+
         bool mMATH_START = false;
+        bool mERASE = false;
+        bool ?mBUFSEL = false;
 
         /// <summary>
         /// Hardware signal that indicates when the mathbox is done
@@ -122,11 +159,13 @@ namespace I_Robot
         public readonly M6809E.ReadDelegate ReadRamFunction;
         public readonly M6809E.WriteDelegate WriteRamFunction;
 
-        public Mathbox(Hardware hardware) : base(hardware, "Mathbox")
+        public Mathbox(Hardware hardware, IInterpreter interpreter) : base(hardware, "Mathbox")
         {
             Memory = Memory16;
             pData = (byte*)Memory;
 
+            Interpreter = interpreter;
+            Interpreter.pMemory = Memory;
 
             //  Mathbox     CPU           hi                lo
             //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
@@ -224,6 +263,34 @@ namespace I_Robot
             // NOTE: 6809 I/O is not handled here, it is handled by Bank_2000 subsystem
         }
 
+        public bool BUFSEL
+        {
+            set
+            {
+                if (mBUFSEL != value)
+                {
+                    mBUFSEL = value;
+                    Interpreter.SetVideoBuffer(value ? 1 : 0);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Hardware signal that tells the video process to erase the selected video bank
+        /// </summary>
+        public bool ERASE
+        {
+            set
+            {
+                if (mERASE != value)
+                {
+                    mERASE = value;
+                    if (value)
+                        Interpreter.EraseVideoBuffer();
+                }
+            }
+        }
+
         /// <summary>
         /// Hardware signal that kicks off mathbox execution
         /// </summary>
@@ -245,24 +312,32 @@ namespace I_Robot
                         switch ((COMMAND)Memory[0])
                         {
                             case COMMAND.START_PLAYFIELD:
-                                //RasterizePlayfield();
+                                // route to interpreter
+                                Interpreter.RasterizePlayfield();
                                 break;
                             case COMMAND.UNKNOWN:
+                                // route to interpreter
+                                Interpreter.UnknownCommand();
                                 break;
                             case COMMAND.ROLL:
+                                // native interpretation
                                 Roll((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.YAW:
+                                // native interpretation
                                 Yaw((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.PITCH:
+                                // native interpretation
                                 Pitch((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.MATRIX_MULTIPLY:
+                                // native interpretation
                                 MatrixMultiply((Matrix*)&Memory[Memory[0x7B]], (Matrix*)&Memory[Memory[0x7C]], (Matrix*)&Memory[Memory[0x7D]]);
                                 break;
                             default:
-                                // RasterizeObject(Memory[0]);
+                                // route to interpreter
+                                Interpreter.RasterizeObject(Memory[0]);
                                 break;
                         }
 

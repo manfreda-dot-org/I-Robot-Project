@@ -39,6 +39,9 @@ namespace I_Robot
             }
         }
 
+        VideoInterpreter? Interpreter;
+
+
         GraphicsDeviceManager Graphics;
         public ScreenManager? ScreenManager;
         ScreenFactory ScreenFactory;
@@ -73,8 +76,10 @@ namespace I_Robot
             // read the ROMs
             if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out RomSet? roms, out string? errMsg) && roms != null)
             {
+                Interpreter = new VideoInterpreter();
+
                 // create hardware that uses the ROMs
-                mHardware = new Hardware(roms);
+                mHardware = new Hardware(roms, Interpreter);
             }
 
             LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));
