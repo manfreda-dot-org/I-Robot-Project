@@ -29,18 +29,7 @@ namespace I_Robot
     public class Game : Microsoft.Xna.Framework.Game
     {
         Hardware? mHardware;
-        public Hardware Hardware
-        {
-            get
-            {
-                if (mHardware == null)
-                    throw new Exception();
-                return mHardware;
-            }
-        }
-
-        VideoInterpreter? Interpreter;
-
+        MathboxRenderer? mMathboxRenderer;
 
         GraphicsDeviceManager Graphics;
         public ScreenManager? ScreenManager;
@@ -60,6 +49,26 @@ namespace I_Robot
             Services.AddService(typeof(IScreenFactory), ScreenFactory);
         }
 
+        public Hardware Hardware
+        {
+            get
+            {
+                if (mHardware == null)
+                    throw new Exception();
+                return mHardware;
+            }
+        }
+
+        public MathboxRenderer MathboxRenderer
+        {
+            get
+            {
+                if (mMathboxRenderer == null)
+                    throw new Exception();
+                return mMathboxRenderer;
+            }
+        }
+
         protected override void Initialize()
         {
             base.Initialize();
@@ -76,10 +85,10 @@ namespace I_Robot
             // read the ROMs
             if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out RomSet? roms, out string? errMsg) && roms != null)
             {
-                Interpreter = new VideoInterpreter();
+                mMathboxRenderer = new MathboxRenderer(ScreenManager);
 
                 // create hardware that uses the ROMs
-                mHardware = new Hardware(roms, Interpreter);
+                mHardware = new Hardware(roms, mMathboxRenderer);
             }
 
             LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));

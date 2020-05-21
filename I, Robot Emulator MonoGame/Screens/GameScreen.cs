@@ -34,7 +34,8 @@ namespace I_Robot
     /// </summary>
     class GameScreen : IRobotScreen
     {
-        readonly AlphanumericsRenderer AlphanumericsOverlay;
+        readonly AlphanumericsRenderer Alphanumerics;
+        readonly MathboxRenderer MathboxRenderer;
 
         ContentManager? Content;
 
@@ -55,7 +56,8 @@ namespace I_Robot
                 new Keys[] { Keys.Escape },
                 true);
 
-            AlphanumericsOverlay = new AlphanumericsRenderer(this);
+            MathboxRenderer = Game.MathboxRenderer;
+            Alphanumerics = new AlphanumericsRenderer(this);
         }
 
         /// <summary>
@@ -87,7 +89,7 @@ namespace I_Robot
         /// </summary>
         public override void Unload()
         {
-            AlphanumericsOverlay.Dispose();
+            Alphanumerics.Dispose();
             Content?.Unload();
         }
 
@@ -178,19 +180,17 @@ namespace I_Robot
         /// </summary>
         public override void Draw(GameTime gameTime)
         {
-            if (ScreenManager.GraphicsDevice is GraphicsDevice device)
+            ScreenManager.GraphicsDevice.Clear(ClearOptions.Target, Color.CornflowerBlue, 0, 0);
+
+            MathboxRenderer.Draw(ScreenManager.GraphicsDevice);
+            Alphanumerics.Draw(ScreenManager.GraphicsDevice);
+
+            // If the game is transitioning on or off, fade it out to black.
+            if (TransitionPosition > 0 || pauseAlpha > 0)
             {
-                device.Clear(ClearOptions.Target, Color.CornflowerBlue, 0, 0);
+                float alpha = MathHelper.Lerp(1f - TransitionAlpha, 1f, pauseAlpha);
 
-                AlphanumericsOverlay.Draw(device);
-
-                // If the game is transitioning on or off, fade it out to black.
-                if (TransitionPosition > 0 || pauseAlpha > 0)
-                {
-                    float alpha = MathHelper.Lerp(1f - TransitionAlpha, 1f, pauseAlpha);
-
-                    ScreenManager.FadeBackBufferToBlack(alpha * 0.75f);
-                }
+                ScreenManager.FadeBackBufferToBlack(alpha * 0.75f);
             }
         }
     }

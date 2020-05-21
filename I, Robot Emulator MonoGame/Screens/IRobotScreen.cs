@@ -23,15 +23,16 @@ namespace I_Robot
     /// </summary>
     class IRobotScreen : Screen
     {
+        new public readonly I_Robot.Game Game;
         public readonly Hardware Hardware;
         
         public IRobotScreen(ScreenManager screenManager)
             : base(screenManager)
         {
-            if (this.Game is Game game)
-                Hardware = game.Hardware;
-            else
+            if (!(screenManager.Game is I_Robot.Game game))
                 throw new System.Exception();
+            Game = game;
+            Hardware = Game.Hardware;
         }
     }
 }
