@@ -39,15 +39,10 @@ namespace I_Robot
         /// </summary>
         readonly Texture2D CharacterSet;
 
-        readonly SpriteBatch SpriteBatch;
-
         public AlphanumericsRenderer(IRobotScreen screen)
         {
             Screen = screen;
             Hardware = screen.Hardware;
-
-            // create a spriteback for use later
-            SpriteBatch = screen.SpriteBatch;
 
             // create the character set texture, and fill with game font
             CharacterSet = new Texture2D(screen.Game.GraphicsDevice, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT * Alphanumerics.NUM_CHARS);
@@ -67,7 +62,6 @@ namespace I_Robot
         {
             Overlay.Dispose();
             CharacterSet.Dispose();
-            SpriteBatch.Dispose();
         }
 
         /// <summary>
@@ -109,7 +103,7 @@ namespace I_Robot
             graphicsDevice.DepthStencilState = new DepthStencilState() { DepthBufferEnable = true };
             graphicsDevice.Clear(Color.Transparent);
 
-            SpriteBatch.Begin();
+            Screen.SpriteBatch.Begin();
             Color[] palette = Hardware.Alphanumerics.Palette;
             int index = 0;
             Rectangle src = new Rectangle(0, 0, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT);
@@ -129,11 +123,11 @@ namespace I_Robot
                     if (ch != 0)
                     {
                         src.Y = ch * Alphanumerics.CHAR_HEIGHT;
-                        SpriteBatch.Draw(CharacterSet, dst, src, palette[_byte >> 6]);
+                        Screen.SpriteBatch.Draw(CharacterSet, dst, src, palette[_byte >> 6]);
                     }
                 }
             }
-            SpriteBatch.End();
+            Screen.SpriteBatch.End();
 
             // Drop the render target
             graphicsDevice.SetRenderTarget(null);
@@ -165,9 +159,9 @@ namespace I_Robot
             int h = (int)Math.Round(Hardware.NATIVE_RESOLUTION.Height * scale);
 
             // draw overlay ontop of screen
-            SpriteBatch.Begin();
-            SpriteBatch.Draw(Overlay, OverlayDestRect(graphicsDevice), null, Color.White);
-            SpriteBatch.End();
+            Screen.SpriteBatch.Begin();
+            Screen.SpriteBatch.Draw(Overlay, OverlayDestRect(graphicsDevice), null, Color.White);
+            Screen.SpriteBatch.End();
         }
     }
 }
