@@ -6,28 +6,34 @@ namespace I_Robot
 {
     unsafe class VideoInterpreter : Mathbox.IInterpreter
     {
+        #region MATHBOX INTERFACE
+
+        /// <summary>
+        /// Pointer to Mathbox memory
+        /// </summary>
         UInt16* Memory;
 
         public unsafe ushort* pMemory { set => Memory = value; }
 
-        public void SetVideoBuffer(int index)
+        void Mathbox.IInterpreter.SetVideoBuffer(int index)
         {
         }
 
-        public void EraseVideoBuffer()
+        void Mathbox.IInterpreter.EraseVideoBuffer()
         {
         }
 
-        public void RasterizeObject(ushort address)
+        void Mathbox.IInterpreter.RasterizeObject(ushort address)
         {
         }
 
-        public void RasterizePlayfield()
+        void Mathbox.IInterpreter.RasterizePlayfield()
         {
         }
 
-        public void UnknownCommand()
+        void Mathbox.IInterpreter.UnknownCommand()
         {
         }
+        #endregion
     }
 }
