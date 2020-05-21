@@ -41,6 +41,7 @@ namespace GameManagement
         }
 
         public readonly Game Game;
+        public readonly GraphicsDevice GraphicsDevice;
         public readonly ScreenManager ScreenManager;
         public readonly SpriteFont GameFont;
         public readonly SpriteFont MenuFont;
@@ -104,6 +105,7 @@ namespace GameManagement
         {
             Game = screenManager.Game;
             ScreenManager = screenManager;
+            GraphicsDevice = ScreenManager.GraphicsDevice;
             GameFont = screenManager.GameFont;
             MenuFont = screenManager.MenuFont;
             SpriteBatch = screenManager.SpriteBatch;

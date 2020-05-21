@@ -127,7 +127,7 @@ namespace I_Robot
                 const string message = "Loading...";
 
                 // Center the text in the viewport.
-                Viewport viewport = ScreenManager.GraphicsDevice.Viewport;
+                Viewport viewport = GraphicsDevice.Viewport;
                 Vector2 viewportSize = new Vector2(viewport.Width, viewport.Height);
                 Vector2 textSize = MenuFont.MeasureString(message);
                 Vector2 textPosition = (viewportSize - textSize) / 2;
