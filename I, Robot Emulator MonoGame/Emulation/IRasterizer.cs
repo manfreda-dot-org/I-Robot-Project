@@ -28,18 +28,17 @@ namespace I_Robot.Emulation
         /// </summary>
         Machine Machine { set; }
 
-        void EXT_START();
+        /// <summary>
+        /// Called when game program asserts EXT_START
+        /// </summary>
+        /// <param name="BUFSEL">buffer to render to</param>
+        /// <param name="ERASE">true if buffer should be erased before rendering</param>
+        void EXT_START(bool BUFSEL, bool ERASE);
 
         /// <summary>
-        /// Sets the current video buffer being renderd to
+        /// Gets the state of the video processor
         /// </summary>
-        /// <param name="index"></param>
-        void SetVideoBuffer(int index);
-
-        /// <summary>
-        /// Erases the selected video buffer
-        /// </summary>
-        void EraseVideoBuffer();
+        bool EXT_DONE { get; }
 
         /// <summary>
         /// This command kicks off playfield rasterization

@@ -140,8 +140,6 @@ namespace I_Robot.Emulation
         readonly IRasterizer Rasterizer;
 
         bool mMATH_START = false;
-        bool mERASE = false;
-        bool? mBUFSEL = false;
 
         /// <summary>
         /// Hardware signal that indicates when the mathbox is done
@@ -255,30 +253,15 @@ namespace I_Robot.Emulation
             // NOTE: 6809 I/O is not handled here, it is handled by Bank_2000 subsystem
         }
 
-        public bool BUFSEL
+        bool? mADDCON = null;
+        public bool ADDCON
         {
             set
             {
-                if (mBUFSEL != value)
+                if (mADDCON != value)
                 {
-                    mBUFSEL = value;
-                    Rasterizer.SetVideoBuffer(value ? 1 : 0);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Hardware signal that tells the video process to erase the selected video bank
-        /// </summary>
-        public bool ERASE
-        {
-            set
-            {
-                if (mERASE != value)
-                {
-                    mERASE = value;
-                    if (value)
-                        Rasterizer.EraseVideoBuffer();
+                    mADDCON = value;
+                    Machine.TraceSignal($"ADDCON = {value}");
                 }
             }
         }
@@ -296,6 +279,9 @@ namespace I_Robot.Emulation
                 {
                     mMATH_START = value;
 
+                    if (!value)
+                        Machine.TraceSignal("MATH_START = false");
+
                     // if signal is going from 0 --> 1
                     if (value)
                     {
@@ -304,30 +290,37 @@ namespace I_Robot.Emulation
                         switch ((COMMAND)Memory[0])
                         {
                             case COMMAND.START_PLAYFIELD:
+                                Machine.TraceSignal("MATH_START(START_PLAYFIELD)");
                                 // route to interpreter
                                 Rasterizer.RasterizePlayfield();
                                 break;
                             case COMMAND.UNKNOWN:
+                                Machine.TraceSignal("MATH_START(UNKNOWN)");
                                 // route to interpreter
                                 Rasterizer.UnknownCommand();
                                 break;
                             case COMMAND.ROLL:
+                                Machine.TraceSignal("MATH_START(ROLL)");
                                 // native interpretation
                                 Roll((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.YAW:
+                                Machine.TraceSignal("MATH_START(YAW)");
                                 // native interpretation
                                 Yaw((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.PITCH:
+                                Machine.TraceSignal("MATH_START(PITCH)");
                                 // native interpretation
                                 Pitch((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
                                 break;
                             case COMMAND.MATRIX_MULTIPLY:
+                                Machine.TraceSignal("MATH_START(MULTIPLY)");
                                 // native interpretation
                                 MatrixMultiply((Matrix*)&Memory[Memory[0x7B]], (Matrix*)&Memory[Memory[0x7C]], (Matrix*)&Memory[Memory[0x7D]]);
                                 break;
                             default:
+                                Machine.TraceSignal($"MATH_START({Memory[0].HexString()})");
                                 // route to interpreter
                                 Rasterizer.RasterizeObject(Memory[0]);
                                 break;

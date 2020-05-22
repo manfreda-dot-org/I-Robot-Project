@@ -200,9 +200,9 @@ namespace I_Robot.Emulation
             public bool ADDCON { get { return (Value & 0x08) != 0; } }
 
             /// <summary>
-            /// Signal used to start the video processor
+            /// Signal used to start the video processor, active low
             /// </summary>
-            public bool EXT_START { get { return (Value & 0x04) != 0; } }
+            public bool EXT_START { get { return (Value & 0x04) == 0; } }
 
 
             public bool BUFSEL { get { return (Value & 0x02) != 0; } }
@@ -454,10 +454,13 @@ namespace I_Robot.Emulation
 
                 Machine.Bank_2000.BankSwitch();
 
-                Machine.Mathbox.BUFSEL = value.BUFSEL;
-                Machine.Mathbox.ERASE = value.ERASE;
+                // unneeded, appears to switch MBRAM between CPU and Mathbox
+                //Machine.Mathbox.ADDCON = value.ADDCON;
                 Machine.Mathbox.MATH_START = value.MATH_START;
 
+                // should update BUFSEL and ERASE before we kick off EXT_START
+                Machine.VideoProcessor.BUFSEL = value.BUFSEL;
+                Machine.VideoProcessor.ERASE = value.ERASE;
                 Machine.VideoProcessor.EXT_START = value.EXT_START;
             }
         }

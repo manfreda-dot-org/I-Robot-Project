@@ -14,6 +14,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using SharpDX.DXGI;
 using System;
 using System.Runtime.Serialization;
 
@@ -29,12 +30,14 @@ namespace I_Robot.Emulation
         public readonly PinnedBuffer<byte>[] COMRAM = new PinnedBuffer<byte>[2] { new PinnedBuffer<byte>(0x2000), new PinnedBuffer<byte>(0x2000) };
 
         readonly IRasterizer Rasterizer;
+        bool mBUFSEL;
         bool mEXT_START;
+        bool mERASE;
 
         /// <summary>
         /// Video processor finished signal
         /// </summary>
-        public bool EXT_DONE { get; private set; } = true;
+        public bool EXT_DONE => Rasterizer.EXT_DONE;
 
         public VideoProcessor(Machine machine, IRasterizer rasterizer) : base(machine, "Video Processor")
         {
@@ -58,17 +61,56 @@ namespace I_Robot.Emulation
         }
 
         /// <summary>
+        /// hardware signal that selects which page of video memory to render to 
+        /// </summary>
+        public bool BUFSEL
+        {
+            get => mBUFSEL;
+            set
+            {
+                if (mBUFSEL != value)
+                {
+                    mBUFSEL = value;
+                    Machine.TraceSignal($"BUFSEL = {value}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Hardware signal that tells the video process to erase the selected video bank
+        /// </summary>
+        public bool ERASE
+        {
+            get => mERASE;
+            set
+            {
+                if (mERASE != value)
+                {
+                    mERASE = value;
+                    Machine.TraceSignal($"ERASE = {value}");
+                }
+            }
+        }
+
+        /// <summary>
         /// Hardware signal that tells the video processor to execute the display list in COMRAM
         /// </summary>
         public bool EXT_START
         {
+            get => mEXT_START;
             set
             {
                 if (mEXT_START != value)
                 {
                     mEXT_START = value;
                     if (!value)
-                        Rasterizer.EXT_START();
+                        Machine.TraceSignal($"EXT_START = false");
+                    // start rasterizer on assertion
+                    if (value)
+                    {
+                        Rasterizer.EXT_START(ERASE, BUFSEL);
+                        Machine.TraceSignal($"EXT_START(erase={ERASE}, bufsel={BUFSEL})");
+                    }
                 }
             }
         }
