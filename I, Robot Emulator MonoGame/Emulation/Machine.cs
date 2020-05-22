@@ -378,6 +378,7 @@ namespace I_Robot.Emulation
                     if (Paused)
                     {
                         CyclesToRun = 0;
+                        Throttle.Reset();
                         continue;
                     }
 
