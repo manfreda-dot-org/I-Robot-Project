@@ -55,6 +55,11 @@ namespace I_Robot.Emulation
 
         ////////////////////////////////////////////////////////////////////////////////
 
+        /// <summary>
+        /// Standard 4:3 TV monitor
+        /// </summary>
+        public const float NativeAspectRatio = 4f / 3; 
+
         public static readonly Size NATIVE_RESOLUTION = new Size(Alphanumerics.COLUMNS * Alphanumerics.CHAR_WIDTH, Alphanumerics.VISIBLE_ROWS * Alphanumerics.CHAR_HEIGHT);
 
         // Video clocks 320 x 256 pixels per frame, at 5 MHz
