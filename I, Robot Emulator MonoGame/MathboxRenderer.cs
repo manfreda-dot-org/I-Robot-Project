@@ -85,11 +85,28 @@ namespace I_Robot
         // must be retained between calls of ParseObjectList()
         UInt16 SurfaceList;
 
+        class VertexBufRenderType : IDisposable
+        {
+            public TYPE Type;
+            public int NumPrimitives;
+            public readonly VertexBuffer VertexBuffer;
+
+            public VertexBufRenderType(GraphicsDevice graphicsDevice)
+            {
+                VertexBuffer = new VertexBuffer(graphicsDevice, typeof(VertexPositionColor), 1024 * 3, BufferUsage.WriteOnly);
+            }
+
+            public void Dispose()
+            {
+                VertexBuffer.Dispose();
+            }
+        }
+
         class VertexBufferPool : IDisposable
         {
             readonly GraphicsDevice GraphicsDevice;
-            ConcurrentQueue<VertexBuffer> Pool = new ConcurrentQueue<VertexBuffer>();
-            public ConcurrentStack<VertexBuffer> InUse = new ConcurrentStack<VertexBuffer>();
+            ConcurrentQueue<VertexBufRenderType> Pool = new ConcurrentQueue<VertexBufRenderType>();
+            public ConcurrentStack<VertexBufRenderType> InUse = new ConcurrentStack<VertexBufRenderType>();
             int Count = 0;
 
             public VertexBufferPool(GraphicsDevice graphicsDevice)
@@ -112,13 +129,13 @@ namespace I_Robot
                 InUse.Clear();
             }
 
-            public VertexBuffer Get()
+            public VertexBufRenderType Get()
             {
-                if (!Pool.TryDequeue(out VertexBuffer? result))
+                if (!Pool.TryDequeue(out VertexBufRenderType? result))
                 {
-                    result = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), 256 * 3, BufferUsage.WriteOnly);
+                    result = new VertexBufRenderType(GraphicsDevice);
                     Count++;
-                    System.Diagnostics.Debug.WriteLine($"new VertexBuffer(), total = {Count}");
+//                    System.Diagnostics.Debug.WriteLine($"new VertexBuffer(), total = {Count}");
                 }
                 InUse.Push(result);
                 return result;
@@ -273,114 +290,77 @@ namespace I_Robot
         }
 
         VertexPositionColor[] buf = new VertexPositionColor[256 * 3];
-        void UnlockVertexBuffer(int numvertices, Color color)
+        void UnlockVertexBuffer(int numvertices, Color color, TYPE type)
         {
             if (numvertices <= 0)
                 return;
+            else if (numvertices == 1)
+                type = TYPE.Dot;
+            else if (numvertices == 2 && type == TYPE.Polygon)
+                type = TYPE.Vector;
 
-            // if object is to be rendered as a vector, we must close the object
-            // by making the endpoint equal to the start point
-            Vertices[numvertices] = Vertices[0];
-
-            var vertexBuffer = Pool.Get();
-
-#if true
-
-            if (numvertices == 1)
-            {
-                int i = 0;
-                buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
-                buf[i++].Position = Vertices[0];
-                buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
-                buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
-
-                buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
-                buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
-                buf[i++].Position = Vertices[0] + 10 * Vector3.Right + 10 * Vector3.Down;
-                buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
-
-                vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
-            }
-            else if (numvertices == 2)
-            {
-                int i = 0;
-                for (int n = 1; n < numvertices; n++)
-                {
-                    buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
-                    buf[i++].Position = Vertices[n - 1];
-                    buf[i++].Position = Vertices[n];
-                    buf[i++].Position = Vertices[n] + 5 * Vector3.Left;
-
-                    buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
-                    buf[i++].Position = Vertices[n];
-                    buf[i++].Position = Vertices[n] + 5 * Vector3.Left;
-                    buf[i++].Position = Vertices[n - 1] + 5 * Vector3.Left;
-                }
-                vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
-            }
-            else
-            {
-                // convert triangle fan
-                int i = 0;
-                for (int n = 2; n < numvertices; n++)
-                {
-                    buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
-                    buf[i++].Position = Vertices[0];
-                    buf[i++].Position = Vertices[n - 1];
-                    buf[i++].Position = Vertices[n - 2];
-                }
-                vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
-            }
-#else
             int i = 0;
-            for (int n=0; n<numvertices;n++)
-            {
-                buf[i].Color = buf[i+1].Color = buf[i+2].Color = color;
-                buf[i++].Position = Vertices[n];
-                buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
-                buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
+            int numPrimitives = 0;
 
-                buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
-                buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
-                buf[i++].Position = Vertices[n] + 10 * Vector3.Right + 10 * Vector3.Down;
-                buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
+            switch (type)
+            {
+                default: return;
+                case TYPE.Dot:
+                    for (int n = 0; n < numvertices; n++)
+                    {
+                        buf[i++].Position = Vertices[0];
+                        buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
+                        buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
+
+                        buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
+                        buf[i++].Position = Vertices[0] + 10 * Vector3.Right + 10 * Vector3.Down;
+                        buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
+                    }
+                    numPrimitives = numvertices * 2;
+                    break;
+                case TYPE.Vector:
+                    // if object is to be rendered as a vector, we must close the object
+                    // by making the endpoint equal to the start point
+                    Vertices[numvertices++] = Vertices[0];
+                    for (int n = 0; n < numvertices; n++)
+                        buf[i++].Position = Vertices[n];
+                    numPrimitives = numvertices - 1;
+                    break;
+                case TYPE.Polygon:
+                    // convert triangle fan
+                    int a = 0;
+                    int b = 1;
+                    int c = numvertices - 1;
+
+                    buf[i++].Position = Vertices[a];
+                    buf[i++].Position = Vertices[b];
+                    for (; ; )
+                    {
+                        buf[i++].Position = Vertices[c];
+                        int next = b + 1;
+                        a = b; b = c; c = next;
+                        if (b == c)
+                            break;
+
+                        buf[i++].Position = Vertices[c];
+                        next = b - 1;
+                        a = b; b = c; c = next;
+                        if (b == c)
+                            break;
+
+                    }
+                    numPrimitives = numvertices - 2;
+                    break;
             }
 
-            vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
-#endif
-            //            System.Diagnostics.Debug.WriteLine(Vertices[0].ToString());
-            //            if (numvertices > 5 && numvertices < 20)
-            //                System.Diagnostics.Debug.WriteLine("");
-        }
+            for (int n = 0; n < i; n++)
+                buf[n].Color = color;
 
-        void Dot()
-        {
-#if false
-            if (Settings.ShowDots)
-                Device->DrawPrimitive(D3DPT_POINTLIST, 0, VertexBuffer.Length);
-#endif
+            var obj = Pool.Get();
+            obj.Type = type;
+            obj.NumPrimitives = numPrimitives;
+            obj.VertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
         }
-
-        void Vector()
-        {
-#if false
-            if (VertexBuffer.Length < 2)
-                Dot();
-            else if (Settings.ShowVectors)
-                Device->DrawPrimitive(D3DPT_LINESTRIP, 0, VertexBuffer.Length - 1 + (VertexBuffer.Length > 2));
-#endif
-        }
-
-        void Polygon()
-        {
-#if false
-            if (VertexBuffer.Length < 3)
-                Vector();
-            else if (Settings.ShowPolygons)
-                Device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, VertexBuffer.Length - 2);
-#endif
-        }
-
 
 #endregion
 
@@ -529,20 +509,20 @@ namespace I_Robot
             Color color = GetColor(flags, shade);
 
             // prepare the vertex buffer
-            PrepareVertexBuffer(address, color);
-
-            // render surface using appropriate method
-            switch (flags & 0x0300)
-            {
-                case 0x0000: Polygon(); break;
-                case 0x0100: Vector(); break;
-                case 0x0200: Dot(); break;
-            }
+            PrepareVertexBuffer(address, color, (TYPE)flags & TYPE.Mask);
 
             return true;
         }
 
-        void PrepareVertexBuffer(UInt16 address, Color color)
+        enum TYPE : UInt16
+        {
+            Polygon = 0x0000,
+            Vector = 0x0100,
+            Dot = 0x0200,
+            Mask = 0x0300
+        }
+
+        void PrepareVertexBuffer(UInt16 address, Color color, TYPE type)
         {
             UInt16* pface = &Memory[address + 1];
             Vector3[] dst = LockVertexBuffer();
@@ -558,7 +538,7 @@ namespace I_Robot
 
                 if ((word & 0x8000) != 0)
                 {
-                    UnlockVertexBuffer(index, color);
+                    UnlockVertexBuffer(index, color, type);
                     return;
                 }
             }
@@ -599,7 +579,7 @@ namespace I_Robot
         void Mathbox.IRasterizer.UnknownCommand()
         {
         }
-        #endregion
+#endregion
 
         /// <summary>
         /// Renders alphanumerics onto the overlay itself in native resolution
@@ -607,50 +587,6 @@ namespace I_Robot
         /// <param name="graphicsDevice"></param>
         public void Render(GraphicsDevice graphicsDevice)
         {
-
-            if (GamePad.GetState(PlayerIndex.One).Buttons.Back ==
-                ButtonState.Pressed || Keyboard.GetState().IsKeyDown(
-                Keys.Escape))
-                Game.Exit();
-
-            if (Keyboard.GetState().IsKeyDown(Keys.Left))
-            {
-                camPosition.X -= 1f;
-                camTarget.X -= 1f;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Right))
-            {
-                camPosition.X += 1f;
-                camTarget.X += 1f;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Up))
-            {
-                camPosition.Y -= 1f;
-                camTarget.Y -= 1f;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Down))
-            {
-                camPosition.Y += 1f;
-                camTarget.Y += 1f;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
-            {
-                camPosition.Z += 1f;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
-            {
-                camPosition.Z -= 1f;
-            }
-            if (Keyboard.GetState().IsKeyDown(Keys.Space))
-            {
-                orbit = !orbit;
-            }
-
-            if (orbit)
-            {
-                Matrix rotationMatrix = Matrix.CreateRotationY(MathHelper.ToRadians(1f));
-                camPosition = Vector3.Transform(camPosition, rotationMatrix);
-            }
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
 
 
@@ -666,9 +602,9 @@ namespace I_Robot
             basicEffect.World = worldMatrix;
             graphicsDevice.Clear(Color.CornflowerBlue);
 
-            foreach (var vertexBuffer in Pool.InUse)
+            foreach (var obj in Pool.InUse)
             {
-                graphicsDevice.SetVertexBuffer(vertexBuffer);
+                graphicsDevice.SetVertexBuffer(obj.VertexBuffer);
 
                 //Turn off culling so we see both sides of our rendered triangle
                 Microsoft.Xna.Framework.Graphics.RasterizerState rasterizerState = new RasterizerState();
@@ -678,7 +614,10 @@ namespace I_Robot
                 foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 3);
+                    if (obj.Type == TYPE.Vector)
+                        graphicsDevice.DrawPrimitives(PrimitiveType.LineList, 0, obj.NumPrimitives);
+                    else
+                        graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, obj.NumPrimitives);
                 }
             }
         }
