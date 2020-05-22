@@ -410,6 +410,17 @@ namespace I_Robot.Emulation
             }
         }
 
+        UInt32 LastInstruction = 0;
+
+        [Conditional("DEBUG")]
+        public void TraceSignal(string s)
+        {
+            UInt32 prev = LastInstruction;
+            LastInstruction = (UInt32)M6809E.Clock;
+            UInt32 delta = LastInstruction - prev;
+            System.Diagnostics.Debug.WriteLine($"Delta {delta.ToString("00000")}  {s}");
+        }
+
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)
         {
             info.AddValue("M6809E", M6809E);
