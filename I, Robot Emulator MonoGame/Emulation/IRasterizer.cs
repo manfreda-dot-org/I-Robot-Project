@@ -26,20 +26,20 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Sets pointer to mathbox memory
         /// </summary>
-        public Machine Machine { set; }
+        Machine Machine { set; }
 
-        public bool EXT_START { set; }
+        void EXT_START();
 
         /// <summary>
         /// Sets the current video buffer being renderd to
         /// </summary>
         /// <param name="index"></param>
-        public void SetVideoBuffer(int index);
+        void SetVideoBuffer(int index);
 
         /// <summary>
         /// Erases the selected video buffer
         /// </summary>
-        public void EraseVideoBuffer();
+        void EraseVideoBuffer();
 
         /// <summary>
         /// This command kicks off playfield rasterization
@@ -57,6 +57,4 @@ namespace I_Robot.Emulation
         /// <param name="address"></param>
         void RasterizeObject(UInt16 address);
     }
-
-
 }

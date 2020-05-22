@@ -67,7 +67,8 @@ namespace I_Robot.Emulation
                 if (mEXT_START != value)
                 {
                     mEXT_START = value;
-                    Rasterizer.EXT_START = value;
+                    if (!value)
+                        Rasterizer.EXT_START();
                 }
             }
         }

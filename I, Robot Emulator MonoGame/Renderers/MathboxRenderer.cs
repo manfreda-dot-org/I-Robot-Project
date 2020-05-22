@@ -547,17 +547,13 @@ namespace I_Robot
 
 
 
-#endregion
+        #endregion
 
-#region EMULATOR INTERFACE
+        #region EMULATOR INTERFACE
 
-        bool IRasterizer.EXT_START
+        void IRasterizer.EXT_START()
         {
-            set
-            {
-                if (!value)
-                    Pool.FlipAndReset();
-            }
+            Pool.FlipAndReset();
         }
 
         void IRasterizer.SetVideoBuffer(int index)
