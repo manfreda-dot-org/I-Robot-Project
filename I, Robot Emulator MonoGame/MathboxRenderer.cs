@@ -1,4 +1,4 @@
-﻿using GameManagement;
+using GameManagement;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -37,18 +37,18 @@ namespace I_Robot
         {
             const float scale = 1.0f / 0x4000;
             return new Matrix3x3(
-                m.M11 * scale, m.M12 * -scale, m.M13 * scale,
-                m.M21 * scale, m.M22 * -scale, m.M23 * scale,
-                m.M31 * scale, m.M32 * -scale, m.M33 * scale);
+                m.M11 * scale, m.M12 * scale, m.M13 * scale,
+                m.M21 * scale, m.M22 * scale, m.M23 * scale,
+                m.M31 * scale, m.M32 * scale, m.M33 * scale);
         }
 
         public static Matrix ToMatrix4(this Mathbox.Matrix m)
         {
             const float scale = 1.0f / 0x4000;
             return new Matrix(
-                m.M11 * scale, m.M12 * -scale, m.M13 * scale, 0,
-                m.M21 * scale, m.M22 * -scale, m.M23 * scale, 0,
-                m.M31 * scale, m.M32 * -scale, m.M33 * scale, 0,
+                m.M11 * scale, m.M12 * scale, m.M13 * scale, 0,
+                m.M21 * scale, m.M22 * scale, m.M23 * scale, 0,
+                m.M31 * scale, m.M32 * scale, m.M33 * scale, 0,
                 0, 0, 0, 1);
         }
     }
@@ -149,7 +149,6 @@ namespace I_Robot
         Matrix viewMatrix;
         Matrix worldMatrix;
         BasicEffect basicEffect;
-        bool orbit;
 
         public MathboxRenderer(ScreenManager screenManager)
         {
@@ -180,7 +179,7 @@ namespace I_Robot
             camPosition = new Vector3(0f, 0f, -3f);
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 10000f);
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
-            worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Up);
+            worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Down);
             basicEffect = new BasicEffect(Game.GraphicsDevice);
             basicEffect.Alpha = 1f;
             basicEffect.VertexColorEnabled = true; // Want to see the colors of the vertices, this needs to be on
