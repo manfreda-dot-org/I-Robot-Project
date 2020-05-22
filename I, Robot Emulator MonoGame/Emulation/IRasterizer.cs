@@ -28,6 +28,8 @@ namespace I_Robot.Emulation
         /// </summary>
         public Machine Machine { set; }
 
+        public bool EXT_START { set; }
+
         /// <summary>
         /// Sets the current video buffer being renderd to
         /// </summary>

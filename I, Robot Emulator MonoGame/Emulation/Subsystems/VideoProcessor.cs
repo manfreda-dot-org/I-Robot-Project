@@ -28,14 +28,17 @@ namespace I_Robot.Emulation
         // two banks of COMRAM
         public readonly PinnedBuffer<byte>[] COMRAM = new PinnedBuffer<byte>[2] { new PinnedBuffer<byte>(0x2000), new PinnedBuffer<byte>(0x2000) };
 
+        readonly IRasterizer Rasterizer;
+        bool mEXT_START;
+
         /// <summary>
         /// Video processor finished signal
         /// </summary>
         public bool EXT_DONE { get; private set; } = true;
 
-        public VideoProcessor(Machine machine) : base(machine, "Video Processor")
+        public VideoProcessor(Machine machine, IRasterizer rasterizer) : base(machine, "Video Processor")
         {
-
+            Rasterizer = rasterizer;
         }
 
         public override void Dispose()
@@ -61,6 +64,11 @@ namespace I_Robot.Emulation
         {
             set
             {
+                if (mEXT_START != value)
+                {
+                    mEXT_START = value;
+                    Rasterizer.EXT_START = value;
+                }
             }
         }
     }

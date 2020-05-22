@@ -278,7 +278,7 @@ namespace I_Robot.Emulation
             Mathbox = new Mathbox(this, rasterizer);
             Palette = new Palette(this);
             Registers = new Registers(this);
-            VideoProcessor = new VideoProcessor(this);
+            VideoProcessor = new VideoProcessor(this, rasterizer);
 
             RAM_0000 = new RAM_0000(this);
             RAM_0800 = new RAM_0800(this);

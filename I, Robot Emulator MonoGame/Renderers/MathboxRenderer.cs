@@ -106,28 +106,36 @@ namespace I_Robot
         class VertexBufferPool : IDisposable
         {
             readonly GraphicsDevice GraphicsDevice;
-            ConcurrentQueue<VertexBufRenderType> Pool = new ConcurrentQueue<VertexBufRenderType>();
-            public ConcurrentStack<VertexBufRenderType> InUse = new ConcurrentStack<VertexBufRenderType>();
+            readonly ConcurrentQueue<VertexBufRenderType> Pool = new ConcurrentQueue<VertexBufRenderType>();
+
+            int index = 0;
+            public ConcurrentStack<VertexBufRenderType> Active => Buffers[index & 1];
+            ConcurrentStack<VertexBufRenderType> Staging => Buffers[(index & 1) ^ 1];
+
+            public ConcurrentStack<VertexBufRenderType>[] Buffers = new ConcurrentStack<VertexBufRenderType>[2];
             int Count = 0;
 
             public VertexBufferPool(GraphicsDevice graphicsDevice)
             {
                 GraphicsDevice = graphicsDevice;
+                for (int n = 0; n < Buffers.Length; n++)
+                    Buffers[n] = new ConcurrentStack<VertexBufRenderType>();
             }
 
             public void Dispose()
             {
-                Reset();
+                FlipAndReset();
                 foreach (var v in Pool)
                     v.Dispose();
             }
 
 
-            public void Reset()
+            public void FlipAndReset()
             {
-                foreach (var v in InUse)
+                index++;
+                foreach (var v in Staging)
                     Pool.Enqueue(v);
-                InUse.Clear();
+                Staging.Clear();
             }
 
             public VertexBufRenderType Get()
@@ -138,7 +146,7 @@ namespace I_Robot
                     Count++;
 //                    System.Diagnostics.Debug.WriteLine($"new VertexBuffer(), total = {Count}");
                 }
-                InUse.Push(result);
+                Staging.Push(result);
                 return result;
             }
         }
@@ -241,9 +249,9 @@ namespace I_Robot
                 address = 0x15;
             WorldRotation = GetMatrix4At(address);
         }
-#endregion
+        #endregion
 
-#region RASTERIZER
+        #region RASTERIZER
 
         void StartRender()
         {
@@ -547,6 +555,15 @@ namespace I_Robot
 
 #region EMULATOR INTERFACE
 
+        bool IRasterizer.EXT_START
+        {
+            set
+            {
+                if (!value)
+                    Pool.FlipAndReset();
+            }
+        }
+
         void IRasterizer.SetVideoBuffer(int index)
         {
             VideoBuffer = Buffers[index];
@@ -556,7 +573,7 @@ namespace I_Robot
         {
             // this is essentially the same as "starting" a new display list
             // so we should clear/cache the old one while we build the new one
-            Pool.Reset();
+//            Pool.Reset();
 
         }
 
@@ -597,9 +614,8 @@ namespace I_Robot
             basicEffect.Projection = projectionMatrix;
             basicEffect.View = Matrix.CreateScale(1.0f / 128) * viewMatrix;
             basicEffect.World = worldMatrix;
-            graphicsDevice.Clear(Color.CornflowerBlue);
 
-            foreach (var obj in Pool.InUse)
+            foreach (var obj in Pool.Active)
             {
                 graphicsDevice.SetVertexBuffer(obj.VertexBuffer);
 
