@@ -23,7 +23,7 @@ namespace I_Robot.Emulation
     /// Represents the video processor circuit on the I, Robot PCB
     /// </summary>
     [Serializable]
-    unsafe public class VideoProcessor : Hardware.Subsystem
+    unsafe public class VideoProcessor : Machine.Subsystem
     {
         // two banks of COMRAM
         public readonly PinnedBuffer<byte>[] COMRAM = new PinnedBuffer<byte>[2] { new PinnedBuffer<byte>(0x2000), new PinnedBuffer<byte>(0x2000) };
@@ -33,7 +33,7 @@ namespace I_Robot.Emulation
         /// </summary>
         public bool EXT_DONE { get; private set; } = true;
 
-        public VideoProcessor(Hardware hardware) : base(hardware, "Video Processor")
+        public VideoProcessor(Machine machine) : base(machine, "Video Processor")
         {
 
         }

@@ -23,11 +23,11 @@ namespace I_Robot.Emulation
     /// Represents the 2k of memory from address 0000 - 07FF
     /// </summary>
     [Serializable]
-    unsafe public class RAM_0000 : Hardware.Subsystem
+    unsafe public class RAM_0000 : Machine.Subsystem
     {
         public readonly PinnedBuffer<byte> RAM = new PinnedBuffer<byte>(0x800);
 
-        public RAM_0000(Hardware hardware) : base(hardware, "RAM 0000 - 07FF")
+        public RAM_0000(Machine machine) : base(machine, "RAM 0000 - 07FF")
         {
         }
 
@@ -43,7 +43,7 @@ namespace I_Robot.Emulation
         public override void Reset()
         {
             // setup M6809 page read/write pointers
-            Hardware.M6809E.SetPageIO(0x00, 0x07, RAM, RAM);
+            Machine.M6809E.SetPageIO(0x00, 0x07, RAM, RAM);
         }
     }
 }

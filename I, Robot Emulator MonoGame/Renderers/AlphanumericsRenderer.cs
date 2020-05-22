@@ -27,7 +27,7 @@ namespace I_Robot
     class AlphanumericsRenderer : IDisposable
     {
         readonly Screen Screen;
-        readonly Hardware Hardware;
+        readonly Machine Machine;
 
         /// <summary>
         /// We render characters onto this overlay
@@ -44,7 +44,7 @@ namespace I_Robot
         public AlphanumericsRenderer(Screen screen)
         {
             Screen = screen;
-            Hardware = screen.Hardware;
+            Machine = screen.Machine;
 
             // create the character set texture, and fill with game font
             CharacterSet = new Texture2D(screen.Game.GraphicsDevice, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT * Alphanumerics.NUM_CHARS);
@@ -53,8 +53,8 @@ namespace I_Robot
             // create an overlay for us to render onto
             Overlay = new RenderTarget2D(
                 screen.GraphicsDevice,
-                Hardware.NATIVE_RESOLUTION.Width,
-                Hardware.NATIVE_RESOLUTION.Height);
+                Machine.NATIVE_RESOLUTION.Width,
+                Machine.NATIVE_RESOLUTION.Height);
         }
 
         public void Dispose()
@@ -73,7 +73,7 @@ namespace I_Robot
                 // create a pixel buffer as the source for our character map texture
                 Color[] pixels = new Color[CharacterSet.Width * CharacterSet.Height];
                 UInt32 index = 0;
-                foreach (var character in Hardware.Alphanumerics.CharacterSet)
+                foreach (var character in Machine.Alphanumerics.CharacterSet)
                 {
                     foreach (BYTE row in character)
                     {
@@ -102,13 +102,13 @@ namespace I_Robot
             graphicsDevice.Clear(Color.Transparent);
 
             Screen.SpriteBatch.Begin();
-            Color[] palette = Hardware.Alphanumerics.Palette;
+            Color[] palette = Machine.Alphanumerics.Palette;
             int index = 0;
             Rectangle src = new Rectangle(0, 0, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT);
             Rectangle dst = new Rectangle(0, 0, Alphanumerics.CHAR_WIDTH, Alphanumerics.CHAR_HEIGHT);
-            for (dst.Y = 0; dst.Y < Hardware.NATIVE_RESOLUTION.Height; dst.Y += Alphanumerics.CHAR_HEIGHT)
+            for (dst.Y = 0; dst.Y < Machine.NATIVE_RESOLUTION.Height; dst.Y += Alphanumerics.CHAR_HEIGHT)
             {
-                for (dst.X = 0; dst.X < Hardware.NATIVE_RESOLUTION.Width; dst.X += Alphanumerics.CHAR_WIDTH)
+                for (dst.X = 0; dst.X < Machine.NATIVE_RESOLUTION.Width; dst.X += Alphanumerics.CHAR_WIDTH)
                 {
                     // each byte of alpha ram
                     // xxxxxxxx
@@ -116,7 +116,7 @@ namespace I_Robot
                     // || \\\\\\___ character 0 - 63
                     //  \\_________ color index 0 - 3
 
-                    byte _byte = Hardware.Alphanumerics.RAM[index++];
+                    byte _byte = Machine.Alphanumerics.RAM[index++];
                     int ch = _byte & 63;
                     if (ch != 0)
                     {
@@ -133,11 +133,11 @@ namespace I_Robot
             // determine location of overlay
             int dstWidth = graphicsDevice.PresentationParameters.BackBufferWidth;
             int dstHeight = graphicsDevice.PresentationParameters.BackBufferHeight;
-            float scale_x = (float)dstWidth / Hardware.NATIVE_RESOLUTION.Width;
-            float scale_y = (float)dstHeight / Hardware.NATIVE_RESOLUTION.Height;
+            float scale_x = (float)dstWidth / Machine.NATIVE_RESOLUTION.Width;
+            float scale_y = (float)dstHeight / Machine.NATIVE_RESOLUTION.Height;
             float scale = Math.Min(scale_x, scale_y);
-            int w = (int)Math.Round(Hardware.NATIVE_RESOLUTION.Width * scale);
-            int h = (int)Math.Round(Hardware.NATIVE_RESOLUTION.Height * scale);
+            int w = (int)Math.Round(Machine.NATIVE_RESOLUTION.Width * scale);
+            int h = (int)Math.Round(Machine.NATIVE_RESOLUTION.Height * scale);
 
             // draw overlay ontop of screen
             Screen.SpriteBatch.Begin();

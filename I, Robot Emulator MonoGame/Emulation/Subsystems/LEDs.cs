@@ -24,7 +24,7 @@ namespace I_Robot.Emulation
     /// Represents the two LEDs on the I, Robot control panel
     /// </summary>
     [Serializable]
-    public class LEDs : Hardware.Subsystem
+    public class LEDs : Machine.Subsystem
     {
         static byte[] keys = new byte[256];
         static bool? mLED1 = null;
@@ -36,7 +36,7 @@ namespace I_Robot.Emulation
         const int KEYEVENTF_EXTENDEDKEY = 0x1;
         const int KEYEVENTF_KEYUP = 0x2;
 
-        public LEDs(Hardware hardware) : base(hardware, "LEDs")
+        public LEDs(Machine machine) : base(machine, "LEDs")
         {
             GetKeyboardState(keys);
         }

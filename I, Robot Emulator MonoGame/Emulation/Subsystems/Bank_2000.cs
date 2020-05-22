@@ -23,7 +23,7 @@ namespace I_Robot.Emulation
     /// Represents the bank switch hardware for addresses 2000 - 3FFF on the I, Robot PCB
     /// </summary>
     [Serializable]
-    unsafe public class Bank_2000 : Hardware.Subsystem
+    unsafe public class Bank_2000 : Machine.Subsystem
     {
         /// <summary>
         /// Enumeration of the possible banks of memory that can be switched in from 2000 - 3FFF
@@ -46,7 +46,7 @@ namespace I_Robot.Emulation
         /// </summary>
         public BANK BankSelect { get; private set; }
 
-        public Bank_2000(Hardware hardware) : base(hardware, "Bank 2000 - 3FFF")
+        public Bank_2000(Machine machine) : base(machine, "Bank 2000 - 3FFF")
         {
         }
 
@@ -57,7 +57,7 @@ namespace I_Robot.Emulation
         public override void Reset()
         {
             // $20xx-$3Fxx banked COMRAM / Mathbox
-            Hardware.M6809E.SetPageIO(0x20, 0x3F, M6809E.pNullPage, M6809E.pNullPage);
+            Machine.M6809E.SetPageIO(0x20, 0x3F, M6809E.pNullPage, M6809E.pNullPage);
 
             BankSelect = (BANK)0xFF;
             BankSwitch();
@@ -67,9 +67,9 @@ namespace I_Robot.Emulation
         { 
             get
             {
-                if (!Hardware.Registers.OUT0.OUT4)
+                if (!Machine.Registers.OUT0.OUT4)
                 {
-                    switch ((Hardware.Registers.OUT0.Value >> 1) & 7)
+                    switch ((Machine.Registers.OUT0.Value >> 1) & 7)
                     {
                         case 0: return BANK.MB_ROM_0;
                         case 1: return BANK.MB_ROM_1;
@@ -81,10 +81,10 @@ namespace I_Robot.Emulation
                         default: return BANK.MB_ROM_5;
                     }
                 }
-                else if (Hardware.Registers.OUT0.OUT3)
+                else if (Machine.Registers.OUT0.OUT3)
                     return BANK.MB_RAM;
                 else
-                    return Hardware.Registers.STATWR.EXT_COM_SWAP ? BANK.COMRAM_1 : BANK.COMRAM_0;
+                    return Machine.Registers.STATWR.EXT_COM_SWAP ? BANK.COMRAM_1 : BANK.COMRAM_0;
             }
         }
 
@@ -99,14 +99,14 @@ namespace I_Robot.Emulation
             {
                 BankSelect = bank;
 
-                // System.Diagnostics.Debug.WriteLine($"Bank 2000: OUT0 = {out0.HexString()}  EXT_COM_SWAP = {Hardware.Registers.STATWR.EXT_COM_SWAP}");
+                // System.Diagnostics.Debug.WriteLine($"Bank 2000: OUT0 = {out0.HexString()}  EXT_COM_SWAP = {Machine.Registers.STATWR.EXT_COM_SWAP}");
 
                 switch (bank)
                 {
-                    case BANK.COMRAM_0: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.VideoProcessor.COMRAM[0]); break;
-                    case BANK.COMRAM_1: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.VideoProcessor.COMRAM[1]); break;
-                    case BANK.MB_RAM: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.Mathbox.ReadRamFunction, Hardware.Mathbox.WriteRamFunction); break;
-                    default: Hardware.M6809E.SetPageIO(0x20, 0x3F, Hardware.Mathbox.ROM[(byte)bank], M6809E.pNullPage); break;
+                    case BANK.COMRAM_0: Machine.M6809E.SetPageIO(0x20, 0x3F, Machine.VideoProcessor.COMRAM[0]); break;
+                    case BANK.COMRAM_1: Machine.M6809E.SetPageIO(0x20, 0x3F, Machine.VideoProcessor.COMRAM[1]); break;
+                    case BANK.MB_RAM: Machine.M6809E.SetPageIO(0x20, 0x3F, Machine.Mathbox.ReadRamFunction, Machine.Mathbox.WriteRamFunction); break;
+                    default: Machine.M6809E.SetPageIO(0x20, 0x3F, Machine.Mathbox.ROM[(byte)bank], M6809E.pNullPage); break;
                 }
             }
         }

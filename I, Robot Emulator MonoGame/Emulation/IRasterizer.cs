@@ -26,7 +26,7 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Sets pointer to mathbox memory
         /// </summary>
-        public Hardware Hardware { set; }
+        public Machine Machine { set; }
 
         /// <summary>
         /// Sets the current video buffer being renderd to

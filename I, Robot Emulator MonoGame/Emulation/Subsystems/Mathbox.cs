@@ -31,7 +31,7 @@ namespace I_Robot.Emulation
     /// - converts playfield data into a set of display list commands for the video processor
     /// </summary>
     [Serializable]
-    unsafe public class Mathbox : Hardware.Subsystem
+    unsafe public class Mathbox : Machine.Subsystem
     {
         /// <summary>
         /// Enumeration of the different rendering modes that the I, Robot hardware supports
@@ -152,7 +152,7 @@ namespace I_Robot.Emulation
         public readonly M6809E.ReadDelegate ReadRamFunction;
         public readonly M6809E.WriteDelegate WriteRamFunction;
 
-        public Mathbox(Hardware hardware, IRasterizer interpreter) : base(hardware, "Mathbox")
+        public Mathbox(Machine machine, IRasterizer interpreter) : base(machine, "Mathbox")
         {
             Memory = Memory16;
             pData = (byte*)Memory;
@@ -167,10 +167,10 @@ namespace I_Robot.Emulation
             //  6000-6FFF   4:2000-3FFF   136029-102[2000]  136029-101[2000]
             //  7000-7FFF   5:2000-3FFF   136029-102[3000]  136029-101[3000]
 
-            ROM? r101 = hardware.Roms["136029-101"];
-            ROM? r102 = hardware.Roms["136029-102"];
-            ROM? r103 = hardware.Roms["136029-103"];
-            ROM? r104 = hardware.Roms["136029-104"];
+            ROM? r101 = machine.Roms["136029-101"];
+            ROM? r102 = machine.Roms["136029-102"];
+            ROM? r103 = machine.Roms["136029-103"];
+            ROM? r104 = machine.Roms["136029-104"];
 
             // create x86 accessable bank (low endian)
             UInt16 address;
@@ -212,16 +212,16 @@ namespace I_Robot.Emulation
 
 #if true
             // now patch the self test so our emulation results passs
-            Array.Copy(Mathbox.SelfTestPatch, 0, Hardware.ProgROM.Bank_4000[4], 0x5CAD - 0x4000, SelfTestPatch.Length);
+            Array.Copy(Mathbox.SelfTestPatch, 0, Machine.ProgROM.Bank_4000[4], 0x5CAD - 0x4000, SelfTestPatch.Length);
 
             // adjust the value at the end of ROM bank 4 to account for the checksum change
             UInt16 checksum = 0;
             for (int n = 0; n < 0x1FFE; n += 2)
-                checksum -= (UInt16)(Hardware.ProgROM.Bank_4000[4][n] * 256 + Hardware.ProgROM.Bank_4000[4][n + 1]);
+                checksum -= (UInt16)(Machine.ProgROM.Bank_4000[4][n] * 256 + Machine.ProgROM.Bank_4000[4][n + 1]);
             for (int n = 0; n < 0x2000; n += 2)
-                checksum -= (UInt16)(Hardware.ProgROM.Bank_4000[5][n] * 256 + Hardware.ProgROM.Bank_4000[5][n + 1]);
-            Hardware.ProgROM.Bank_4000[4][0x1FFE] = (byte)(checksum >> 8);
-            Hardware.ProgROM.Bank_4000[4][0x1FFF] = (byte)(checksum >> 0);
+                checksum -= (UInt16)(Machine.ProgROM.Bank_4000[5][n] * 256 + Machine.ProgROM.Bank_4000[5][n + 1]);
+            Machine.ProgROM.Bank_4000[4][0x1FFE] = (byte)(checksum >> 8);
+            Machine.ProgROM.Bank_4000[4][0x1FFF] = (byte)(checksum >> 0);
 #endif
 
             ReadRamFunction = new M6809E.ReadDelegate((UInt16 address) =>
@@ -334,7 +334,7 @@ namespace I_Robot.Emulation
                         }
 
                         // signal mathbox completion to CPU
-                        Hardware.M6809E.FIRQ = true;
+                        Machine.M6809E.FIRQ = true;
                     }
                 }
             }

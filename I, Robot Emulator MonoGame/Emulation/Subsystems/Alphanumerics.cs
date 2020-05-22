@@ -26,7 +26,7 @@ namespace I_Robot.Emulation
     /// A full 1K of ram is emulated, however only the first 29 lines are visible on the screen
     /// </summary>
     [Serializable]
-    unsafe public class Alphanumerics : Hardware.Subsystem
+    unsafe public class Alphanumerics : Machine.Subsystem
     {
         public const int NUM_CHARS = 64;
         public const int NUM_PALETTES = 2;
@@ -59,10 +59,10 @@ namespace I_Robot.Emulation
         /// </summary>
         public readonly PinnedBuffer<byte> RAM = new PinnedBuffer<byte>(0x400);
 
-        public Alphanumerics(Hardware hardware) : base(hardware, "Alphanumerics")
+        public Alphanumerics(Machine machine) : base(machine, "Alphanumerics")
         {
             // load the character ROM
-            ROM? rom124 = Hardware.Roms["136029-124"];
+            ROM? rom124 = Machine.Roms["136029-124"];
             if (rom124 != null)
             {
                 // unpack the ROM into character scanlines
@@ -80,7 +80,7 @@ namespace I_Robot.Emulation
             }
 
             // load the color ROM
-            ROM? rom125 = Hardware.Roms["136029-125"];
+            ROM? rom125 = Machine.Roms["136029-125"];
             if (rom125 != null)
             {
                 for (int p = 0; p < NUM_PALETTES; p++)
@@ -111,7 +111,7 @@ namespace I_Robot.Emulation
 
         public override void Reset()
         {
-            Hardware.M6809E.SetPageIO(0x1C, 0x1F, RAM, RAM);
+            Machine.M6809E.SetPageIO(0x1C, 0x1F, RAM, RAM);
 
             ALPHA_MAP = false;
         }

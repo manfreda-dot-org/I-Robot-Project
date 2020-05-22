@@ -23,12 +23,12 @@ namespace I_Robot.Emulation
     /// Represents the two LEDs on the I, Robot control panel
     /// </summary>
     [Serializable]
-    public class CoinCounters : Hardware.Subsystem
+    public class CoinCounters : Machine.Subsystem
     {
         bool mLeftCoinCounter;
         bool mRightCoinCounter;
 
-        public CoinCounters(Hardware hardware) : base(hardware, "CoinCounters")
+        public CoinCounters(Machine machine) : base(machine, "CoinCounters")
         {
         }
 

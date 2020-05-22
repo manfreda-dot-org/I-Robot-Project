@@ -67,7 +67,7 @@ namespace I_Robot
             dialog.Accepted += new System.EventHandler<PlayerIndexEventArgs>((object? sender, PlayerIndexEventArgs e) =>
             {
                 if (this.Game is I_Robot.Game game)
-                    game.Hardware.Reset(Emulation.Hardware.RESET_TYPE.USER);
+                    game.Machine.Reset(Emulation.Machine.RESET_TYPE.USER);
                 OnCancel(sender, e);
             });
             ScreenManager.AddScreen(dialog, null);

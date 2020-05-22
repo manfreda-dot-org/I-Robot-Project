@@ -23,7 +23,7 @@ namespace I_Robot.Emulation
     /// Represents the 3 x 2k banks of memory from address 0800 - 0FFF
     /// </summary>
     [Serializable]
-    unsafe public class RAM_0800 : Hardware.Subsystem
+    unsafe public class RAM_0800 : Machine.Subsystem
     {
         public const int NUM_BANKS = 3;
 
@@ -34,7 +34,7 @@ namespace I_Robot.Emulation
 
         byte mBankSelect = 0xFF;
 
-        public RAM_0800(Hardware hardware) : base(hardware, "RAM 0800 - 0FFF")
+        public RAM_0800(Machine machine) : base(machine, "RAM 0800 - 0FFF")
         {
         }
 
@@ -52,7 +52,7 @@ namespace I_Robot.Emulation
 
         public override void Reset()
         {
-            Hardware.M6809E.SetPageIO(0x08, 0x0F, M6809E.pNullPage, M6809E.pNullPage);
+            Machine.M6809E.SetPageIO(0x08, 0x0F, M6809E.pNullPage, M6809E.pNullPage);
 
             mBankSelect = 0xFF;
             BankSelect = 0;
@@ -73,9 +73,9 @@ namespace I_Robot.Emulation
 
                     // setup M6809 page read/write pointers
                     if (value < Bank.Length)
-                        Hardware.M6809E.SetPageIO(0x08, 0x0F, Bank[value], Bank[value]);
+                        Machine.M6809E.SetPageIO(0x08, 0x0F, Bank[value], Bank[value]);
                     else
-                        Hardware.M6809E.SetPageIO(0x08, 0x0F, M6809E.pNullPage, M6809E.pNullPage);
+                        Machine.M6809E.SetPageIO(0x08, 0x0F, M6809E.pNullPage, M6809E.pNullPage);
                 }
             }
         }

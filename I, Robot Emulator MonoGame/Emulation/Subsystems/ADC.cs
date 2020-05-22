@@ -24,7 +24,7 @@ namespace I_Robot.Emulation
     /// This chip is responsible performing ADC conversions on the hall effect joystick
     /// </summary>
     [Serializable]
-    unsafe public class ADC : Hardware.Subsystem
+    unsafe public class ADC : Machine.Subsystem
     {
         readonly M6809E.ReadDelegate Read13xx;
         readonly M6809E.WriteDelegate Write1Bxx;
@@ -34,7 +34,7 @@ namespace I_Robot.Emulation
         /// </summary>
         byte ADC_RESULT = 0x80;
 
-        public ADC(Hardware hardware) : base(hardware, "ADC")
+        public ADC(Machine machine) : base(machine, "ADC")
         {
             Read13xx = new M6809E.ReadDelegate((UInt16 address) =>
                 {
@@ -59,8 +59,8 @@ namespace I_Robot.Emulation
         {
             ADC_RESULT = 0x80;
 
-            Hardware.M6809E.SetPageIO(0x13, Read13xx, M6809E.pNullPage);
-            Hardware.M6809E.SetPageIO(0x1B, M6809E.pNullPage, Write1Bxx);
+            Machine.M6809E.SetPageIO(0x13, Read13xx, M6809E.pNullPage);
+            Machine.M6809E.SetPageIO(0x1B, M6809E.pNullPage, Write1Bxx);
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)

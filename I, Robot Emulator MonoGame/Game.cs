@@ -28,7 +28,7 @@ namespace I_Robot
     /// </summary>
     public class Game : Microsoft.Xna.Framework.Game
     {
-        Emulation.Hardware? mHardware;
+        Emulation.Machine? mMachine;
         MathboxRenderer? mMathboxRenderer;
 
         GraphicsDeviceManager Graphics;
@@ -49,13 +49,13 @@ namespace I_Robot
             Services.AddService(typeof(IScreenFactory), ScreenFactory);
         }
 
-        public Emulation.Hardware Hardware
+        public Emulation.Machine Machine
         {
             get
             {
-                if (mHardware == null)
+                if (mMachine == null)
                     throw new Exception();
-                return mHardware;
+                return mMachine;
             }
         }
 
@@ -93,7 +93,7 @@ namespace I_Robot
                 mMathboxRenderer = new MathboxRenderer(ScreenManager);
 
                 // create hardware that uses the ROMs
-                mHardware = new Emulation.Hardware(roms, mMathboxRenderer);
+                mMachine = new Emulation.Machine(roms, mMathboxRenderer);
             }
 
             LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));
@@ -108,7 +108,7 @@ namespace I_Robot
 
         protected override void UnloadContent()
         {
-            Hardware.Dispose();
+            Machine.Dispose();
             base.UnloadContent();
         }
 
@@ -125,7 +125,7 @@ namespace I_Robot
 
         protected override void OnExiting(object sender, EventArgs args)
         {
-            Hardware.Paused = true;
+            Machine.Paused = true;
             base.OnExiting(sender, args);
         }
     }

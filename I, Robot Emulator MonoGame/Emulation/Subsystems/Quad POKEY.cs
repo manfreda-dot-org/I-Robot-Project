@@ -26,7 +26,7 @@ namespace I_Robot.Emulation
     /// Heavily based on Ron Fries POKEY Chip Emulator V2.3
     /// </summary>
     [Serializable]
-    unsafe public class Quad_POKEY : Hardware.Subsystem
+    unsafe public class Quad_POKEY : Machine.Subsystem
     {
         // As an alternative to using the exact frequencies, selecting a playback
         // frequency that is an exact division of the main clock provides a higher
@@ -799,8 +799,8 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Creates a new Quad POKEY subsystem for the hardware
         /// </summary>
-        /// <param name="hardware"></param>
-        public Quad_POKEY(Hardware hardware) : base(hardware, "Quad POKEY")
+        /// <param name="machine"></param>
+        public Quad_POKEY(Machine machine) : base(machine, "Quad POKEY")
         {
             // setup I/O delegates
 
@@ -858,7 +858,7 @@ namespace I_Robot.Emulation
             foreach (var voice in Voice)
                 voice.Stop();
 
-            Hardware.M6809E.SetPageIO(0x14, Read14xx, Write14xx);
+            Machine.M6809E.SetPageIO(0x14, Read14xx, Write14xx);
 
             foreach (PokeySourceVoice voice in Voice)
                 voice.POKEY.Reset();

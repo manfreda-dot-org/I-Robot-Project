@@ -24,7 +24,7 @@ using System.Threading;
 namespace I_Robot.Emulation
 {
     [Serializable]
-    unsafe public class Hardware : ISerializable, IDisposable
+    unsafe public class Machine : ISerializable, IDisposable
     {
         ///////////////////////////////////////////////////////////////////////////////
 
@@ -108,13 +108,13 @@ namespace I_Robot.Emulation
         public abstract class Subsystem : IDisposable, ISerializable
         {
             public readonly String Name;
-            public readonly Hardware Hardware;
+            public readonly Machine Machine;
 
-            public Subsystem(Hardware hardware, String name)
+            public Subsystem(Machine machine, String name)
             {
                 Name = name;
-                Hardware = hardware;
-                Hardware.Subsystems.Add(this);
+                Machine = machine;
+                Machine.Subsystems.Add(this);
             }
 
             /// <summary>
@@ -262,7 +262,7 @@ namespace I_Robot.Emulation
 
         public readonly RomSet Roms;
 
-        public Hardware(RomSet roms, IRasterizer rasterizer)
+        public Machine(RomSet roms, IRasterizer rasterizer)
         {
             Roms = roms;
 
@@ -287,7 +287,7 @@ namespace I_Robot.Emulation
 
             // let the interpreter know about this hardware
             // must be done after subsystems are loaded
-            rasterizer.Hardware = this;
+            rasterizer.Machine = this;
 
             // setup a periodic callback from the 6809 engine to update scanline counter
             ScanlineCallback = new M6809E.PeriodicDelegate(() =>
@@ -309,7 +309,7 @@ namespace I_Robot.Emulation
                 Quad_POKEY.Update();
             });
 
-            Reset(Hardware.RESET_TYPE.COLD);
+            Reset(Machine.RESET_TYPE.COLD);
 
             Thread = new Thread(EmulationThread);
             Thread.IsBackground = true;
@@ -347,7 +347,7 @@ namespace I_Robot.Emulation
                 if (mDisposed)
                     return;
 
-                System.Diagnostics.Debug.WriteLine($"Hardware reset: {type}");
+                System.Diagnostics.Debug.WriteLine($"Machine reset: {type}");
 
                 foreach (Subsystem subsystem in Subsystems)
                 {
@@ -384,7 +384,7 @@ namespace I_Robot.Emulation
                     Quad_POKEY.Update();
 
                     if (Registers.WatchdogCounter > 500000)
-                        Reset(Hardware.RESET_TYPE.WATCHDOG);
+                        Reset(Machine.RESET_TYPE.WATCHDOG);
 
                     // compute number of cycles to run
                     if (Settings.SpeedThrottle)

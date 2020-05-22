@@ -24,7 +24,7 @@ namespace I_Robot
     class Screen : GameManagement.Screen
     {
         new public readonly I_Robot.Game Game;
-        public readonly Emulation.Hardware Hardware;
+        public readonly Emulation.Machine Machine;
         
         public Screen(ScreenManager screenManager)
             : base(screenManager)
@@ -32,7 +32,7 @@ namespace I_Robot
             if (!(screenManager.Game is I_Robot.Game game))
                 throw new System.Exception();
             Game = game;
-            Hardware = Game.Hardware;
+            Machine = Game.Machine;
         }
     }
 }

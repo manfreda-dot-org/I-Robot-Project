@@ -24,14 +24,14 @@ namespace I_Robot.Emulation
     /// Represents the 64 x 9-bit color palette on the I, Robot video PCB
     /// </summary>
     [Serializable]
-    unsafe public class Palette : Hardware.Subsystem
+    unsafe public class Palette : Machine.Subsystem
     {
         public const int NUM_COLORS = 64;
 
         public readonly Color[] Color = new Color[NUM_COLORS];
         readonly M6809E.WriteDelegate Write18xx;
 
-        public Palette(Hardware hardware) : base(hardware, "Palette")
+        public Palette(Machine machine) : base(machine, "Palette")
         {
             Write18xx = new M6809E.WriteDelegate((UInt16 address, byte data) =>
             {
@@ -72,7 +72,7 @@ namespace I_Robot.Emulation
 
         public override void Reset()
         {
-            Hardware.M6809E.SetPageIO(0x18, M6809E.pNullPage, Write18xx);
+            Machine.M6809E.SetPageIO(0x18, M6809E.pNullPage, Write18xx);
         }
     }
 }

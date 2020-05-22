@@ -24,7 +24,7 @@ namespace I_Robot.Emulation
     /// The class persists the non-volatile data in the user properties file
     /// </summary>
     [Serializable]
-    public class EEPROM : Hardware.Subsystem
+    public class EEPROM : Machine.Subsystem
     {
         // 4-bit x 256 NVRAM
         readonly byte[] NVRAM;
@@ -32,7 +32,7 @@ namespace I_Robot.Emulation
         readonly M6809E.ReadDelegate Read12xx;
         readonly M6809E.WriteDelegate Write12xx;
 
-        public EEPROM(Hardware hardware) : base(hardware, "EEPROM")
+        public EEPROM(Machine machine) : base(machine, "EEPROM")
         {
             try
             {
@@ -62,7 +62,7 @@ namespace I_Robot.Emulation
 
         public override void Reset()
         {
-            Hardware.M6809E.SetPageIO(0x12, Read12xx, Write12xx);
+            Machine.M6809E.SetPageIO(0x12, Read12xx, Write12xx);
         }
     }
 }

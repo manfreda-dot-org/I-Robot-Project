@@ -24,7 +24,7 @@ namespace I_Robot.Emulation
     /// There are 40K of fixed ROM and 6 x 8k banks of ROM
     /// </summary>
     [Serializable]
-    unsafe public class ProgROM : Hardware.Subsystem
+    unsafe public class ProgROM : Machine.Subsystem
     {
         public const int NUM_BANKS = 6;
 
@@ -42,14 +42,14 @@ namespace I_Robot.Emulation
 
         byte mBankSelect = 0xFF;
 
-        public ProgROM(Hardware hardware) : base(hardware, "Program ROM")
+        public ProgROM(Machine machine) : base(machine, "Program ROM")
         {
-            ROM? r405 = hardware.Roms["136029-405"];
-            ROM? r206 = hardware.Roms["136029-206"];
-            ROM? r207 = hardware.Roms["136029-207"];
-            ROM? r208 = hardware.Roms["136029-208"];
-            ROM? r209 = hardware.Roms["136029-209"];
-            ROM? r210 = hardware.Roms["136029-210"];
+            ROM? r405 = machine.Roms["136029-405"];
+            ROM? r206 = machine.Roms["136029-206"];
+            ROM? r207 = machine.Roms["136029-207"];
+            ROM? r208 = machine.Roms["136029-208"];
+            ROM? r209 = machine.Roms["136029-209"];
+            ROM? r210 = machine.Roms["136029-210"];
 
             if (r405 != null)
             {
@@ -84,10 +84,10 @@ namespace I_Robot.Emulation
         public override void Reset()
         {
             // banked reads go nowhere for now
-            Hardware.M6809E.SetPageIO(0x40, 0x5F, M6809E.pNullPage, M6809E.pNullPage);
+            Machine.M6809E.SetPageIO(0x40, 0x5F, M6809E.pNullPage, M6809E.pNullPage);
 
             // setup fixed ROM reads 6000-FFFF
-            Hardware.M6809E.SetPageIO(0x60, 0xFF, ROM_6000, M6809E.pNullPage);
+            Machine.M6809E.SetPageIO(0x60, 0xFF, ROM_6000, M6809E.pNullPage);
 
             // setup the proper bank at 4000-5FFF
             mBankSelect = 0xFF;
@@ -109,9 +109,9 @@ namespace I_Robot.Emulation
 
                     // setup M6809 page read pointers
                     if (value < Bank_4000.Length)
-                        Hardware.M6809E.SetPageIO(0x40, 0x5F, Bank_4000[value], M6809E.pNullPage);
+                        Machine.M6809E.SetPageIO(0x40, 0x5F, Bank_4000[value], M6809E.pNullPage);
                     else
-                        Hardware.M6809E.SetPageIO(0x40, 0x5F, M6809E.pNullPage, M6809E.pNullPage);
+                        Machine.M6809E.SetPageIO(0x40, 0x5F, M6809E.pNullPage, M6809E.pNullPage);
                 }
             }
         }

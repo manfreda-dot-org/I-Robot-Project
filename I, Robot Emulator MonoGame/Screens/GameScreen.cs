@@ -65,7 +65,7 @@ namespace I_Robot
         /// </summary>
         public override void Activate(bool instancePreserved)
         {
-            Hardware.Paused = false;
+            Machine.Paused = false;
 
             if (!instancePreserved)
             {
@@ -89,7 +89,7 @@ namespace I_Robot
         /// </summary>
         public override void Unload()
         {
-            Hardware.Paused = true;
+            Machine.Paused = true;
             Alphanumerics.Dispose();
             MathboxRenderer.Dispose();
             Content?.Unload();
@@ -111,7 +111,7 @@ namespace I_Robot
             else
                 pauseAlpha = Math.Max(pauseAlpha - 1f / 16, 0);
 
-            Hardware.Paused = !IsActive;
+            //Machine.Paused = !IsActive;
         }
 
         /// <summary>
@@ -139,8 +139,8 @@ namespace I_Robot
             PlayerIndex player;
             if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
-                Hardware.Paused = true;
-                ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
+                Machine.Paused = !Machine.Paused;
+//                ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
             }
 
 
@@ -148,7 +148,7 @@ namespace I_Robot
             if (Keyboard.HasBeenPressed(Keys.Tab))
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (Keyboard.HasBeenPressed(Keys.F3))
-                Hardware.Reset(Emulation.Hardware.RESET_TYPE.USER);
+                Machine.Reset(Emulation.Machine.RESET_TYPE.USER);
             if (Keyboard.HasBeenPressed(Keys.F7))
             {
                 if (Keyboard.IsPressed(Keys.LeftShift) || Keyboard.IsPressed(Keys.RightShift))
@@ -157,7 +157,7 @@ namespace I_Robot
                     using (FileStream stream = new FileStream("irobot.sav", FileMode.Create))
                     {
                         IFormatter formatter = new BinaryFormatter();
-                        formatter.Serialize(stream, Hardware);
+                        formatter.Serialize(stream, Machine);
                         stream.Close();
                     }
                 }
@@ -167,7 +167,7 @@ namespace I_Robot
                     using (FileStream stream = new FileStream("irobot.sav", FileMode.Open))
                     {
                         //                        IFormatter formatter = new BinaryFormatter();
-                        //                        Hardware = (Hardware)formatter.Deserialize(stream);
+                        //                        Machine = (Machine)formatter.Deserialize(stream);
                         //                        stream.Close();
                     }
                 }

@@ -65,11 +65,11 @@ namespace I_Robot
         public RenderTarget2D VideoBuffer;
         public Texture2D Texture => Buffers[0];
 
-        Hardware mHardware;
-        public Hardware Hardware
+        Machine mMachine;
+        public Machine Machine
         {
-            get => mHardware;
-            set { mHardware = value; Memory = value.Mathbox.Memory; }
+            get => mMachine;
+            set { mMachine = value; Memory = value.Mathbox.Memory; }
         }
 
         // Pointer to Mathbox memory
@@ -258,16 +258,16 @@ namespace I_Robot
         Color GetColor(int index)
         {
             // set rasterizer color
-            return Hardware.Palette.Color[index & 0x3F];
+            return Machine.Palette.Color[index & 0x3F];
         }
 
         Color GetColor(int index, float shade)
         {
             int offset = (int)shade;
             index += offset;
-            Color c = Hardware.Palette.Color[index & 0x3F];
+            Color c = Machine.Palette.Color[index & 0x3F];
             if ((index & 7) != 7)
-                c = Color.Lerp(c, Hardware.Palette.Color[(index + 1) & 0x3F], shade - offset);
+                c = Color.Lerp(c, Machine.Palette.Color[(index + 1) & 0x3F], shade - offset);
             return c;
         }
 

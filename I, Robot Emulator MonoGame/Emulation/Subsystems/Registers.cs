@@ -24,7 +24,7 @@ namespace I_Robot.Emulation
     /// Class that represents all of the special function registers on the I, Robot hardware
     /// </summary>
     [Serializable]
-    unsafe public class Registers : Hardware.Subsystem
+    unsafe public class Registers : Machine.Subsystem
     {
         #region STRUCTURES
 
@@ -311,13 +311,13 @@ namespace I_Robot.Emulation
         /// Gets the current value in the Watchdog counter
         /// Represents the number of CPU clock cycles since the watchdog was last petted
         /// </summary>
-        public UInt64 WatchdogCounter => Hardware.M6809E.Clock - Watchdog;
+        public UInt64 WatchdogCounter => Machine.M6809E.Clock - Watchdog;
 
         REGISER_1140 mSTATWR = 0x00;
         REGISTER_1180 mOUT0 = 0x10;
         REGISTER_11C0 mOUT1 = 0x00;
 
-        public Registers(Hardware hardware) : base(hardware, "Regsisters")
+        public Registers(Machine machine) : base(machine, "Regsisters")
         {
             Read10xx = new M6809E.ReadDelegate((UInt16 address) =>
             {
@@ -365,10 +365,10 @@ namespace I_Robot.Emulation
 
         public override void Reset()
         {
-            Hardware.M6809E.SetPageIO(0x10, Read10xx, M6809E.pNullPage);
-            Hardware.M6809E.SetPageIO(0x11, M6809E.pNullPage, Write11xx);
-            Hardware.M6809E.SetPageIO(0x19, M6809E.pNullPage, Write19xx);
-            Hardware.M6809E.SetPageIO(0x1A, M6809E.pNullPage, Write1Axx);
+            Machine.M6809E.SetPageIO(0x10, Read10xx, M6809E.pNullPage);
+            Machine.M6809E.SetPageIO(0x11, M6809E.pNullPage, Write11xx);
+            Machine.M6809E.SetPageIO(0x19, M6809E.pNullPage, Write19xx);
+            Machine.M6809E.SetPageIO(0x1A, M6809E.pNullPage, Write1Axx);
 
             Watchdog = 0;
             STATWR = 0x00;
@@ -415,9 +415,9 @@ namespace I_Robot.Emulation
             get
             {
                 REGISTER_1080 reg = 0;
-                reg.VBLANK = Hardware.VBLANK;
-                reg.EXT_DONE = Hardware.VideoProcessor.EXT_DONE;
-                reg.MB_DONE = Hardware.Mathbox.MB_DONE;
+                reg.VBLANK = Machine.VBLANK;
+                reg.EXT_DONE = Machine.VideoProcessor.EXT_DONE;
+                reg.MB_DONE = Machine.Mathbox.MB_DONE;
                 return reg;
             }
         }
@@ -430,17 +430,17 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Writes to this register reset the IRQ line
         /// </summary>
-        public byte CLEAR_IRQ { set { Hardware.M6809E.IRQ = false; } }
+        public byte CLEAR_IRQ { set { Machine.M6809E.IRQ = false; } }
 
         /// <summary>
         /// Writes to this register reset the hardware watchdog
         /// </summary>
-        public byte CLEAR_WATCHDOG { set { Watchdog = Hardware.M6809E.Clock; } }
+        public byte CLEAR_WATCHDOG { set { Watchdog = Machine.M6809E.Clock; } }
 
         /// <summary>
         /// Writes to this register reset the FIRQ line
         /// </summary>
-        public byte CLEAR_FIRQ { set { Hardware.M6809E.FIRQ = false; } }
+        public byte CLEAR_FIRQ { set { Machine.M6809E.FIRQ = false; } }
 
         /// <summary>
         /// Writes to this register control bank switching at 2000 - 3FFF, mathbox start, and video processor start
@@ -452,13 +452,13 @@ namespace I_Robot.Emulation
             {
                 mSTATWR = value;
 
-                Hardware.Bank_2000.BankSwitch();
+                Machine.Bank_2000.BankSwitch();
 
-                Hardware.Mathbox.BUFSEL = value.BUFSEL;
-                Hardware.Mathbox.ERASE = value.ERASE;
-                Hardware.Mathbox.MATH_START = value.MATH_START;
+                Machine.Mathbox.BUFSEL = value.BUFSEL;
+                Machine.Mathbox.ERASE = value.ERASE;
+                Machine.Mathbox.MATH_START = value.MATH_START;
 
-                Hardware.VideoProcessor.EXT_START = value.EXT_START;
+                Machine.VideoProcessor.EXT_START = value.EXT_START;
             }
         }
 
@@ -472,11 +472,11 @@ namespace I_Robot.Emulation
             {
                 mOUT0 = value;
 
-                Hardware.Alphanumerics.ALPHA_MAP = mOUT0.ALPHA_MAP;
+                Machine.Alphanumerics.ALPHA_MAP = mOUT0.ALPHA_MAP;
 
-                Hardware.RAM_0800.BankSelect = mOUT0.RAM_800_BANK;
+                Machine.RAM_0800.BankSelect = mOUT0.RAM_800_BANK;
 
-                Hardware.Bank_2000.BankSwitch();
+                Machine.Bank_2000.BankSwitch();
             }
         }
 
@@ -490,11 +490,11 @@ namespace I_Robot.Emulation
             {
                 mOUT1 = value;
 
-                Hardware.CoinCounters.LEFT_COIN_COUNTER = value.LEFT_COIN_COUNTER;
-                Hardware.CoinCounters.RIGHT_COIN_COUNTER = value.RIGHT_COIN_COUNTER;
-                Hardware.LEDs.LED1 = value.LED1;
-                Hardware.LEDs.LED2 = value.LED2;
-                Hardware.ProgROM.BankSelect = value.ROM_4000_BANK;
+                Machine.CoinCounters.LEFT_COIN_COUNTER = value.LEFT_COIN_COUNTER;
+                Machine.CoinCounters.RIGHT_COIN_COUNTER = value.RIGHT_COIN_COUNTER;
+                Machine.LEDs.LED1 = value.LED1;
+                Machine.LEDs.LED2 = value.LED2;
+                Machine.ProgROM.BankSelect = value.ROM_4000_BANK;
             }
         }
     }
