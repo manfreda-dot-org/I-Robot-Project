@@ -327,13 +327,9 @@ namespace I_Robot
                     numPrimitives = numvertices * 2;
                     break;
                 case Mathbox.RenderMode.Vector:
-                    numPrimitives = numvertices;
-                    // if object is to be rendered as a vector, we must close the object
-                    // by making the endpoint equal to the start point
-                    if (numvertices > 2)
-                        Vertices[numvertices++] = Vertices[0];
                     for (int n = 0; n < numvertices; n++)
                         buf[i++].Position = Vertices[n];
+                    numPrimitives = numvertices - 1;
                     break;
                 case Mathbox.RenderMode.Polygon:
                     // convert triangle fan
