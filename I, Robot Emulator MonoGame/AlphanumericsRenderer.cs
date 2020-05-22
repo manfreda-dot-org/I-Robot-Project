@@ -27,7 +27,7 @@ namespace I_Robot
     /// </summary>
     class AlphanumericsRenderer : IDisposable
     {
-        readonly IRobotScreen Screen;
+        readonly Screen Screen;
         readonly Hardware Hardware;
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace I_Robot
         /// </summary>
         readonly Texture2D CharacterSet;
 
-        public AlphanumericsRenderer(IRobotScreen screen)
+        public AlphanumericsRenderer(Screen screen)
         {
             Screen = screen;
             Hardware = screen.Hardware;

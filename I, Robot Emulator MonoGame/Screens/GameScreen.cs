@@ -32,7 +32,7 @@ namespace I_Robot
     /// placeholder to get the idea across: you'll probably want to
     /// put some more interesting gameplay in here!
     /// </summary>
-    class GameScreen : IRobotScreen
+    class GameScreen : Screen
     {
         readonly AlphanumericsRenderer Alphanumerics;
         readonly MathboxRenderer MathboxRenderer;

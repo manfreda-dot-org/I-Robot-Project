@@ -288,6 +288,11 @@ namespace I_Robot
             EEPROM = new EEPROM(this);
             Bank_2000 = new Bank_2000(this);
 
+            // let the interpreter know about this hardware
+            // must be done after subsystems are loaded
+            interpreter.Hardware = this;
+
+            // setup a periodic callback from the 6809 engine to update scanline counter
             ScanlineCallback = new M6809E.PeriodicDelegate(() =>
             {
                 byte prev = Scanline;

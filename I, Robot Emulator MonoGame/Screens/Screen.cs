@@ -21,12 +21,12 @@ namespace I_Robot
     /// <summary>
     /// The main menu screen is the first thing displayed when the game starts up.
     /// </summary>
-    class IRobotScreen : Screen
+    class Screen : GameManagement.Screen
     {
         new public readonly I_Robot.Game Game;
         public readonly Hardware Hardware;
         
-        public IRobotScreen(ScreenManager screenManager)
+        public Screen(ScreenManager screenManager)
             : base(screenManager)
         {
             if (!(screenManager.Game is I_Robot.Game game))

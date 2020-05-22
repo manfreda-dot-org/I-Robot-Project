@@ -35,17 +35,17 @@ namespace I_Robot
     ///   next screen, which may take a long time to load its data. The loading
     ///   screen will be the only thing displayed while this load is taking place.
     /// </summary>
-    class LoadingScreen : IRobotScreen
+    class LoadingScreen : Screen
     {
         bool LoadingIsSlow;
         bool OtherScreensAreGone;
 
-        Screen[] ScreensToLoad;
+        GameManagement.Screen[] ScreensToLoad;
 
         /// <summary>
         /// The constructor is private: loading screens should be activated via the static Load method instead.
         /// </summary>
-        private LoadingScreen(ScreenManager screenManager, bool loadingIsSlow, Screen[] screensToLoad) : base (screenManager)
+        private LoadingScreen(ScreenManager screenManager, bool loadingIsSlow, GameManagement.Screen[] screensToLoad) : base (screenManager)
         {
             this.LoadingIsSlow = loadingIsSlow;
             this.ScreensToLoad = screensToLoad;
@@ -59,10 +59,10 @@ namespace I_Robot
         /// </summary>
         public static void Load(ScreenManager screenManager, bool loadingIsSlow,
                                 PlayerIndex? controllingPlayer,
-                                params Screen[] screensToLoad)
+                                params GameManagement.Screen[] screensToLoad)
         {
             // Tell all the current screens to transition off.
-            foreach (Screen screen in screenManager.GetScreens())
+            foreach (GameManagement.Screen screen in screenManager.GetScreens())
                 screen.ExitScreen();
 
             // Create and activate the loading screen.
@@ -87,7 +87,7 @@ namespace I_Robot
             {
                 ScreenManager.RemoveScreen(this);
 
-                foreach (Screen screen in ScreensToLoad)
+                foreach (GameManagement.Screen screen in ScreensToLoad)
                 {
                     if (screen != null)
                         ScreenManager.AddScreen(screen, ControllingPlayer);

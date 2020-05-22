@@ -38,7 +38,7 @@ namespace I_Robot
             /// <summary>
             /// Sets pointer to mathbox memory
             /// </summary>
-            public UInt16 * pMemory { set; }
+            public Hardware Hardware { set; }
 
             /// <summary>
             /// Sets the current video buffer being renderd to
@@ -82,18 +82,35 @@ namespace I_Robot
         }
 
         /// <summary>
+        /// Represents a Vector3 as used by the Mathbox
+        /// </summary>
+        [StructLayout(LayoutKind.Sequential, Pack = 2)]
+        public struct Vector3
+        {
+            public Int16 X, Y, Z;
+
+            public override string ToString()
+            {
+                return $"[{X}, {Y}, {Z}]";
+            }
+        }
+
+        /// <summary>
         /// Represents a 3x3 matrix as used by the Mathbox
         /// </summary>
         [StructLayout(LayoutKind.Sequential, Pack = 2)]
         public struct Matrix
         {
-            public Int16 M11, M12, M13;
-            public Int16 M21, M22, M23;
-            public Int16 M31, M32, M33;
+            /// <summary>
+            /// The matrix appears to be col/row instead of row/col
+            /// </summary>
+            public Int16 M11, M21, M31;
+            public Int16 M12, M22, M32;
+            public Int16 M13, M23, M33;
 
             public override string ToString()
             {
-                return $"| {M11.HexString()}, {M12.HexString()}, {M13.HexString()} |\n| {M21.HexString()}, {M22.HexString()}, {M23.HexString()} |\n| {M31.HexString()}, {M32.HexString()}, {M33.HexString()} |";
+                return $"| {M11.HexString()}, {M21.HexString()}, {M31.HexString()} |\n| {M12.HexString()}, {M22.HexString()}, {M32.HexString()} |\n| {M13.HexString()}, {M23.HexString()}, {M33.HexString()} |";
             }
         }
 
@@ -139,7 +156,7 @@ namespace I_Robot
         /// <summary>
         /// Word pointer to mathbox memory
         /// </summary>
-        readonly UInt16* Memory;
+        public readonly UInt16* Memory;
 
         /// <summary>
         /// Interface to provided interpreter that intercepts rendering commands
@@ -165,7 +182,6 @@ namespace I_Robot
             pData = (byte*)Memory;
 
             Interpreter = interpreter;
-            Interpreter.pMemory = Memory;
 
             //  Mathbox     CPU           hi                lo
             //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
@@ -360,15 +376,15 @@ namespace I_Robot
         /// <param name="cos">cos() of angle to rotate by</param>
         void Pitch(Matrix* pMatrix, Int16 sin, Int16 cos)
         {
-            Int16 m12 = pMatrix->M12, m13 = pMatrix->M13;
-            Int16 m22 = pMatrix->M22, m23 = pMatrix->M23;
-            Int16 m32 = pMatrix->M32, m33 = pMatrix->M33;
+            Int16 m12 = pMatrix->M21, m13 = pMatrix->M31;
+            Int16 m22 = pMatrix->M22, m23 = pMatrix->M32;
+            Int16 m32 = pMatrix->M23, m33 = pMatrix->M33;
 
-            pMatrix->M12 = (Int16)((m12 * cos - m13 * sin) >> 14);
-            pMatrix->M13 = (Int16)((m13 * cos + m12 * sin) >> 14);
+            pMatrix->M21 = (Int16)((m12 * cos - m13 * sin) >> 14);
+            pMatrix->M31 = (Int16)((m13 * cos + m12 * sin) >> 14);
             pMatrix->M22 = (Int16)((m22 * cos - m23 * sin) >> 14);
-            pMatrix->M23 = (Int16)((m23 * cos + m22 * sin) >> 14);
-            pMatrix->M32 = (Int16)((m32 * cos - m33 * sin) >> 14);
+            pMatrix->M32 = (Int16)((m23 * cos + m22 * sin) >> 14);
+            pMatrix->M23 = (Int16)((m32 * cos - m33 * sin) >> 14);
             pMatrix->M33 = (Int16)((m33 * cos + m32 * sin) >> 14);
         }
 
@@ -384,15 +400,15 @@ namespace I_Robot
         /// <param name="cos">cos() of angle to rotate by</param>
         void Yaw(Matrix* pMatrix, Int16 sin, Int16 cos)
         {
-            Int16 m11 = pMatrix->M11, m13 = pMatrix->M13;
-            Int16 m21 = pMatrix->M21, m23 = pMatrix->M23;
-            Int16 m31 = pMatrix->M31, m33 = pMatrix->M33;
+            Int16 m11 = pMatrix->M11, m13 = pMatrix->M31;
+            Int16 m21 = pMatrix->M12, m23 = pMatrix->M32;
+            Int16 m31 = pMatrix->M13, m33 = pMatrix->M33;
 
             pMatrix->M11 = (Int16)((m11 * cos + m13 * sin) >> 14);
-            pMatrix->M13 = (Int16)((m13 * cos - m11 * sin) >> 14);
-            pMatrix->M21 = (Int16)((m21 * cos + m23 * sin) >> 14);
-            pMatrix->M23 = (Int16)((m23 * cos - m21 * sin) >> 14);
-            pMatrix->M31 = (Int16)((m31 * cos + m33 * sin) >> 14);
+            pMatrix->M31 = (Int16)((m13 * cos - m11 * sin) >> 14);
+            pMatrix->M12 = (Int16)((m21 * cos + m23 * sin) >> 14);
+            pMatrix->M32 = (Int16)((m23 * cos - m21 * sin) >> 14);
+            pMatrix->M13 = (Int16)((m31 * cos + m33 * sin) >> 14);
             pMatrix->M33 = (Int16)((m33 * cos - m31 * sin) >> 14);
         }
 
@@ -408,16 +424,16 @@ namespace I_Robot
         /// <param name="cos">cos() of angle to rotate by</param>
         void Roll(Matrix* pMatrix, Int16 sin, Int16 cos)
         {
-            Int16 m11 = pMatrix->M11, m12 = pMatrix->M12;
-            Int16 m21 = pMatrix->M21, m22 = pMatrix->M22;
-            Int16 m31 = pMatrix->M31, m32 = pMatrix->M32;
+            Int16 m11 = pMatrix->M11, m12 = pMatrix->M21;
+            Int16 m21 = pMatrix->M12, m22 = pMatrix->M22;
+            Int16 m31 = pMatrix->M13, m32 = pMatrix->M23;
 
             pMatrix->M11 = (Int16)((m11 * cos - m12 * sin) >> 14);
-            pMatrix->M12 = (Int16)((m12 * cos + m11 * sin) >> 14);
-            pMatrix->M21 = (Int16)((m21 * cos - m22 * sin) >> 14);
+            pMatrix->M21 = (Int16)((m12 * cos + m11 * sin) >> 14);
+            pMatrix->M12 = (Int16)((m21 * cos - m22 * sin) >> 14);
             pMatrix->M22 = (Int16)((m22 * cos + m21 * sin) >> 14);
-            pMatrix->M31 = (Int16)((m31 * cos - m32 * sin) >> 14);
-            pMatrix->M32 = (Int16)((m32 * cos + m31 * sin) >> 14);
+            pMatrix->M13 = (Int16)((m31 * cos - m32 * sin) >> 14);
+            pMatrix->M23 = (Int16)((m32 * cos + m31 * sin) >> 14);
         }
 
         /// <summary>
@@ -430,15 +446,15 @@ namespace I_Robot
         /// <param name="pC">pointer to result matrix</param>
         void MatrixMultiply(Matrix* pA, Matrix* pB, Matrix* pC)
         {
-            pC->M11 = (Int16)((pA->M11 * pB->M11 + pA->M12 * pB->M12 + pA->M13 * pB->M13) >> 14);
-            pC->M12 = (Int16)((pA->M11 * pB->M21 + pA->M12 * pB->M22 + pA->M13 * pB->M23) >> 14);
-            pC->M13 = (Int16)((pA->M11 * pB->M31 + pA->M12 * pB->M32 + pA->M13 * pB->M33) >> 14);
-            pC->M21 = (Int16)((pA->M21 * pB->M11 + pA->M22 * pB->M12 + pA->M23 * pB->M13) >> 14);
-            pC->M22 = (Int16)((pA->M21 * pB->M21 + pA->M22 * pB->M22 + pA->M23 * pB->M23) >> 14);
-            pC->M23 = (Int16)((pA->M21 * pB->M31 + pA->M22 * pB->M32 + pA->M23 * pB->M33) >> 14);
-            pC->M31 = (Int16)((pA->M31 * pB->M11 + pA->M32 * pB->M12 + pA->M33 * pB->M13) >> 14);
-            pC->M32 = (Int16)((pA->M31 * pB->M21 + pA->M32 * pB->M22 + pA->M33 * pB->M23) >> 14);
-            pC->M33 = (Int16)((pA->M31 * pB->M31 + pA->M32 * pB->M32 + pA->M33 * pB->M33) >> 14);
+            pC->M11 = (Int16)((pA->M11 * pB->M11 + pA->M21 * pB->M21 + pA->M31 * pB->M31) >> 14);
+            pC->M21 = (Int16)((pA->M11 * pB->M12 + pA->M21 * pB->M22 + pA->M31 * pB->M32) >> 14);
+            pC->M31 = (Int16)((pA->M11 * pB->M13 + pA->M21 * pB->M23 + pA->M31 * pB->M33) >> 14);
+            pC->M12 = (Int16)((pA->M12 * pB->M11 + pA->M22 * pB->M21 + pA->M32 * pB->M31) >> 14);
+            pC->M22 = (Int16)((pA->M12 * pB->M12 + pA->M22 * pB->M22 + pA->M32 * pB->M32) >> 14);
+            pC->M32 = (Int16)((pA->M12 * pB->M13 + pA->M22 * pB->M23 + pA->M32 * pB->M33) >> 14);
+            pC->M13 = (Int16)((pA->M13 * pB->M11 + pA->M23 * pB->M21 + pA->M33 * pB->M31) >> 14);
+            pC->M23 = (Int16)((pA->M13 * pB->M12 + pA->M23 * pB->M22 + pA->M33 * pB->M32) >> 14);
+            pC->M33 = (Int16)((pA->M13 * pB->M13 + pA->M23 * pB->M23 + pA->M33 * pB->M33) >> 14);
         }
     }
 }
