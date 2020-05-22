@@ -160,8 +160,8 @@ namespace I_Robot
 
             //Setup Camera
             camTarget = new Vector3(0f, 0f, 0f);
-            camPosition = new Vector3(0f, 0f, -100f);
-            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 100000f);
+            camPosition = new Vector3(0f, 0f, -3f);
+            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 10000f);
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
             worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Up);
             basicEffect = new BasicEffect(Game.GraphicsDevice);
@@ -275,19 +275,75 @@ namespace I_Robot
         VertexPositionColor[] buf = new VertexPositionColor[256 * 3];
         void UnlockVertexBuffer(int numvertices, Color color)
         {
+            if (numvertices <= 0)
+                return;
+
             // if object is to be rendered as a vector, we must close the object
             // by making the endpoint equal to the start point
-            //VertexBuffer.pVertices[numvertices] = VertexBuffer.pVertices[0];
+            Vertices[numvertices] = Vertices[0];
+
             var vertexBuffer = Pool.Get();
 
-#if DEBUG
+#if true
+
+            if (numvertices == 1)
+            {
+                int i = 0;
+                buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
+                buf[i++].Position = Vertices[0];
+                buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
+                buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
+
+                buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
+                buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
+                buf[i++].Position = Vertices[0] + 10 * Vector3.Right + 10 * Vector3.Down;
+                buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
+
+                vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
+            }
+            else if (numvertices == 2)
+            {
+                int i = 0;
+                for (int n = 1; n < numvertices; n++)
+                {
+                    buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
+                    buf[i++].Position = Vertices[n - 1];
+                    buf[i++].Position = Vertices[n];
+                    buf[i++].Position = Vertices[n] + 5 * Vector3.Left;
+
+                    buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
+                    buf[i++].Position = Vertices[n];
+                    buf[i++].Position = Vertices[n] + 5 * Vector3.Left;
+                    buf[i++].Position = Vertices[n - 1] + 5 * Vector3.Left;
+                }
+                vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
+            }
+            else
+            {
+                // convert triangle fan
+                int i = 0;
+                for (int n = 2; n < numvertices; n++)
+                {
+                    buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
+                    buf[i++].Position = Vertices[0];
+                    buf[i++].Position = Vertices[n - 1];
+                    buf[i++].Position = Vertices[n - 2];
+                }
+                vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
+            }
+#else
             int i = 0;
             for (int n=0; n<numvertices;n++)
             {
                 buf[i].Color = buf[i+1].Color = buf[i+2].Color = color;
                 buf[i++].Position = Vertices[n];
-                buf[i++].Position = Vertices[n] + 5*Vector3.Down;
-                buf[i++].Position = Vertices[n] + 5 * Vector3.Left;
+                buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
+                buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
+
+                buf[i].Color = buf[i + 1].Color = buf[i + 2].Color = color;
+                buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
+                buf[i++].Position = Vertices[n] + 10 * Vector3.Right + 10 * Vector3.Down;
+                buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
             }
 
             vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
@@ -496,7 +552,9 @@ namespace I_Robot
             {
                 UInt16 word = *pface++;
 
-                dst[index++] = GetVertexAt(word);
+                Vector3 pt = GetVertexAt(word);
+                pt = Vector3.Transform(pt, WorldRotation) + WorldPosition;
+                dst[index++] = pt;
 
                 if ((word & 0x8000) != 0)
                 {
@@ -604,7 +662,7 @@ namespace I_Robot
 
 
             basicEffect.Projection = projectionMatrix;
-            basicEffect.View = Matrix.CreateScale(1.0f / 256) * viewMatrix;
+            basicEffect.View = Matrix.CreateScale(1.0f / 128) * viewMatrix;
             basicEffect.World = worldMatrix;
             graphicsDevice.Clear(Color.CornflowerBlue);
 
