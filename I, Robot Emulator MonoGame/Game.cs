@@ -103,6 +103,7 @@ namespace I_Robot
 
         protected override void UnloadContent()
         {
+            Hardware.Dispose();
             base.UnloadContent();
         }
 
@@ -115,6 +116,12 @@ namespace I_Robot
 
             // The real drawing happens inside the screen manager component.
             base.Draw(gameTime);
+        }
+
+        protected override void OnExiting(object sender, EventArgs args)
+        {
+            Hardware.Paused = true;
+            base.OnExiting(sender, args);
         }
     }
 }
