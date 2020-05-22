@@ -175,7 +175,7 @@ namespace I_Robot
             //Setup Camera
             camTarget = new Vector3(0f, 0f, 0f);
             camPosition = new Vector3(0f, 0f, -3f);
-            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 10000f);
+            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 1000f);
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
             worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Down);
             basicEffect = new BasicEffect(Game.GraphicsDevice);
@@ -318,9 +318,9 @@ namespace I_Robot
                     numPrimitives = numvertices * 2;
                     break;
                 case TYPE.Vector:
+                    numPrimitives = numvertices;
                     // if object is to be rendered as a vector, we must close the object
                     // by making the endpoint equal to the start point
-                    numPrimitives = numvertices;
                     if (numvertices > 2)
                         Vertices[numvertices++] = Vertices[0];
                     for (int n = 0; n < numvertices; n++)
@@ -615,7 +615,7 @@ namespace I_Robot
                 {
                     pass.Apply();
                     if (obj.Type == TYPE.Vector)
-                        graphicsDevice.DrawPrimitives(PrimitiveType.LineList, 0, obj.NumPrimitives);
+                        graphicsDevice.DrawPrimitives(PrimitiveType.LineStrip, 0, obj.NumPrimitives);
                     else
                         graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, obj.NumPrimitives);
                 }
