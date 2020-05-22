@@ -133,11 +133,11 @@ namespace I_Robot
             // determine location of overlay
             int dstWidth = graphicsDevice.PresentationParameters.BackBufferWidth;
             int dstHeight = graphicsDevice.PresentationParameters.BackBufferHeight;
-            float scale_x = (float)dstWidth / Machine.NATIVE_RESOLUTION.Width;
-            float scale_y = (float)dstHeight / Machine.NATIVE_RESOLUTION.Height;
+            float scale_x = (float)dstWidth / Emulation.Machine.NativeAspectRatio;
+            float scale_y = (float)dstHeight / 1;
             float scale = Math.Min(scale_x, scale_y);
-            int w = (int)Math.Round(Machine.NATIVE_RESOLUTION.Width * scale);
-            int h = (int)Math.Round(Machine.NATIVE_RESOLUTION.Height * scale);
+            int w = (int)Math.Round(Emulation.Machine.NativeAspectRatio * scale);
+            int h = (int)Math.Round(1 * scale);
 
             // draw overlay ontop of screen
             Screen.SpriteBatch.Begin();
