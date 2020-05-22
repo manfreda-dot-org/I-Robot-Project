@@ -13,6 +13,7 @@ using System.Text;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
+using Texture2D = Microsoft.Xna.Framework.Graphics.Texture2D;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 
@@ -124,7 +125,7 @@ namespace I_Robot
             }
         }
         readonly VertexBufferPool Pool;
-        VertexPositionColor[] Vertices = new VertexPositionColor[256];
+        Vector3[] Vertices = new Vector3[512];
         Vector3 camTarget;
         Vector3 camPosition;
         Matrix projectionMatrix;
@@ -266,21 +267,34 @@ namespace I_Robot
             //Device->SetTransform(D3DTS_WORLD, &world);
         }
 
-        VertexPositionColor[] LockVertexBuffer()
+        Vector3[] LockVertexBuffer()
         {
             return Vertices;            
         }
 
-        void UnlockVertexBuffer(int numvertices)
+        VertexPositionColor[] buf = new VertexPositionColor[256 * 3];
+        void UnlockVertexBuffer(int numvertices, Color color)
         {
             // if object is to be rendered as a vector, we must close the object
             // by making the endpoint equal to the start point
             //VertexBuffer.pVertices[numvertices] = VertexBuffer.pVertices[0];
             var vertexBuffer = Pool.Get();
-            vertexBuffer.SetData<VertexPositionColor>(Vertices, 0, numvertices);
-            System.Diagnostics.Debug.WriteLine(Vertices[0].ToString());
-//            if (numvertices > 5 && numvertices < 20)
-//                System.Diagnostics.Debug.WriteLine("");
+
+#if DEBUG
+            int i = 0;
+            for (int n=0; n<numvertices;n++)
+            {
+                buf[i].Color = buf[i+1].Color = buf[i+2].Color = color;
+                buf[i++].Position = Vertices[n];
+                buf[i++].Position = Vertices[n] + 5*Vector3.Down;
+                buf[i++].Position = Vertices[n] + 5 * Vector3.Left;
+            }
+
+            vertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
+#endif
+            //            System.Diagnostics.Debug.WriteLine(Vertices[0].ToString());
+            //            if (numvertices > 5 && numvertices < 20)
+            //                System.Diagnostics.Debug.WriteLine("");
         }
 
         void Dot()
@@ -475,20 +489,18 @@ namespace I_Robot
         void PrepareVertexBuffer(UInt16 address, Color color)
         {
             UInt16* pface = &Memory[address + 1];
-            VertexPositionColor[] dst = LockVertexBuffer();
+            Vector3[] dst = LockVertexBuffer();
 
             // add points to buffer
             for (int index = 0; ;)
             {
                 UInt16 word = *pface++;
 
-                dst[index].Position = GetVertexAt(word);
-                dst[index].Color = color;
-                index++;
+                dst[index++] = GetVertexAt(word);
 
                 if ((word & 0x8000) != 0)
                 {
-                    UnlockVertexBuffer(index);
+                    UnlockVertexBuffer(index, color);
                     return;
                 }
             }
@@ -601,14 +613,14 @@ namespace I_Robot
                 graphicsDevice.SetVertexBuffer(vertexBuffer);
 
                 //Turn off culling so we see both sides of our rendered triangle
-                RasterizerState rasterizerState = new RasterizerState();
+                Microsoft.Xna.Framework.Graphics.RasterizerState rasterizerState = new RasterizerState();
                 rasterizerState.CullMode = CullMode.None;
                 graphicsDevice.RasterizerState = rasterizerState;
 
                 foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 3);
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, 3);
                 }
             }
         }
