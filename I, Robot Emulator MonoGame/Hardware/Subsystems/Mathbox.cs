@@ -1,4 +1,4 @@
-﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// Copyright 2020 by John Manfreda. All Rights Reserved.
 // https://www.manfreda.org/
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,7 +33,10 @@ namespace I_Robot
     [Serializable]
     unsafe public class Mathbox : Hardware.Subsystem
     {
-        public interface IInterpreter
+        /// <summary>
+        /// Interface to a rasterizer that interprets mathbox rendering commands
+        /// </summary>
+        public interface IRasterizer
         {
             /// <summary>
             /// Sets pointer to mathbox memory
@@ -159,13 +162,13 @@ namespace I_Robot
         public readonly UInt16* Memory;
 
         /// <summary>
-        /// Interface to provided interpreter that intercepts rendering commands
+        /// Interface to the rasterizer that interprets rendering commands
         /// </summary>
-        readonly IInterpreter Interpreter;
+        readonly IRasterizer Rasterizer;
 
         bool mMATH_START = false;
         bool mERASE = false;
-        bool ?mBUFSEL = false;
+        bool? mBUFSEL = false;
 
         /// <summary>
         /// Hardware signal that indicates when the mathbox is done
@@ -176,12 +179,12 @@ namespace I_Robot
         public readonly M6809E.ReadDelegate ReadRamFunction;
         public readonly M6809E.WriteDelegate WriteRamFunction;
 
-        public Mathbox(Hardware hardware, IInterpreter interpreter) : base(hardware, "Mathbox")
+        public Mathbox(Hardware hardware, IRasterizer interpreter) : base(hardware, "Mathbox")
         {
             Memory = Memory16;
             pData = (byte*)Memory;
 
-            Interpreter = interpreter;
+            Rasterizer = interpreter;
 
             //  Mathbox     CPU           hi                lo
             //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
@@ -222,7 +225,7 @@ namespace I_Robot
                 foreach (byte b in r102)
                     Memory[address++] |= (UInt16)(b << 8);
             }
-            
+
             // create M6809E accessable banks (high endian)
             address = 0x2000;
             for (int bank = 0; bank < ROM.Length; bank++)
@@ -275,7 +278,7 @@ namespace I_Robot
         public override void Reset()
         {
             MB_DONE = true;
-            
+
             // NOTE: 6809 I/O is not handled here, it is handled by Bank_2000 subsystem
         }
 
@@ -286,7 +289,7 @@ namespace I_Robot
                 if (mBUFSEL != value)
                 {
                     mBUFSEL = value;
-                    Interpreter.SetVideoBuffer(value ? 1 : 0);
+                    Rasterizer.SetVideoBuffer(value ? 1 : 0);
                 }
             }
         }
@@ -302,7 +305,7 @@ namespace I_Robot
                 {
                     mERASE = value;
                     if (value)
-                        Interpreter.EraseVideoBuffer();
+                        Rasterizer.EraseVideoBuffer();
                 }
             }
         }
@@ -329,11 +332,11 @@ namespace I_Robot
                         {
                             case COMMAND.START_PLAYFIELD:
                                 // route to interpreter
-                                Interpreter.RasterizePlayfield();
+                                Rasterizer.RasterizePlayfield();
                                 break;
                             case COMMAND.UNKNOWN:
                                 // route to interpreter
-                                Interpreter.UnknownCommand();
+                                Rasterizer.UnknownCommand();
                                 break;
                             case COMMAND.ROLL:
                                 // native interpretation
@@ -353,7 +356,7 @@ namespace I_Robot
                                 break;
                             default:
                                 // route to interpreter
-                                Interpreter.RasterizeObject(Memory[0]);
+                                Rasterizer.RasterizeObject(Memory[0]);
                                 break;
                         }
 

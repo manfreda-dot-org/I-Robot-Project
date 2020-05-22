@@ -1,9 +1,10 @@
 ﻿using GameManagement;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
-using SharpDX;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.PerformanceData;
 using System.Net.Security;
@@ -11,6 +12,7 @@ using System.Numerics;
 using System.Text;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
+using Matrix3x3 = SharpDX.Matrix3x3;
 using Vector2 = Microsoft.Xna.Framework.Vector2;
 using Vector3 = Microsoft.Xna.Framework.Vector3;
 
@@ -50,7 +52,7 @@ namespace I_Robot
         }
     }
 
-    unsafe public class MathboxRenderer : Mathbox.IInterpreter
+    unsafe public class MathboxRenderer : Mathbox.IRasterizer
     {
         readonly Game Game;
         readonly ScreenManager ScreenManager;
@@ -82,6 +84,55 @@ namespace I_Robot
         // must be retained between calls of ParseObjectList()
         UInt16 SurfaceList;
 
+        class VertexBufferPool : IDisposable
+        {
+            readonly GraphicsDevice GraphicsDevice;
+            ConcurrentQueue<VertexBuffer> Pool = new ConcurrentQueue<VertexBuffer>();
+            public ConcurrentStack<VertexBuffer> InUse = new ConcurrentStack<VertexBuffer>();
+            int Count = 0;
+
+            public VertexBufferPool(GraphicsDevice graphicsDevice)
+            {
+                GraphicsDevice = graphicsDevice;
+            }
+
+            public void Dispose()
+            {
+                Reset();
+                foreach (var v in Pool)
+                    v.Dispose();
+            }
+
+
+            public void Reset()
+            {
+                foreach (var v in InUse)
+                    Pool.Enqueue(v);
+                InUse.Clear();
+            }
+
+            public VertexBuffer Get()
+            {
+                if (!Pool.TryDequeue(out VertexBuffer? result))
+                {
+                    result = new VertexBuffer(GraphicsDevice, typeof(VertexPositionColor), 256 * 3, BufferUsage.WriteOnly);
+                    Count++;
+                    System.Diagnostics.Debug.WriteLine($"new VertexBuffer(), total = {Count}");
+                }
+                InUse.Push(result);
+                return result;
+            }
+        }
+        readonly VertexBufferPool Pool;
+        VertexPositionColor[] Vertices = new VertexPositionColor[256];
+        Vector3 camTarget;
+        Vector3 camPosition;
+        Matrix projectionMatrix;
+        Matrix viewMatrix;
+        Matrix worldMatrix;
+        BasicEffect basicEffect;
+        bool orbit;
+
         public MathboxRenderer(ScreenManager screenManager)
         {
             ScreenManager = screenManager;
@@ -89,6 +140,8 @@ namespace I_Robot
             if (!(screenManager.Game is I_Robot.Game game))
                 throw new Exception("VideoInterpreter can only be used with I_Robot.Game");
             Game = game;
+
+            Pool = new VertexBufferPool(Game.GraphicsDevice);
 
             // create our render target buffers
             for (int n = 0; n < Buffers.Length; n++)
@@ -101,7 +154,30 @@ namespace I_Robot
                     Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
                     DepthFormat.Depth24);
             }
+
+
+
+            //Setup Camera
+            camTarget = new Vector3(0f, 0f, 0f);
+            camPosition = new Vector3(0f, 0f, -100f);
+            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 100000f);
+            viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
+            worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Up);
+            basicEffect = new BasicEffect(Game.GraphicsDevice);
+            basicEffect.Alpha = 1f;
+            basicEffect.VertexColorEnabled = true; // Want to see the colors of the vertices, this needs to be on
+            // Lighting requires normal information which VertexPositionColor does not have
+            // If you want to use lighting and VPC you need to create a custom def
+            basicEffect.LightingEnabled = false;
         }
+
+        public void Dispose()
+        {
+            Pool.Dispose();
+            foreach (var b in Buffers)
+                b.Dispose();
+        }
+        
 
         const UInt16 VIEW_POSITION_ADDRESS = 0x12;
         const UInt16 LIGHT_ADDRESS = 0x44;
@@ -161,22 +237,20 @@ namespace I_Robot
 
         }
 
-        void SetColor(int index)
+        Color GetColor(int index)
         {
-            index &= 0x3F;
             // set rasterizer color
-            var c = Hardware.Palette.Color[index & 0x3F];
+            return Hardware.Palette.Color[index & 0x3F];
         }
 
-        void SetColor(int index, float shade)
+        Color GetColor(int index, float shade)
         {
-//            System.Diagnostics.Debug.WriteLine($"index {index & 0x3F}   offset {shade}");
             int offset = (int)shade;
             index += offset;
-            index &= 0x3F;
-            Color c = Hardware.Palette.Color[index];
+            Color c = Hardware.Palette.Color[index & 0x3F];
             if ((index & 7) != 7)
-                c = Color.Lerp(c, Hardware.Palette.Color[index + 1], shade - offset);
+                c = Color.Lerp(c, Hardware.Palette.Color[(index + 1) & 0x3F], shade - offset);
+            return c;
         }
 
         void SetWorldMatrix(ref Matrix rotation)
@@ -192,22 +266,21 @@ namespace I_Robot
             //Device->SetTransform(D3DTS_WORLD, &world);
         }
 
-        Vector3* LockVertexBuffer()
+        VertexPositionColor[] LockVertexBuffer()
         {
-            //        VertexBuffer.Object->Lock(0, 256 * sizeof(VECTOR), (VOID**) &VertexBuffer.pVertices, D3DLOCK_DISCARD);
-            //        return VertexBuffer.pVertices;
-            return null;
+            return Vertices;            
         }
 
         void UnlockVertexBuffer(int numvertices)
         {
-            //VertexBuffer.Length = numvertices;
-
             // if object is to be rendered as a vector, we must close the object
             // by making the endpoint equal to the start point
             //VertexBuffer.pVertices[numvertices] = VertexBuffer.pVertices[0];
-
-            //VertexBuffer.Object->Unlock();
+            var vertexBuffer = Pool.Get();
+            vertexBuffer.SetData<VertexPositionColor>(Vertices, 0, numvertices);
+            System.Diagnostics.Debug.WriteLine(Vertices[0].ToString());
+//            if (numvertices > 5 && numvertices < 20)
+//                System.Diagnostics.Debug.WriteLine("");
         }
 
         void Dot()
@@ -383,10 +456,10 @@ namespace I_Robot
                 return true; // don't render
 
             // prepare color
-            SetColor(flags, shade);
+            Color color = GetColor(flags, shade);
 
             // prepare the vertex buffer
-            PrepareVertexBuffer(address);
+            PrepareVertexBuffer(address, color);
 
             // render surface using appropriate method
             switch (flags & 0x0300)
@@ -399,25 +472,23 @@ namespace I_Robot
             return true;
         }
 
-        void PrepareVertexBuffer(UInt16 address)
+        void PrepareVertexBuffer(UInt16 address, Color color)
         {
             UInt16* pface = &Memory[address + 1];
-            Vector3* dst = LockVertexBuffer();
+            VertexPositionColor[] dst = LockVertexBuffer();
 
             // add points to buffer
-            for (int count = 0; ;)
+            for (int index = 0; ;)
             {
                 UInt16 word = *pface++;
-#if DEBUG
-                GetVertexAt(word);
-#else
-                *dst++ = GetVertexAt(word);
-#endif
-                count++;
+
+                dst[index].Position = GetVertexAt(word);
+                dst[index].Color = color;
+                index++;
 
                 if ((word & 0x8000) != 0)
                 {
-                    UnlockVertexBuffer(count);
+                    UnlockVertexBuffer(index);
                     return;
                 }
             }
@@ -429,19 +500,20 @@ namespace I_Robot
 
 #region MATHBOX INTERFACE
 
-        void Mathbox.IInterpreter.SetVideoBuffer(int index)
+        void Mathbox.IRasterizer.SetVideoBuffer(int index)
         {
             VideoBuffer = Buffers[index];
         }
 
-        void Mathbox.IInterpreter.EraseVideoBuffer()
+        void Mathbox.IRasterizer.EraseVideoBuffer()
         {
             // this is essentially the same as "starting" a new display list
             // so we should clear/cache the old one while we build the new one
+            Pool.Reset();
 
         }
 
-        void Mathbox.IInterpreter.RasterizeObject(UInt16 address)
+        void Mathbox.IRasterizer.RasterizeObject(UInt16 address)
         {
             StartRender();
             LoadLightVector();
@@ -450,14 +522,14 @@ namespace I_Robot
             EndRender();
         }
 
-        void Mathbox.IInterpreter.RasterizePlayfield()
+        void Mathbox.IRasterizer.RasterizePlayfield()
         {
         }
 
-        void Mathbox.IInterpreter.UnknownCommand()
+        void Mathbox.IRasterizer.UnknownCommand()
         {
         }
-#endregion
+        #endregion
 
         /// <summary>
         /// Renders alphanumerics onto the overlay itself in native resolution
@@ -465,8 +537,80 @@ namespace I_Robot
         /// <param name="graphicsDevice"></param>
         public void Render(GraphicsDevice graphicsDevice)
         {
+
+            if (GamePad.GetState(PlayerIndex.One).Buttons.Back ==
+                ButtonState.Pressed || Keyboard.GetState().IsKeyDown(
+                Keys.Escape))
+                Game.Exit();
+
+            if (Keyboard.GetState().IsKeyDown(Keys.Left))
+            {
+                camPosition.X -= 1f;
+                camTarget.X -= 1f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Right))
+            {
+                camPosition.X += 1f;
+                camTarget.X += 1f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Up))
+            {
+                camPosition.Y -= 1f;
+                camTarget.Y -= 1f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Down))
+            {
+                camPosition.Y += 1f;
+                camTarget.Y += 1f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.OemPlus))
+            {
+                camPosition.Z += 1f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.OemMinus))
+            {
+                camPosition.Z -= 1f;
+            }
+            if (Keyboard.GetState().IsKeyDown(Keys.Space))
+            {
+                orbit = !orbit;
+            }
+
+            if (orbit)
+            {
+                Matrix rotationMatrix = Matrix.CreateRotationY(MathHelper.ToRadians(1f));
+                camPosition = Vector3.Transform(camPosition, rotationMatrix);
+            }
+            viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
+
+
+
+
+
             graphicsDevice.SetRenderTarget(Buffers[0]);
             graphicsDevice.Clear(Color.Transparent);
+
+
+            basicEffect.Projection = projectionMatrix;
+            basicEffect.View = Matrix.CreateScale(1.0f / 256) * viewMatrix;
+            basicEffect.World = worldMatrix;
+            graphicsDevice.Clear(Color.CornflowerBlue);
+
+            foreach (var vertexBuffer in Pool.InUse)
+            {
+                graphicsDevice.SetVertexBuffer(vertexBuffer);
+
+                //Turn off culling so we see both sides of our rendered triangle
+                RasterizerState rasterizerState = new RasterizerState();
+                rasterizerState.CullMode = CullMode.None;
+                graphicsDevice.RasterizerState = rasterizerState;
+
+                foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
+                {
+                    pass.Apply();
+                    graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, 3);
+                }
+            }
         }
 
         public void Draw(GraphicsDevice graphicsDevice)

@@ -265,7 +265,7 @@ namespace I_Robot
 
         public readonly RomSet Roms;
 
-        public Hardware(RomSet roms, Mathbox.IInterpreter interpreter)
+        public Hardware(RomSet roms, Mathbox.IRasterizer rasterizer)
         {
             Roms = roms;
 
@@ -278,7 +278,7 @@ namespace I_Robot
 
             ADC = new ADC(this);
             Alphanumerics = new Alphanumerics(this);
-            Mathbox = new Mathbox(this, interpreter);
+            Mathbox = new Mathbox(this, rasterizer);
             Palette = new Palette(this);
             Registers = new Registers(this);
             VideoProcessor = new VideoProcessor(this);
@@ -290,7 +290,7 @@ namespace I_Robot
 
             // let the interpreter know about this hardware
             // must be done after subsystems are loaded
-            interpreter.Hardware = this;
+            rasterizer.Hardware = this;
 
             // setup a periodic callback from the 6809 engine to update scanline counter
             ScanlineCallback = new M6809E.PeriodicDelegate(() =>
@@ -322,16 +322,23 @@ namespace I_Robot
 
         public void Dispose()
         {
-            lock (Lock)
+            if (!mDisposed)
             {
-                if (!mDisposed)
+                lock (Lock)
                 {
-                    mDisposed = true;
+                    if (!mDisposed)
+                    {
+                        mDisposed = true;
 
-                    foreach (Subsystem subsystem in Subsystems)
-                        subsystem.Dispose();
+                        foreach (Subsystem subsystem in Subsystems)
+                        {
+                            try { subsystem.Dispose(); }
+                            catch { }
+                        }
 
-                    M6809E.Dispose();
+                        try { M6809E.Dispose(); }
+                        catch { }
+                    }
                 }
             }
         }

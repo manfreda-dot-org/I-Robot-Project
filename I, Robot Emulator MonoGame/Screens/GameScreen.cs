@@ -89,7 +89,9 @@ namespace I_Robot
         /// </summary>
         public override void Unload()
         {
+            Hardware.Paused = true;
             Alphanumerics.Dispose();
+            MathboxRenderer.Dispose();
             Content?.Unload();
         }
 
