@@ -16,12 +16,10 @@
 
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Runtime.Serialization;
 using System.Text;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Simulates the 32x32 alphanumerics video overlay on the I, Robot PCB

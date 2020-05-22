@@ -24,7 +24,7 @@ namespace I_Robot
     class Screen : GameManagement.Screen
     {
         new public readonly I_Robot.Game Game;
-        public readonly Hardware Hardware;
+        public readonly Emulation.Hardware Hardware;
         
         public Screen(ScreenManager screenManager)
             : base(screenManager)

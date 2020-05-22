@@ -14,17 +14,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
-using SharpDX.DirectWrite;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Net;
 using System.Runtime.Serialization;
-using System.Text;
 using System.Threading;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     [Serializable]
     unsafe public class Hardware : ISerializable, IDisposable
@@ -265,7 +262,7 @@ namespace I_Robot
 
         public readonly RomSet Roms;
 
-        public Hardware(RomSet roms, Mathbox.IRasterizer rasterizer)
+        public Hardware(RomSet roms, IRasterizer rasterizer)
         {
             Roms = roms;
 

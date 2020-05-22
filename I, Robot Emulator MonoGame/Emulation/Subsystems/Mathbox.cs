@@ -18,7 +18,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Represents the Mathbox hardware on the I, Robot PCB
@@ -34,41 +34,14 @@ namespace I_Robot
     unsafe public class Mathbox : Hardware.Subsystem
     {
         /// <summary>
-        /// Interface to a rasterizer that interprets mathbox rendering commands
+        /// Enumeration of the different rendering modes that the I, Robot hardware supports
         /// </summary>
-        public interface IRasterizer
+        public enum RenderMode : UInt16
         {
-            /// <summary>
-            /// Sets pointer to mathbox memory
-            /// </summary>
-            public Hardware Hardware { set; }
-
-            /// <summary>
-            /// Sets the current video buffer being renderd to
-            /// </summary>
-            /// <param name="index"></param>
-            public void SetVideoBuffer(int index);
-
-            /// <summary>
-            /// Erases the selected video buffer
-            /// </summary>
-            public void EraseVideoBuffer();
-
-            /// <summary>
-            /// This command kicks off playfield rasterization
-            /// </summary>
-            void RasterizePlayfield();
-
-            /// <summary>
-            /// This command performas an unknown function, likely related to rasterization
-            /// </summary>
-            void UnknownCommand();
-
-            /// <summary>
-            /// Rasterizes the object at the given address, using the current lighting vector, camera vector, etc
-            /// </summary>
-            /// <param name="address"></param>
-            void RasterizeObject(UInt16 address);
+            Polygon = 0x0000,
+            Vector = 0x0100,
+            Dot = 0x0200,
+            Mask = 0x0300
         }
 
         /// <summary>

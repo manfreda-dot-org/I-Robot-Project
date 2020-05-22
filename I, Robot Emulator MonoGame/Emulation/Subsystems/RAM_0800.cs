@@ -15,11 +15,9 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Represents the 3 x 2k banks of memory from address 0800 - 0FFF

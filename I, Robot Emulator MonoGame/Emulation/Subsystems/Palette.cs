@@ -18,7 +18,7 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Runtime.Serialization;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Represents the 64 x 9-bit color palette on the I, Robot video PCB

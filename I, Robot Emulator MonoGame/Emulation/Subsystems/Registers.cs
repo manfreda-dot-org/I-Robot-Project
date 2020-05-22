@@ -16,12 +16,9 @@
 
 using Microsoft.Xna.Framework.Input;
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Windows.Input;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Class that represents all of the special function registers on the I, Robot hardware

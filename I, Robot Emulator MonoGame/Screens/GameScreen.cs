@@ -148,7 +148,7 @@ namespace I_Robot
             if (Keyboard.HasBeenPressed(Keys.Tab))
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (Keyboard.HasBeenPressed(Keys.F3))
-                Hardware.Reset(Hardware.RESET_TYPE.USER);
+                Hardware.Reset(Emulation.Hardware.RESET_TYPE.USER);
             if (Keyboard.HasBeenPressed(Keys.F7))
             {
                 if (Keyboard.IsPressed(Keys.LeftShift) || Keyboard.IsPressed(Keys.RightShift))

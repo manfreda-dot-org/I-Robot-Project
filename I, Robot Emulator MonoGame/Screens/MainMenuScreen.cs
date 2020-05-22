@@ -15,7 +15,6 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using GameManagement;
-using Microsoft.Xna.Framework.Graphics;
 
 namespace I_Robot
 {
@@ -68,7 +67,7 @@ namespace I_Robot
             dialog.Accepted += new System.EventHandler<PlayerIndexEventArgs>((object? sender, PlayerIndexEventArgs e) =>
             {
                 if (this.Game is I_Robot.Game game)
-                    game.Hardware.Reset(Hardware.RESET_TYPE.USER);
+                    game.Hardware.Reset(Emulation.Hardware.RESET_TYPE.USER);
                 OnCancel(sender, e);
             });
             ScreenManager.AddScreen(dialog, null);

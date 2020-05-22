@@ -1,4 +1,5 @@
 using GameManagement;
+using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -53,7 +54,7 @@ namespace I_Robot
         }
     }
 
-    unsafe public class MathboxRenderer : Mathbox.IRasterizer
+    unsafe public class MathboxRenderer : IRasterizer
     {
         readonly Game Game;
         readonly ScreenManager ScreenManager;
@@ -87,7 +88,7 @@ namespace I_Robot
 
         class VertexBufRenderType : IDisposable
         {
-            public TYPE Type;
+            public Mathbox.RenderMode RenderMode;
             public int NumPrimitives;
             public readonly VertexBuffer VertexBuffer;
 
@@ -289,22 +290,22 @@ namespace I_Robot
         }
 
         VertexPositionColor[] buf = new VertexPositionColor[256 * 3];
-        void UnlockVertexBuffer(int numvertices, Color color, TYPE type)
+        void UnlockVertexBuffer(int numvertices, Color color, Mathbox.RenderMode renderMode)
         {
             if (numvertices <= 0)
                 return;
             else if (numvertices == 1)
-                type = TYPE.Dot;
-            else if (numvertices == 2 && type == TYPE.Polygon)
-                type = TYPE.Vector;
+                renderMode = Mathbox.RenderMode.Dot;
+            else if (numvertices == 2 && renderMode == Mathbox.RenderMode.Polygon)
+                renderMode = Mathbox.RenderMode.Vector;
 
             int i = 0;
             int numPrimitives = 0;
 
-            switch (type)
+            switch (renderMode)
             {
                 default: return;
-                case TYPE.Dot:
+                case Mathbox.RenderMode.Dot:
                     for (int n = 0; n < numvertices; n++)
                     {
                         buf[i++].Position = Vertices[0];
@@ -317,7 +318,7 @@ namespace I_Robot
                     }
                     numPrimitives = numvertices * 2;
                     break;
-                case TYPE.Vector:
+                case Mathbox.RenderMode.Vector:
                     numPrimitives = numvertices;
                     // if object is to be rendered as a vector, we must close the object
                     // by making the endpoint equal to the start point
@@ -326,7 +327,7 @@ namespace I_Robot
                     for (int n = 0; n < numvertices; n++)
                         buf[i++].Position = Vertices[n];
                     break;
-                case TYPE.Polygon:
+                case Mathbox.RenderMode.Polygon:
                     // convert triangle fan
                     int a = 0;
                     int b = 1;
@@ -357,7 +358,7 @@ namespace I_Robot
                 buf[n].Color = color;
 
             var obj = Pool.Get();
-            obj.Type = type;
+            obj.RenderMode = renderMode;
             obj.NumPrimitives = numPrimitives;
             obj.VertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
         }
@@ -480,11 +481,14 @@ namespace I_Robot
         {
             float shade = 0;
 
+            // should we check the normal vector to see if this polygon is visible
             if ((Memory[address] & 0x4000) == 0)
             {
+                // get the normal vector
                 Vector3 normal = GetVertexAt(Memory[address]);
                 normal = Vector3.Transform(normal, WorldRotation);
 
+                // get the first coordinate
                 Vector3 pt = GetVertexAt(Memory[address + 1]);
                 Vector3.Transform(pt, WorldRotation);
                 pt += WorldPosition;
@@ -509,20 +513,12 @@ namespace I_Robot
             Color color = GetColor(flags, shade);
 
             // prepare the vertex buffer
-            PrepareVertexBuffer(address, color, (TYPE)flags & TYPE.Mask);
+            PrepareVertexBuffer(address, color, (Mathbox.RenderMode)flags & Mathbox.RenderMode.Mask);
 
             return true;
         }
 
-        enum TYPE : UInt16
-        {
-            Polygon = 0x0000,
-            Vector = 0x0100,
-            Dot = 0x0200,
-            Mask = 0x0300
-        }
-
-        void PrepareVertexBuffer(UInt16 address, Color color, TYPE type)
+        void PrepareVertexBuffer(UInt16 address, Color color, Mathbox.RenderMode type)
         {
             UInt16* pface = &Memory[address + 1];
             Vector3[] dst = LockVertexBuffer();
@@ -536,6 +532,7 @@ namespace I_Robot
                 pt = Vector3.Transform(pt, WorldRotation) + WorldPosition;
                 dst[index++] = pt;
 
+                // is this the last point of the plygon?
                 if ((word & 0x8000) != 0)
                 {
                     UnlockVertexBuffer(index, color, type);
@@ -548,14 +545,14 @@ namespace I_Robot
 
 #endregion
 
-#region MATHBOX INTERFACE
+#region EMULATOR INTERFACE
 
-        void Mathbox.IRasterizer.SetVideoBuffer(int index)
+        void IRasterizer.SetVideoBuffer(int index)
         {
             VideoBuffer = Buffers[index];
         }
 
-        void Mathbox.IRasterizer.EraseVideoBuffer()
+        void IRasterizer.EraseVideoBuffer()
         {
             // this is essentially the same as "starting" a new display list
             // so we should clear/cache the old one while we build the new one
@@ -563,7 +560,7 @@ namespace I_Robot
 
         }
 
-        void Mathbox.IRasterizer.RasterizeObject(UInt16 address)
+        void IRasterizer.RasterizeObject(UInt16 address)
         {
             StartRender();
             LoadLightVector();
@@ -572,11 +569,11 @@ namespace I_Robot
             EndRender();
         }
 
-        void Mathbox.IRasterizer.RasterizePlayfield()
+        void IRasterizer.RasterizePlayfield()
         {
         }
 
-        void Mathbox.IRasterizer.UnknownCommand()
+        void IRasterizer.UnknownCommand()
         {
         }
 #endregion
@@ -614,10 +611,17 @@ namespace I_Robot
                 foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
                 {
                     pass.Apply();
-                    if (obj.Type == TYPE.Vector)
-                        graphicsDevice.DrawPrimitives(PrimitiveType.LineStrip, 0, obj.NumPrimitives);
-                    else
-                        graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, obj.NumPrimitives);
+                    switch (obj.RenderMode)
+                    {
+                        case Mathbox.RenderMode.Dot:
+                            break;
+                        case Mathbox.RenderMode.Vector:
+                            graphicsDevice.DrawPrimitives(PrimitiveType.LineStrip, 0, obj.NumPrimitives);
+                            break;
+                        case Mathbox.RenderMode.Polygon:
+                            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, obj.NumPrimitives);
+                            break;
+                    }
                 }
             }
         }

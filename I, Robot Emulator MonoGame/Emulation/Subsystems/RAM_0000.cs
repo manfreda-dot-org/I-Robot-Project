@@ -15,29 +15,20 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
-    /// Represents the video processor circuit on the I, Robot PCB
+    /// Represents the 2k of memory from address 0000 - 07FF
     /// </summary>
     [Serializable]
-    unsafe public class VideoProcessor : Hardware.Subsystem
+    unsafe public class RAM_0000 : Hardware.Subsystem
     {
-        // two banks of COMRAM
-        public readonly PinnedBuffer<byte>[] COMRAM = new PinnedBuffer<byte>[2] { new PinnedBuffer<byte>(0x2000), new PinnedBuffer<byte>(0x2000) };
+        public readonly PinnedBuffer<byte> RAM = new PinnedBuffer<byte>(0x800);
 
-        /// <summary>
-        /// Video processor finished signal
-        /// </summary>
-        public bool EXT_DONE { get; private set; } = true;
-
-        public VideoProcessor(Hardware hardware) : base(hardware, "Video Processor")
+        public RAM_0000(Hardware hardware) : base(hardware, "RAM 0000 - 07FF")
         {
-
         }
 
         public override void Dispose()
@@ -46,24 +37,13 @@ namespace I_Robot
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            info.AddValue("EXT_DONE", EXT_DONE);
-            info.AddValue("COMRAM_0", COMRAM[0]);
-            info.AddValue("COMRAM_1", COMRAM[1]);
+            info.AddValue("RAM_0000", RAM);
         }
 
         public override void Reset()
         {
-
-        }
-
-        /// <summary>
-        /// Hardware signal that tells the video processor to execute the display list in COMRAM
-        /// </summary>
-        public bool EXT_START
-        {
-            set
-            {
-            }
+            // setup M6809 page read/write pointers
+            Hardware.M6809E.SetPageIO(0x00, 0x07, RAM, RAM);
         }
     }
 }

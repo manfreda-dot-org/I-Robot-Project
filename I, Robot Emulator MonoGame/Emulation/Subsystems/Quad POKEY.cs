@@ -15,20 +15,11 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
-using System.Text;
-using System.Threading;
-using System.Windows.Input;
 using Vortice.Multimedia;
 using Vortice.XAudio2;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Emulates the Quad-Pokey chip on the I, Robot PCB

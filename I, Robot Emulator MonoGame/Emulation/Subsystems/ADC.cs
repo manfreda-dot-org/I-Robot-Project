@@ -14,13 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
-using I_Robot;
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
-namespace I_Robot
+namespace I_Robot.Emulation
 {
     /// <summary>
     /// Represents the ADC chip on the I, Robot PCB
