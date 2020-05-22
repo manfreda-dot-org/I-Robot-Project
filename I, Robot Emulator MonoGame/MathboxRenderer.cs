@@ -172,8 +172,6 @@ namespace I_Robot
                     DepthFormat.Depth24);
             }
 
-
-
             //Setup Camera
             camTarget = new Vector3(0f, 0f, 0f);
             camPosition = new Vector3(0f, 0f, -3f);
@@ -186,7 +184,9 @@ namespace I_Robot
             // Lighting requires normal information which VertexPositionColor does not have
             // If you want to use lighting and VPC you need to create a custom def
             basicEffect.LightingEnabled = false;
+
         }
+
 
         public void Dispose()
         {
@@ -223,7 +223,7 @@ namespace I_Robot
             return ((Mathbox.Matrix*)&Memory[address])->ToMatrix4(); 
         }
 
-        void LoadLightVector() { Light = -GetVectorAt(LIGHT_ADDRESS); }
+        void LoadLightVector() { Light = GetVectorAt(LIGHT_ADDRESS); }
         void LoadViewPosition() { ViewPosition = GetVectorAt(VIEW_POSITION_ADDRESS); }
         void LoadViewMatrix(UInt16 address)
         {
@@ -320,10 +320,11 @@ namespace I_Robot
                 case TYPE.Vector:
                     // if object is to be rendered as a vector, we must close the object
                     // by making the endpoint equal to the start point
-                    Vertices[numvertices++] = Vertices[0];
+                    numPrimitives = numvertices;
+                    if (numvertices > 2)
+                        Vertices[numvertices++] = Vertices[0];
                     for (int n = 0; n < numvertices; n++)
                         buf[i++].Position = Vertices[n];
-                    numPrimitives = numvertices - 1;
                     break;
                 case TYPE.Polygon:
                     // convert triangle fan
@@ -496,7 +497,7 @@ namespace I_Robot
                 if ((flags & 0x0040) != 0)
                 {
                     const float scale = 1.0f / (1 << 25);
-                    shade = Vector3.Dot(normal, -Light) * scale;
+                    shade = Vector3.Dot(normal, Light) * scale;
                     shade = Math.Min(7, Math.Max(0, shade));
                 }
             }
@@ -591,8 +592,8 @@ namespace I_Robot
 
 
 
-
             graphicsDevice.SetRenderTarget(Buffers[0]);
+            graphicsDevice.DepthStencilState = DepthStencilState.Default;
             graphicsDevice.Clear(Color.Transparent);
 
 
