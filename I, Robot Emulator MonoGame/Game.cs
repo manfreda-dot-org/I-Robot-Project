@@ -71,6 +71,11 @@ namespace I_Robot
 
         protected override void Initialize()
         {
+            Graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width - 100;
+            Graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 100;
+         //   Graphics.IsFullScreen = true;
+            Graphics.ApplyChanges();
+
             base.Initialize();
         }
 
