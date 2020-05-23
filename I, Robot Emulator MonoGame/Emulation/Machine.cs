@@ -94,9 +94,10 @@ namespace I_Robot.Emulation
         public const double VIDEO_REFRESH_HZ = (DOT_CLOCK / HORIZONTAL_DOTS / VERTICAL_DOTS);
 
         /// <summary>
-        /// CPU crystal is 8 MHz
+        /// CPU crystal is 12.069 MHz
         /// </summary>
-        public const double CPU_XTAL_HZ = 12069000;
+        //public const double CPU_XTAL_HZ = 12069000;
+        public const double CPU_XTAL_HZ = 2*12069000; // give game program a boost to let it render better, play better
 
         /// <summary>
         /// M6809E clock runs at 1.508625 MHz
