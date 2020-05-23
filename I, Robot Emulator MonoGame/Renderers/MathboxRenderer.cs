@@ -22,9 +22,6 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
-using System.Security.Permissions;
-using System.Windows.Shapes;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -143,7 +140,7 @@ namespace I_Robot
             // two buffers
             // - one buffer is always active (ready for render)
             // - the other buffer is always available for staging new display list commands
-            public ConcurrentStack<DisplayListPrimitive>[] SwapBuffer = new ConcurrentStack<DisplayListPrimitive>[2];
+            readonly ConcurrentStack<DisplayListPrimitive>[] SwapBuffer = new ConcurrentStack<DisplayListPrimitive>[2];
 
             // buffer selection
             ConcurrentStack<DisplayListPrimitive> Committed => SwapBuffer[Index & 1];
@@ -227,6 +224,8 @@ namespace I_Robot
 
             DisplayList = new DisplayListBuilder(Game.GraphicsDevice);
 
+            // create our scene buffer
+            // this buffer has a z-buffer
             SceneBuffer = new RenderTarget2D(
              Game.GraphicsDevice,
              Game.GraphicsDevice.Viewport.Width,
@@ -235,7 +234,9 @@ namespace I_Robot
              Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
              DepthFormat.Depth24);
 
-            // create our render target buffers
+            // create our two screen buffers
+            // these buffers do not require depth sorting, they are simply raw bitmaps
+            // however the contents need to be preserved when rendering context is reset
             for (int n = 0; n < ScreenBuffers.Length; n++)
             {
                 ScreenBuffers[n] = new RenderTarget2D(
