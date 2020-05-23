@@ -33,6 +33,10 @@ namespace I_Robot.Emulation
     [Serializable]
     unsafe public class Mathbox : Machine.Subsystem
     {
+        public const int TILE_SIZE_X = 128;
+        public const int TILE_SIZE_Y = 256;
+        public const int TILE_SIZE_Z = 128;
+
         /// <summary>
         /// Enumeration of the different rendering modes that the I, Robot hardware supports
         /// </summary>

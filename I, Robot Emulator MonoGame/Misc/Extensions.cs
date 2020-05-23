@@ -14,14 +14,45 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
+using I_Robot.Emulation;
+using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace I_Robot
 {
     public static class Extensions
     {
+        public static Vector3 ToNormal(this Mathbox.Vector3 v)
+        {
+            Vector3 n = ToVector(v);
+            n.Normalize();
+            return n;
+        }
+
+        public static Vector3 ToVector(this Mathbox.Vector3 v)
+        {
+            return new Vector3(v.X, v.Y, v.Z);
+        }
+
+        public static SharpDX.Matrix3x3 ToMatrix3(this Mathbox.Matrix m)
+        {
+            const float scale = 1.0f / 0x4000;
+            return new SharpDX.Matrix3x3(
+                m.M11 * scale, m.M12 * scale, m.M13 * scale,
+                m.M21 * scale, m.M22 * scale, m.M23 * scale,
+                m.M31 * scale, m.M32 * scale, m.M33 * scale);
+        }
+
+        public static Matrix ToMatrix4(this Mathbox.Matrix m)
+        {
+            const float scale = 1.0f / 0x4000;
+            return new Matrix(
+                m.M11 * scale, m.M12 * scale, m.M13 * scale, 0,
+                m.M21 * scale, m.M22 * scale, m.M23 * scale, 0,
+                m.M31 * scale, m.M32 * scale, m.M33 * scale, 0,
+                0, 0, 0, 1);
+        }
+
         public static string HexString(this byte b) { return b.ToString("X2"); }
         public static string HexString(this sbyte b) { return b.ToString("X2"); }
         public static string HexString(this UInt16 w) { return w.ToString("X4"); }

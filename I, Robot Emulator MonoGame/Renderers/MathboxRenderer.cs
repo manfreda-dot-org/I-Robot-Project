@@ -1,3 +1,19 @@
+// Copyright 2020 by John Manfreda. All Rights Reserved.
+// https://www.manfreda.org/
+//
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with this program.If not, see<https://www.gnu.org/licenses/>.
+
 using GameManagement;
 using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
@@ -7,6 +23,8 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Security.Permissions;
+using System.Windows.Shapes;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -16,40 +34,6 @@ using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace I_Robot
 {
-    public static class ConverterExtensions
-    {
-        public static Vector3 ToNormal(this Mathbox.Vector3 v)
-        {
-            Vector3 n = ToVector(v);
-            n.Normalize();
-            return n;
-        }
-
-        public static Vector3 ToVector(this Mathbox.Vector3 v)
-        {
-            return new Vector3(v.X, v.Y, v.Z);
-        }
-
-        public static Matrix3x3 ToMatrix3(this Mathbox.Matrix m)
-        {
-            const float scale = 1.0f / 0x4000;
-            return new Matrix3x3(
-                m.M11 * scale, m.M12 * scale, m.M13 * scale,
-                m.M21 * scale, m.M22 * scale, m.M23 * scale,
-                m.M31 * scale, m.M32 * scale, m.M33 * scale);
-        }
-
-        public static Matrix ToMatrix4(this Mathbox.Matrix m)
-        {
-            const float scale = 1.0f / 0x4000;
-            return new Matrix(
-                m.M11 * scale, m.M12 * scale, m.M13 * scale, 0,
-                m.M21 * scale, m.M22 * scale, m.M23 * scale, 0,
-                m.M31 * scale, m.M32 * scale, m.M33 * scale, 0,
-                0, 0, 0, 1);
-        }
-    }
-
     unsafe public class MathboxRenderer : IRasterizer
     {
         readonly Game Game;
@@ -94,6 +78,25 @@ namespace I_Robot
 
         // must be retained between calls of ParseObjectList()
         UInt16 SurfaceList;
+
+        class PlayfieldManagement
+        {
+            public class RowInfo
+            {
+                public int Count;
+                public int Objects;
+                public UInt16* Prev;
+                public UInt16* This;
+                public UInt16* Next;
+            }
+
+            public Mathbox.RenderMode Mode;
+            public Matrix Rotation;
+            public UInt16 ObjectList;
+
+            public readonly RowInfo Row = new RowInfo();
+        }
+        readonly PlayfieldManagement Playfield = new PlayfieldManagement();
 
         /// <summary>
         /// Represents a primitive to render on the display list
@@ -653,12 +656,301 @@ namespace I_Robot
 
         void IRasterizer.RasterizePlayfield()
         {
+            StartRender();
+
+            LoadLightVector();
+            LoadViewPosition();
+            LoadViewMatrix(0x15);
+            Playfield.Rotation = ViewRotation;
+            SetWorldMatrix(ref Playfield.Rotation);
+
+            // determine rendering method (dot/vector/polygon)
+            Playfield.Mode = (Mathbox.RenderMode)Memory[0x72] & Mathbox.RenderMode.Mask;
+
+            // get address of playfield object buffer
+            Playfield.ObjectList = Memory[0x6B];
+
+            Int16 z_max = (Int16)Memory[0x6C];
+            Int16 z_min = (Int16)Memory[0x6D];
+            Int16 x = (Int16)Memory[0x74];
+            Int16 z_frac = (Int16)Memory[0x75];
+            Int16 x_offset = (Int16)Memory[0x76];
+            Int16 z_offset = (Int16)Memory[0x77];
+
+            // locate left front tile corner (x1,y1,z1)
+            //         +-------+
+            //        /       /|
+            //       /       / |           x2 = x1 + TILE_SIZE_X
+            // y1-- +-------+  |           y2 = y1 + TILE_SIZE_Y
+            //      |       |  + --z2      z2 = z1 + TILE_SIZE_Z
+            //      |       | /
+            //      |       |/
+            // y2-- +-------+ --z1
+            //      |       |
+            //      x1      x2
+            Vector3 corner = new Vector3(
+                Mathbox.TILE_SIZE_X - x_offset * 128 - x,
+                -ViewPosition.Y,
+                z_max * 128 - z_frac);
+
+            // render each row in the playfield
+            int row = z_offset / 16 + z_max; // first absolute row to be rendered
+            Playfield.Row.Count = z_max - z_min + 1; // number of rows to display
+            while (Playfield.Row.Count-- > 0)
+            {
+                DrawPlayfieldRow(row-- & 31, corner);
+                corner.Z -= Mathbox.TILE_SIZE_Z; // move to next row along the Z axis
+            }
+
+            EndRender();
         }
 
         void IRasterizer.UnknownCommand()
         {
         }
         #endregion
+
+        void DrawPlayfieldRow(int row, Vector3 corner)
+        {
+            // Get address of the three rows that determine how tiles
+            // in the current row are drawn
+            int rowbase = 0xE00; // Memory[0x70]
+            Playfield.Row.Prev = &Memory[rowbase + 16 * ((row - 1) & 31)];
+            Playfield.Row.This = &Memory[rowbase + 16 * row];
+            Playfield.Row.Next = &Memory[rowbase + 16 * ((row + 1) & 31)];
+
+            // there are 15 tiles per row
+            // some are to the left of the camera, some to the right
+            // we render from outside -> in, stopping once camera is reached
+
+            int TilesLeft = 15;
+
+            // reset row object counter
+            Playfield.Row.Objects = 0;
+
+            // left side (not including center)
+            if (corner.X < -Mathbox.TILE_SIZE_X)
+            {
+                int n = 1;
+                while (corner.X < -Mathbox.TILE_SIZE_X && TilesLeft > 0)
+                {
+                    DrawPlayfieldTile(n++, corner);
+                    corner.X += Mathbox.TILE_SIZE_X;
+                    TilesLeft--;
+                }
+            }
+
+            // right side (includes center)
+            if (TilesLeft > 0)
+            {
+                corner.X += (TilesLeft - 1) * Mathbox.TILE_SIZE_X;
+
+                int n = 15;
+                while (TilesLeft-- > 0)
+                {
+                    DrawPlayfieldTile(n--, corner);
+                    corner.X -= Mathbox.TILE_SIZE_X;
+                }
+            }
+
+            // any object lists to deal with?
+            if (Playfield.Row.Objects > 0)
+            {
+                // render the objects above this row
+                do
+                {
+                    int count = Memory[Playfield.ObjectList++] + 1;
+                    while (count-- > 0)
+                        ParseObjectList(Memory[Playfield.ObjectList++]);
+                } while (--Playfield.Row.Objects > 0);
+
+                // reset the world matrix to what it was before
+                SetWorldMatrix(ref Playfield.Rotation);
+            }
+        }
+
+        struct TILE_HEIGHT
+        {
+            public float a, b, c, d;
+            public TILE_HEIGHT(float _a, float _b, float _c, float _d)
+            {
+                a = _a;
+                b = _b;
+                c = _c;
+                d = _d;
+            }
+        }
+
+        TILE_HEIGHT GetTileHeight(UInt16 a, UInt16 b, UInt16 c, UInt16 d)
+        {
+            // #define TileHeight(tile) (((sbyte)((tile) >> 8)) << 2)
+
+            if ((a & 0xFF00) == 0x8000)
+            {
+                // no tile
+                float h = -ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                return new TILE_HEIGHT(h, h, h, h);
+            }
+            else if ((a & 0x0040) != 0)
+            {
+                // surface is flat
+                float h = -ViewPosition.Y + (((sbyte)((a) >> 8)) << 2);
+                return new TILE_HEIGHT(h, h, h, h);
+            }
+            else
+            {
+                // surface is sloped
+                return new TILE_HEIGHT(-ViewPosition.Y + (((sbyte)((a) >> 8)) << 2),
+                -ViewPosition.Y + (((sbyte)((b) >> 8)) << 2),
+                -ViewPosition.Y + (((sbyte)((c) >> 8)) << 2),
+                -ViewPosition.Y + (((sbyte)((d) >> 8)) << 2));
+            }
+        }
+
+        void DrawPlayfieldTile(int index, Vector3 corner)
+        {
+            Vector3[] ptr;
+
+            // local tile map (we are rendering tile A)
+            //  TileF   TileD   TileC
+            //  TileE   TileA   TileB
+            //          TileG   TileH
+
+            // get this tile
+            UInt16 TileA = Playfield.Row.This[(index + 0) & 15];
+
+            // check if object must be rendered with this tile
+            if ((TileA & 0x0080) != 0)
+                Playfield.Row.Objects++;
+
+            // check if tile is empty
+            if ((TileA & 0xFF00) == 0x8000)
+                return; // nothing to draw
+
+            // get base tile color
+            int colorIndex = TileA & 0x003F;
+
+            // locate tile corners
+            //       d +-------+ c
+            //        /       /|
+            //       /       / |          x2 = x1 + TILE_SIZE_X
+            // y1-- +-------+  |          y2 = y1 + TILE_SIZE_Y
+            //      |a     b| g+ --z2     z2 = z1 + TILE_SIZE_Z
+            //      |       | /
+            //      |e     f|/
+            // y2-- +-------+ --z1
+            //      |       |
+            //      x1      x2
+            float x1 = corner.X;
+            float x2 = x1 + Mathbox.TILE_SIZE_X;
+            float z1 = corner.Z;
+            float z2 = corner.Z + Mathbox.TILE_SIZE_Z;
+
+            // determine tile height offset
+            UInt16 TileB = Playfield.Row.This[(index + 1) & 15];
+            UInt16 TileC = Playfield.Row.Next[(index + 1) & 15];
+            UInt16 TileD = Playfield.Row.Next[(index + 0) & 15];
+            TILE_HEIGHT height = GetTileHeight(TileA, TileB, TileC, TileD);
+
+            // draw left or right side of cube
+            if (x1 > 0)
+            {
+                // left side of the cube
+                TILE_HEIGHT side;
+
+                if (index == 1)
+                    // leftmost tile
+                    side.b = side.c = -ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                else
+                {
+                    UInt16 TileE = Playfield.Row.This[(index - 1) & 15];
+                    UInt16 TileF = Playfield.Row.Next[(index - 1) & 15];
+                    side = GetTileHeight(TileE, TileA, TileD, TileF);
+                }
+
+                // draw if tile to the left is lower than current tile
+                if (height.a < side.b || height.d < side.c)
+                {
+                    ptr = LockVertexBuffer();
+                    ptr[0] = new Vector3(x1, height.a, z1);
+                    ptr[1] = new Vector3(x1, height.d, z2);
+                    ptr[2] = new Vector3(x1, side.c, z2);
+                    ptr[3] = new Vector3(x1, side.b, z1);
+                    UnlockVertexBuffer(4, GetColor(colorIndex - 1), Playfield.Mode);
+                }
+            }
+            else if (x2 < 0)
+            {
+                // right side of the cube
+                TILE_HEIGHT side;
+
+                if (index == 15)
+                    // rightmost tile
+                    side.a = side.d = -ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                else
+                    side = GetTileHeight(TileB, TileB, TileC, TileC);
+
+                // draw if tile to the right is lower than current tile
+                if (height.b < side.a || height.c < side.d)
+                {
+                    ptr = LockVertexBuffer();
+                    ptr[0] = new Vector3(x2, height.b, z1);
+                    ptr[1] = new Vector3(x2, side.a, z1);
+                    ptr[2] = new Vector3(x2, side.d, z2);
+                    ptr[3] = new Vector3(x2, height.c, z2);
+                    UnlockVertexBuffer(4, GetColor(colorIndex - 1), Playfield.Mode);
+                }
+            }
+
+            // if tile is flat
+            if ((TileA & 0x0040) != 0)
+            {
+                // Draw the front of the cube if:
+                //   - This is the last row to render
+                // OR
+                //   - Tile in front is lower than current tile (or empty)
+                TILE_HEIGHT side;
+                if (Playfield.Row.Count == 0)
+                    side.c = side.d = -ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                else
+                {
+                    UInt16 TileG = Playfield.Row.Prev[(index + 0) & 15];
+                    UInt16 TileH = Playfield.Row.Prev[(index + 1) & 15];
+                    side = GetTileHeight(TileG, TileH, TileB, TileA);
+                }
+                if (height.a < side.d || height.b < side.c)
+                {
+                    ptr = LockVertexBuffer();
+                    ptr[0] = new Vector3(x1, height.a, z1);
+                    ptr[1] = new Vector3(x1, side.d, z1);
+                    ptr[2] = new Vector3(x2, side.c, z1);
+                    ptr[3] = new Vector3(x2, height.b, z1);
+                    UnlockVertexBuffer(4, GetColor(colorIndex - 2), Playfield.Mode);
+                }
+            }
+
+            // draw the top of the cube
+            ptr = LockVertexBuffer();
+            ptr[0] = new Vector3(x1, height.a, z1);
+            ptr[1] = new Vector3(x2, height.b, z1);
+            ptr[2] = new Vector3(x2, height.c, z2);
+            ptr[3] = new Vector3(x1, height.d, z2);
+            UnlockVertexBuffer(4, GetColor(colorIndex), Playfield.Mode);
+
+            // special case for rendering solid sloped tiles
+            // this is done for maximum compatibility with real machine
+            if ((TileA & 0x0040) == 0 && Playfield.Mode == Mathbox.RenderMode.Polygon)
+                Playfield.Mode = Mathbox.RenderMode.Vector;
+
+            // draw the bottom of the cube
+            ptr = LockVertexBuffer();
+            ptr[0] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
+            ptr[1] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
+            ptr[2] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
+            ptr[3] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
+            UnlockVertexBuffer(4, GetColor(colorIndex), Playfield.Mode);
+        }
+
 
         /// <summary>
         /// Renders alphanumerics onto the overlay itself in native resolution

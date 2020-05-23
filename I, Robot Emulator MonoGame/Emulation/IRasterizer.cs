@@ -19,12 +19,12 @@ using System;
 namespace I_Robot.Emulation
 {
     /// <summary>
-    /// Interface to a rasterizer that interprets I Robot rasterization commands and builds display list
+    /// Interface to a rasterizer that can interpert I Robot Mathbox commands and build a rasterizable display list
     /// </summary>
     public interface IRasterizer
     {
         /// <summary>
-        /// Sets a pointer to the machine
+        /// Sets a pointer to the machine that the rasterizer interoperates with
         /// </summary>
         Machine Machine { set; }
 
