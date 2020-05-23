@@ -31,6 +31,11 @@ namespace I_Robot
     class DisplayList : IEnumerable<DisplayList.Primitive>, IDisposable
     {
         /// <summary>
+        /// Indiciates whether the target buffer should be erased before rendering
+        /// </summary>
+        public bool Erase { get; private set; }
+
+        /// <summary>
         /// Batched dot primitives
         /// </summary>
         public readonly Primitive.Dot Dots;
@@ -67,8 +72,9 @@ namespace I_Robot
         /// <summary>
         /// Commits the primitives for rendering
         /// </summary>
-        public void Commit()
+        public void Commit(bool erase)
         {
+            Erase = erase;
             Dots.Commit();
             Vectors.Commit();
             Polygons.Commit();
@@ -338,12 +344,12 @@ namespace I_Robot
             }
 
             /// <summary>
-            /// Commits the assembled display list for rendering
-            /// and initializes a new batch for assembly
+            /// Commits the assembled display list for rendering and initializes a new batch for assembly
             /// </summary>
-            public void CommitDisplayList()
+            /// <param name="erase">indicates whether the target buffer should be erased before redering this display list</param>
+            public void CommitDisplayList(bool erase)
             {
-                WIP.Commit();
+                WIP.Commit(erase);
                 RenderQueue.Enqueue(WIP);
                 WIP = Pool.Get();
             }

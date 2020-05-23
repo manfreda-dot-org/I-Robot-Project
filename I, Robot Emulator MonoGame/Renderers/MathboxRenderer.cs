@@ -19,6 +19,7 @@ using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Windows.Controls;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -58,7 +59,6 @@ namespace I_Robot
         RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
         public Texture2D Texture => ScreenBuffers[BUFSEL ? 0 : 1];
 
-        bool ERASE;
         bool mEXT_DONE = true;
 
 
@@ -96,7 +96,7 @@ namespace I_Robot
         readonly PlayfieldManagement Playfield = new PlayfieldManagement();
 
 
-        readonly DisplayList.Manager mDisplayList;
+        readonly DisplayList.Manager DisplayListManager;
         readonly Vector3[] Vertices = new Vector3[2048];
         Vector3 camTarget;
         public Vector3 camPosition { get; private set; }
@@ -113,7 +113,7 @@ namespace I_Robot
                 throw new Exception("VideoInterpreter can only be used with I_Robot.Game");
             Game = game;
 
-            mDisplayList = new DisplayList.Manager(this);
+            DisplayListManager = new DisplayList.Manager(this);
 
             // create our scene buffer
             // this buffer has a z-buffer
@@ -165,7 +165,7 @@ namespace I_Robot
 
         public void Dispose()
         {
-            mDisplayList.Dispose();
+            DisplayListManager.Dispose();
             foreach (var b in ScreenBuffers)
                 b.Dispose();
         }
@@ -429,7 +429,7 @@ namespace I_Robot
                 // is this the last point of the plygon?
                 if ((word & 0x8000) != 0)
                 {
-                    mDisplayList.AddPrimitive(Vertices, index, color, type);
+                    DisplayListManager.AddPrimitive(Vertices, index, color, type);
                     return;
                 }
             }
@@ -450,8 +450,7 @@ namespace I_Robot
 
             // commit the new display list
             //BUFSEL = bufsel; // select buffer as necessary
-            ERASE = erase; // erase as necesasary
-            mDisplayList.CommitDisplayList(); // commit the display list
+            DisplayListManager.CommitDisplayList(erase); // commit the display list
 
             // simulate rasterizer being done
             // makes more sense moving this to when render is complete (provided if it doesn't cause frames to be dropped)
@@ -691,7 +690,7 @@ namespace I_Robot
                     Vertices[1] = new Vector3(x1, height.d, z2);
                     Vertices[2] = new Vector3(x1, side.c, z2);
                     Vertices[3] = new Vector3(x1, side.b, z1);
-                    mDisplayList.AddPrimitive(Vertices, 4, GetColor(colorIndex - 1), Playfield.Mode);
+                    DisplayListManager.AddPrimitive(Vertices, 4, GetColor(colorIndex - 1), Playfield.Mode);
                 }
             }
             else if (x2 < 0)
@@ -712,7 +711,7 @@ namespace I_Robot
                     Vertices[1] = new Vector3(x2, side.a, z1);
                     Vertices[2] = new Vector3(x2, side.d, z2);
                     Vertices[3] = new Vector3(x2, height.c, z2);
-                    mDisplayList.AddPrimitive(Vertices, 4, GetColor(colorIndex - 1), Playfield.Mode);
+                    DisplayListManager.AddPrimitive(Vertices, 4, GetColor(colorIndex - 1), Playfield.Mode);
                 }
             }
 
@@ -738,7 +737,7 @@ namespace I_Robot
                     Vertices[1] = new Vector3(x1, side.d, z1);
                     Vertices[2] = new Vector3(x2, side.c, z1);
                     Vertices[3] = new Vector3(x2, height.b, z1);
-                    mDisplayList.AddPrimitive(Vertices, 4, GetColor(colorIndex - 2), Playfield.Mode);
+                    DisplayListManager.AddPrimitive(Vertices, 4, GetColor(colorIndex - 2), Playfield.Mode);
                 }
             }
 
@@ -747,19 +746,19 @@ namespace I_Robot
             Vertices[1] = new Vector3(x2, height.b, z1);
             Vertices[2] = new Vector3(x2, height.c, z2);
             Vertices[3] = new Vector3(x1, height.d, z2);
-            mDisplayList.AddPrimitive(Vertices, 4, GetColor(colorIndex), Playfield.Mode);
+            DisplayListManager.AddPrimitive(Vertices, 4, GetColor(colorIndex), Playfield.Mode);
 
             // special case for rendering solid sloped tiles
             // this is done for maximum compatibility with real machine
             if ((TileA & 0x0040) == 0 && Playfield.Mode == Mathbox.RenderMode.Polygon)
-                mDisplayList.AddPrimitive(Vertices, 4, GetColor(colorIndex), Mathbox.RenderMode.Vector);
+                DisplayListManager.AddPrimitive(Vertices, 4, GetColor(colorIndex), Mathbox.RenderMode.Vector);
 
             // draw the bottom of the cube
             Vertices[0] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
             Vertices[1] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
             Vertices[2] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
             Vertices[3] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
-            mDisplayList.AddPrimitive(Vertices, 4, GetColor(colorIndex), Playfield.Mode);
+            DisplayListManager.AddPrimitive(Vertices, 4, GetColor(colorIndex), Playfield.Mode);
         }
 
 
@@ -770,7 +769,7 @@ namespace I_Robot
         public void Render(GraphicsDevice graphicsDevice)
         {
             // is there a new display list to render?
-            while (mDisplayList.GetNext(out DisplayList? displayList) && displayList != null)
+            while (DisplayListManager.GetNext(out DisplayList? displayList) && displayList != null)
             {
                 viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
                 //                viewMatrix = Matrix.CreateTranslation(0, -26f / 128, 0) * viewMatrix;
@@ -811,17 +810,17 @@ namespace I_Robot
                     }
                 }
 
-                mDisplayList.Return(displayList);
-
                 //EXT_DONE = true;
 
                 // now copy our newly rendered scene ontop of the current screen buffer
                 graphicsDevice.SetRenderTarget(ScreenBuffer);
-                if (ERASE)
+                if (displayList.Erase)
                     graphicsDevice.Clear(Color.Transparent);
                 ScreenManager.SpriteBatch.Begin();
                 ScreenManager.SpriteBatch.Draw(SceneBuffer, Vector2.Zero, Color.White);
                 ScreenManager.SpriteBatch.End();
+
+                DisplayListManager.Return(displayList);
             }
         }
 
