@@ -41,9 +41,13 @@ namespace I_Robot
         /// </summary>
         public Game()
         {
-            Content.RootDirectory = "Content";
-            Graphics = new GraphicsDeviceManager(this);
             TargetElapsedTime = TimeSpan.FromTicks(333333);
+            Content.RootDirectory = "Content";
+            Graphics = new GraphicsDeviceManager(this)
+            {
+                GraphicsProfile = GraphicsProfile.HiDef,
+                PreferMultiSampling = true,
+            };
 
             // Create the screen factory and add it to the Services
             ScreenFactory = new ScreenFactory();
@@ -72,11 +76,7 @@ namespace I_Robot
 
         protected override void Initialize()
         {
-            Graphics.GraphicsProfile = GraphicsProfile.HiDef;
-            Graphics.PreferMultiSampling = true;
-            //GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
-            Graphics.ApplyChanges();
-
+            GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
             Graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
             Graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 90;
             //Graphics.PreferredBackBufferWidth = Emulation.Machine.NATIVE_RESOLUTION.Width * 3; 

@@ -216,11 +216,11 @@ namespace I_Robot
                         {
                             Buffer[Index].Color = color;
                             Buffer[Index].Position = vertices[n - 1];
-                            Buffer[Index++].Position.Z -= .5f; // move lines slightly towards view to help avoid z-buffering issues
+                            Buffer[Index++].Position.Z -= 1f; // move lines slightly towards view to help avoid z-buffering issues
 
                             Buffer[Index].Color = color;
                             Buffer[Index].Position = vertices[n];
-                            Buffer[Index++].Position.Z -= .5f; // move lines slightly towards view to help avoid z-buffering issues
+                            Buffer[Index++].Position.Z -= 1f; // move lines slightly towards view to help avoid z-buffering issues
                         }
                         NumPrimitives += numVertices - 1;
                     }
