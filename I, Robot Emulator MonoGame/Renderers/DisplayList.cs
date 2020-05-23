@@ -108,8 +108,8 @@ namespace I_Robot
         /// </summary>
         public abstract class Primitive : IDisposable
         {
-            // maximum i've seen is 8754 vertices queued 
-            const int MaxVertices = 10000;
+            // at least 10,000 are needed, not sure of max
+            const int MaxVertices = 20000;
 
 #if DEBUG
             static int LargestPrimitive = 0;

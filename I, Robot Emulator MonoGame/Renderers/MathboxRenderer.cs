@@ -848,6 +848,8 @@ namespace I_Robot
         /// <param name="graphicsDevice"></param>
         public void Render(GraphicsDevice graphicsDevice)
         {
+            CheckPolysPerSecond();
+
             // is there a new display list to render?
             while (DisplayListManager.GetNext(out DisplayList? displayList) && displayList != null)
             {
@@ -908,24 +910,29 @@ namespace I_Robot
                 TotalDots += displayList.NumDots;
                 TotalVectors += displayList.NumVectors;
                 TotalPolygons += displayList.NumPolygons;
-                int ms = Timer.ElapsedMilliseconds;
-                if (ms >= 1000)
+                DisplayListManager.Return(displayList);
+            }
+
+            CheckPolysPerSecond();
+        }
+
+        void CheckPolysPerSecond()
+        {
+            int ms = Timer.ElapsedMilliseconds;
+            if (ms >= 1000)
+            {
+                if (ms < 1100)
                 {
-                    if (ms < 1100)
-                    {
-                        DotsPerSecond = TotalDots;
-                        VectorsPerSecond = TotalVectors;
-                        PolygonsPerSecond = TotalPolygons;
-                    }
-
-                    Timer.RemoveTime(ms);
-
-                    TotalDots = 0;
-                    TotalVectors = 0;
-                    TotalPolygons = 0;
+                    DotsPerSecond = TotalDots;
+                    VectorsPerSecond = TotalVectors;
+                    PolygonsPerSecond = TotalPolygons;
                 }
 
-                DisplayListManager.Return(displayList);
+                Timer.RemoveTime(ms);
+
+                TotalDots = 0;
+                TotalVectors = 0;
+                TotalPolygons = 0;
             }
         }
 
