@@ -24,6 +24,7 @@ using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 using System.Runtime.Serialization;
 using System.Threading;
+using SharpDX.Direct3D9;
 
 namespace I_Robot
 {
@@ -201,6 +202,17 @@ namespace I_Robot
             GraphicsDevice.SetRenderTarget(null);
             MathboxRenderer.Draw(GraphicsDevice);
             Alphanumerics.Draw(GraphicsDevice);
+
+            if (Settings.ShowFPS)
+            {
+                SpriteBatch.Begin();
+                SpriteBatch.DrawString(
+                    GameFont,
+                    $"FPS:    {Machine.FPS.ToString("0.00")}", 
+                    new Vector2(10, GraphicsDevice.Viewport.Height - 10 - GameFont.LineSpacing),
+                    Color.Yellow);
+                SpriteBatch.End();
+            }
 
             // If the game is transitioning on or off, fade it out to black.
             if (TransitionPosition > 0 || pauseAlpha > 0)

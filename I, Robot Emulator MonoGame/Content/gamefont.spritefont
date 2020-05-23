@@ -1,10 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
 	<Asset Type="Graphics:FontDescription">
-		<FontName>Robotron</FontName>
+		<FontName>Verdana</FontName>
 		<Size>32</Size>
-		<Spacing>2</Spacing>
-		<Style>Bold</Style>
+		<Spacing>6</Spacing>
+		<Style>Regular</Style>
 		<CharacterRegions>
 			<CharacterRegion>
 				<Start>&#32;</Start>
