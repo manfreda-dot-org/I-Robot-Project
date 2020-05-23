@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace I_Robot
 {
@@ -58,6 +59,10 @@ namespace I_Robot
         }
 
         ~DisplayList() { Dispose(); }
+
+        public int NumDots => Dots.NumDots;
+        public int NumVectors => Vectors.NumVectors;
+        public int NumPolygons => Polygons.NumPolygons;
 
         /// <summary>
         /// Resets / empties all of the primitives
@@ -103,7 +108,12 @@ namespace I_Robot
         /// </summary>
         public abstract class Primitive : IDisposable
         {
-            const int MaxVertices = 8192;
+            // maximum i've seen is 8754 vertices queued 
+            const int MaxVertices = 10000;
+
+#if DEBUG
+            static int LargestPrimitive = 0;
+#endif
 
             readonly MathboxRenderer MathboxRenderer;
             int Index;
@@ -142,7 +152,7 @@ namespace I_Robot
             /// <summary>
             /// Resets / empties the batch of primitives
             /// </summary>
-            public void Reset()
+            public virtual void Reset()
             {
                 Index = 0;
                 NumPrimitives = 0;
@@ -153,6 +163,14 @@ namespace I_Robot
             /// </summary>
             public void Commit()
             {
+#if DEBUG
+                if (LargestPrimitive < Index)
+                {
+                    LargestPrimitive = Index;
+                    System.Diagnostics.Debug.WriteLine($"Largest DisplayList.Primitive = {Index} vertices ");
+                }
+#endif
+
                 if (Index > 0)
                     VertexBuffer.SetData<VertexPositionColor>(Buffer, 0, Index);
             }
@@ -172,31 +190,51 @@ namespace I_Robot
             {
                 public Dot(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Dot) { }
 
+                public int NumDots { get; private set; }
+
+                public override void Reset()
+                {
+                    base.Reset();
+                    NumDots = 0;
+                }
+
                 public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
                 {
-                    System.Diagnostics.Debug.Assert(numVertices > 0);
-
-                    if (Settings.ShowDots)
+#if DEBUG
+                    try
                     {
-                        for (int n = 0; n < numVertices; n++)
-                        {
-                            float dist = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 256;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n];
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
+#endif
+                        System.Diagnostics.Debug.Assert(numVertices > 0);
 
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Right + dist * Vector3.Down;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
+                        if (Settings.ShowDots)
+                        {
+                            for (int n = 0; n < numVertices; n++)
+                            {
+                                float dist = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 256;
+                                Buffer[Index].Color = color;
+                                Buffer[Index++].Position = vertices[n];
+                                Buffer[Index].Color = color;
+                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
+                                Buffer[Index].Color = color;
+                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
+
+                                Buffer[Index].Color = color;
+                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
+                                Buffer[Index].Color = color;
+                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right + dist * Vector3.Down;
+                                Buffer[Index].Color = color;
+                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
+                            }
+                            NumPrimitives += numVertices * 2;
+                            NumDots += numVertices;
                         }
-                        NumPrimitives += numVertices * 2;
+#if DEBUG
                     }
+                    catch
+                    {
+                        throw new Exception("Primitive buffer is too small");
+                    }
+#endif
                 }
             }
 
@@ -206,6 +244,14 @@ namespace I_Robot
             public class Vector : Primitive
             {
                 public Vector(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Vector) { }
+
+                public int NumVectors { get; private set; }
+
+                public override void Reset()
+                {
+                    base.Reset();
+                    NumVectors = 0;
+                }
 
                 public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
                 {
@@ -223,6 +269,7 @@ namespace I_Robot
                             Buffer[Index++].Position.Z -= 1f; // move lines slightly towards view to help avoid z-buffering issues
                         }
                         NumPrimitives += numVertices - 1;
+                        NumVectors += numVertices - 1;
                     }
                 }
             }
@@ -233,6 +280,14 @@ namespace I_Robot
             public class Polygon : Primitive
             {
                 public Polygon(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Polygon) { }
+
+                public int NumPolygons { get; private set; }
+
+                public override void Reset()
+                {
+                    base.Reset();
+                    NumPolygons = 0;
+                }
 
                 public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
                 {
@@ -254,6 +309,7 @@ namespace I_Robot
 
                         }
                         NumPrimitives += numVertices - 2;
+                        NumPolygons++;
                     }
                 }
             }

@@ -33,9 +33,63 @@ namespace I_Robot.Emulation
     [Serializable]
     unsafe public class Mathbox : Machine.Subsystem
     {
-        public const int TILE_SIZE_X = 128;
-        public const int TILE_SIZE_Y = 256;
-        public const int TILE_SIZE_Z = 128;
+        /// <summary>
+        /// 16-bit tile structure in Mathbox memory
+        /// xxxxxxxx xxxxxxxx
+        /// |||||||| ||||||||
+        /// |||||||| || \\\\\\_____ index into color table
+        /// |||||||| | \___________ 1 = is flat,  0 = is sloped
+        /// ||||||||  \____________ 1 = tile has an object above/below it,  0 = tile does not have object
+        ///  \\\\\\\\______________ tile height, signed value where each count = 4 world units
+        /// </summary>
+        public struct Tile
+        {
+            /// <summary>
+            /// Default width of a tile along the X axis
+            /// </summary>
+            public const int WIDTH_X = 128;
+            
+            public const int DEFAULT_HEIGHT_Y = 256;
+
+            /// <summary>
+            /// Default width of a tile along the Z axis
+            /// </summary>
+            public const int DEPTH_Z = 128;
+
+            readonly UInt16 Value;
+
+            private Tile(UInt16 value) { Value = value; }
+
+            /// <summary>
+            /// The color index for the tile
+            /// </summary>
+            public int ColorIndex => Value & 0x3F;
+
+            /// <summary>
+            /// True if the tile is flat, false if the tile is sloped
+            /// </summary>
+            public bool IsFlat => ((Value & 0x0040) != 0);
+
+            /// <summary>
+            /// True if the tile has an object above/below it, false otherwise
+            /// </summary>
+            public bool HoldsObject => ((Value & 0x0080) != 0);
+
+            /// <summary>
+            /// True if tile should not render
+            /// </summary>
+            public bool IsEmpty => ((Value & 0xFF00) == 0x8000); // -128 = lowest height value
+
+            /// <summary>
+            /// Gets the height of the tile "top", in world units
+            /// </summary>
+            public int Height => (Int16)(Value & 0xFF00) >> 6; // convert height to world units
+
+            //public static implicit operator UInt16(Tile tile) => tile.Value;
+            public static implicit operator Tile(UInt16 value) => new Tile(value);
+
+            public override string ToString() => $"Tile: Height = {Height}, ColorIndex = {ColorIndex}, IsFlat = {IsFlat}, HoldsObject = {HoldsObject}";
+        }
 
         /// <summary>
         /// Enumeration of the different rendering modes that the I, Robot hardware supports

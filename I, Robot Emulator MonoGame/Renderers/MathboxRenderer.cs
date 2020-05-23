@@ -19,6 +19,9 @@ using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Diagnostics;
+using System.Security.Cryptography;
+using static I_Robot.Emulation.Mathbox;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -34,6 +37,19 @@ namespace I_Robot
     /// </summary>
     unsafe public class MathboxRenderer : IRasterizer
     {
+        // special addresses in mathbox memory
+        const UInt16 VIEW_POSITION_ADDRESS = 0x12;
+        const UInt16 LIGHT_ADDRESS = 0x44;
+        const UInt16 PLAYFIELD_OBJECT_LIST_ADDRESS = 0x6B;
+        const UInt16 PLAYFIELD_Z_MAX = 0x6C;
+        const UInt16 PLAYFIELD_Z_MIN = 0x6D;
+        const UInt16 PLAYFIELD_ROWS_BASE_ADDRESS = 0x70;
+        const UInt16 PLAYFIELD_RENDERING_MODE = 0x72;
+        const UInt16 PLAYFIELD_X = 0x74;
+        const UInt16 PLAYFIELD_Z_FRAC = 0x75;
+        const UInt16 PLAYFIELD_X_OFFSET = 0x76;
+        const UInt16 PLAYFIELD_Z_OFFSET = 0x77;
+
         public readonly Game Game;
         public readonly ScreenManager ScreenManager;
 
@@ -48,6 +64,42 @@ namespace I_Robot
             }
         }
 
+
+        class TimeAccumulator
+        {
+            Stopwatch Stopwatch = new Stopwatch();
+
+            long Base = 0;
+
+            public TimeAccumulator()
+            {
+                Restart();
+            }
+
+            public void Restart()
+            {
+                Stopwatch.Restart();
+                Base = 0;
+            }
+
+            public int ElapsedMilliseconds
+            {
+                get { return (int)(Stopwatch.ElapsedMilliseconds - Base); }
+            }
+
+            public void RemoveTime(int time)
+            {
+                Base += time;
+            }
+        }
+
+        readonly TimeAccumulator Timer = new TimeAccumulator();
+        int TotalDots = 0;
+        int TotalVectors = 0;
+        int TotalPolygons = 0;
+        public int DotsPerSecond { get; private set; }
+        public int VectorsPerSecond { get; private set; }
+        public int PolygonsPerSecond { get; private set; }
 
         // two video buffers on game hardware
         readonly RenderTarget2D[] ScreenBuffers = new RenderTarget2D[2];
@@ -92,7 +144,7 @@ namespace I_Robot
             class RowInfo
             {
                 public int Count;
-                public int Objects;
+                public int ObjectCount;
                 public UInt16* Prev;
                 public UInt16* This;
                 public UInt16* Next;
@@ -101,6 +153,7 @@ namespace I_Robot
             Mathbox.RenderMode Mode;
             Matrix Rotation;
             UInt16 ObjectList;
+            int TileTableBaseAddress;
 
             readonly RowInfo Row = new RowInfo();
 
@@ -112,6 +165,10 @@ namespace I_Robot
 
             public void Rasterize()
             {
+                // locate the tile table in memory
+                System.Diagnostics.Debug.Assert(Memory[PLAYFIELD_ROWS_BASE_ADDRESS] == 0xE00);
+                TileTableBaseAddress = Memory[PLAYFIELD_ROWS_BASE_ADDRESS]; // always 0x0E00
+
                 Parent.StartRender();
 
                 Parent.LoadLightVector();
@@ -121,7 +178,7 @@ namespace I_Robot
                 Parent.SetWorldMatrix(ref Parent.Playfield.Rotation);
 
                 // determine rendering method (dot/vector/polygon)
-                switch (Memory[0x72])
+                switch (Memory[PLAYFIELD_RENDERING_MODE])
                 {
                     case 0x0000: Mode = Mathbox.RenderMode.Polygon; break;
                     case 0x0100: Mode = Mathbox.RenderMode.Vector; break;
@@ -129,28 +186,28 @@ namespace I_Robot
                 }
 
                 // get address of playfield object buffer
-                ObjectList = Memory[0x6B];
+                ObjectList = Memory[PLAYFIELD_OBJECT_LIST_ADDRESS];
 
-                Int16 z_max = (Int16)Memory[0x6C];
-                Int16 z_min = (Int16)Memory[0x6D];
-                Int16 x = (Int16)Memory[0x74];
-                Int16 z_frac = (Int16)Memory[0x75];
-                Int16 x_offset = (Int16)Memory[0x76];
-                Int16 z_offset = (Int16)Memory[0x77];
+                Int16 z_max = (Int16)Memory[PLAYFIELD_Z_MAX];
+                Int16 z_min = (Int16)Memory[PLAYFIELD_Z_MIN];
+                Int16 x = (Int16)Memory[PLAYFIELD_X];
+                Int16 z_frac = (Int16)Memory[PLAYFIELD_Z_FRAC];
+                Int16 x_offset = (Int16)Memory[PLAYFIELD_X_OFFSET];
+                Int16 z_offset = (Int16)Memory[PLAYFIELD_Z_OFFSET];
 
                 // locate left front tile corner (x1,y1,z1)
                 //         +-------+
                 //        /       /|
-                //       /       / |           x2 = x1 + TILE_SIZE_X
-                // y1-- +-------+  |           y2 = y1 + TILE_SIZE_Y
-                //      |       |  + --z2      z2 = z1 + TILE_SIZE_Z
+                //       /       / |           x2 = x1 + Mathbox.Tile.SIZE_X
+                // y1-- +-------+  |           y2 = y1 + Mathbox.Tile.SIZE_Y
+                //      |       |  + --z2      z2 = z1 + Mathbox.Tile.SIZE_Z
                 //      |       | /
                 //      |       |/
                 // y2-- +-------+ --z1
                 //      |       |
                 //      x1      x2
                 Vector3 corner = new Vector3(
-                    Mathbox.TILE_SIZE_X - x_offset * 128 - x,
+                    Tile.WIDTH_X - x_offset * 128 - x,
                     -Parent.ViewPosition.Y,
                     z_max * 128 - z_frac);
 
@@ -160,22 +217,19 @@ namespace I_Robot
                 while (Row.Count-- > 0)
                 {
                     DrawPlayfieldRow(row-- & 31, corner);
-                    corner.Z -= Mathbox.TILE_SIZE_Z; // move to next row along the Z axis
+                    corner.Z -= Tile.DEPTH_Z; // move to next row along the Z axis
                 }
 
                 Parent.EndRender();
             }
 
-
             void DrawPlayfieldRow(int row, Vector3 corner)
             {
                 // Get address of the three rows that determine how tiles
                 // in the current row are drawn
-                System.Diagnostics.Debug.Assert(Memory[0x70] == 0xE00);
-                int rowbase = 0xE00; // Memory[0x70]
-                Row.Prev = &Memory[rowbase + 16 * ((row - 1) & 31)];
-                Row.This = &Memory[rowbase + 16 * row];
-                Row.Next = &Memory[rowbase + 16 * ((row + 1) & 31)];
+                Row.Prev = &Memory[TileTableBaseAddress + 16 * ((row - 1) & 31)];
+                Row.This = &Memory[TileTableBaseAddress + 16 * row];
+                Row.Next = &Memory[TileTableBaseAddress + 16 * ((row + 1) & 31)];
 
                 // there are 15 tiles per row
                 // some are to the left of the camera, some to the right
@@ -184,16 +238,16 @@ namespace I_Robot
                 int TilesLeft = 15;
 
                 // reset row object counter
-                Row.Objects = 0;
+                Row.ObjectCount = 0;
 
                 // left side (not including center)
-                if (corner.X < -Mathbox.TILE_SIZE_X)
+                if (corner.X < -Mathbox.Tile.WIDTH_X)
                 {
                     int n = 1;
-                    while (corner.X < -Mathbox.TILE_SIZE_X && TilesLeft > 0)
+                    while (corner.X < -Mathbox.Tile.WIDTH_X && TilesLeft > 0)
                     {
                         DrawPlayfieldTile(n++, corner);
-                        corner.X += Mathbox.TILE_SIZE_X;
+                        corner.X += Mathbox.Tile.WIDTH_X;
                         TilesLeft--;
                     }
                 }
@@ -201,18 +255,18 @@ namespace I_Robot
                 // right side (includes center)
                 if (TilesLeft > 0)
                 {
-                    corner.X += (TilesLeft - 1) * Mathbox.TILE_SIZE_X;
+                    corner.X += (TilesLeft - 1) * Mathbox.Tile.WIDTH_X;
 
                     int n = 15;
                     while (TilesLeft-- > 0)
                     {
                         DrawPlayfieldTile(n--, corner);
-                        corner.X -= Mathbox.TILE_SIZE_X;
+                        corner.X -= Mathbox.Tile.WIDTH_X;
                     }
                 }
 
                 // any object lists to deal with?
-                if (Row.Objects > 0)
+                if (Row.ObjectCount > 0)
                 {
                     // render the objects above this row
                     do
@@ -220,7 +274,7 @@ namespace I_Robot
                         int count = Memory[ObjectList++] + 1;
                         while (count-- > 0)
                             Parent.ParseObjectList(Memory[ObjectList++]);
-                    } while (--Row.Objects > 0);
+                    } while (--Row.ObjectCount > 0);
 
                     // reset the world matrix to what it was before
                     Parent.SetWorldMatrix(ref Rotation);
@@ -239,29 +293,28 @@ namespace I_Robot
                 }
             }
 
-            TILE_HEIGHT GetTileHeight(UInt16 a, UInt16 b, UInt16 c, UInt16 d)
+            TILE_HEIGHT GetTileHeight(Tile a, Tile b, Tile c, Tile d)
             {
-                // #define TileHeight(tile) (((sbyte)((tile) >> 8)) << 2)
-
-                if ((a & 0xFF00) == 0x8000)
+                if (a.IsEmpty)
                 {
                     // no tile
-                    float h = -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                    float h = Mathbox.Tile.DEFAULT_HEIGHT_Y - Parent.ViewPosition.Y;
                     return new TILE_HEIGHT(h, h, h, h);
                 }
-                else if ((a & 0x0040) != 0)
+                else if (a.IsFlat)
                 {
                     // surface is flat
-                    float h = -Parent.ViewPosition.Y + (((sbyte)((a) >> 8)) << 2);
+                    float h = a.Height - Parent.ViewPosition.Y;
                     return new TILE_HEIGHT(h, h, h, h);
                 }
                 else
                 {
                     // surface is sloped
-                    return new TILE_HEIGHT(-Parent.ViewPosition.Y + (((sbyte)((a) >> 8)) << 2),
-                    -Parent.ViewPosition.Y + (((sbyte)((b) >> 8)) << 2),
-                    -Parent.ViewPosition.Y + (((sbyte)((c) >> 8)) << 2),
-                    -Parent.ViewPosition.Y + (((sbyte)((d) >> 8)) << 2));
+                    return new TILE_HEIGHT(
+                        a.Height - Parent.ViewPosition.Y,
+                        b.Height - Parent.ViewPosition.Y,
+                        c.Height - Parent.ViewPosition.Y,
+                        d.Height - Parent.ViewPosition.Y);
                 }
             }
 
@@ -273,39 +326,39 @@ namespace I_Robot
                 //          TileG   TileH
 
                 // get this tile
-                UInt16 TileA = Row.This[(index + 0) & 15];
+                Tile TileA = Row.This[(index + 0) & 15];
 
                 // check if object must be rendered with this tile
-                if ((TileA & 0x0080) != 0)
-                    Row.Objects++;
+                if (TileA.HoldsObject)
+                    Row.ObjectCount++;
 
                 // check if tile is empty
-                if ((TileA & 0xFF00) == 0x8000)
+                if (TileA.IsEmpty)
                     return; // nothing to draw
 
                 // get base tile color
-                int colorIndex = TileA & 0x003F;
+                int colorIndex = TileA.ColorIndex;
 
                 // locate tile corners
                 //       d +-------+ c
                 //        /       /|
-                //       /       / |          x2 = x1 + TILE_SIZE_X
-                // y1-- +-------+  |          y2 = y1 + TILE_SIZE_Y
-                //      |a     b| g+ --z2     z2 = z1 + TILE_SIZE_Z
+                //       /       / |          x2 = x1 + Tile.WIDTH_X
+                // y1-- +-------+  |          y2 = y1 + Tile.DEFAULT_HEIGHT_Y
+                //      |a     b| g+ --z2     z2 = z1 + Tile.DEPTH_Z
                 //      |       | /
                 //      |e     f|/
                 // y2-- +-------+ --z1
                 //      |       |
                 //      x1      x2
                 float x1 = corner.X;
-                float x2 = x1 + Mathbox.TILE_SIZE_X;
+                float x2 = x1 + Tile.WIDTH_X;
                 float z1 = corner.Z;
-                float z2 = corner.Z + Mathbox.TILE_SIZE_Z;
+                float z2 = corner.Z + Tile.DEPTH_Z;
 
                 // determine tile height offset
-                UInt16 TileB = Row.This[(index + 1) & 15];
-                UInt16 TileC = Row.Next[(index + 1) & 15];
-                UInt16 TileD = Row.Next[(index + 0) & 15];
+                Tile TileB = Row.This[(index + 1) & 15];
+                Tile TileC = Row.Next[(index + 1) & 15];
+                Tile TileD = Row.Next[(index + 0) & 15];
                 TILE_HEIGHT height = GetTileHeight(TileA, TileB, TileC, TileD);
 
                 // draw left or right side of cube
@@ -316,11 +369,11 @@ namespace I_Robot
 
                     if (index == 1)
                         // leftmost tile
-                        side.b = side.c = -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                        side.b = side.c = -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y;
                     else
                     {
-                        UInt16 TileE = Row.This[(index - 1) & 15];
-                        UInt16 TileF = Row.Next[(index - 1) & 15];
+                        Tile TileE = Row.This[(index - 1) & 15];
+                        Tile TileF = Row.Next[(index - 1) & 15];
                         side = GetTileHeight(TileE, TileA, TileD, TileF);
                     }
 
@@ -341,7 +394,7 @@ namespace I_Robot
 
                     if (index == 15)
                         // rightmost tile
-                        side.a = side.d = -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                        side.a = side.d = -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y;
                     else
                         side = GetTileHeight(TileB, TileB, TileC, TileC);
 
@@ -357,7 +410,7 @@ namespace I_Robot
                 }
 
                 // if tile is flat
-                if ((TileA & 0x0040) != 0)
+                if (TileA.IsFlat)
                 {
                     // Draw the front of the cube if:
                     //   - This is the last row to render
@@ -365,11 +418,11 @@ namespace I_Robot
                     //   - Tile in front is lower than current tile (or empty)
                     TILE_HEIGHT side;
                     if (Row.Count == 0)
-                        side.c = side.d = -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y;
+                        side.c = side.d = -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y;
                     else
                     {
-                        UInt16 TileG = Row.Prev[(index + 0) & 15];
-                        UInt16 TileH = Row.Prev[(index + 1) & 15];
+                        Tile TileG = Row.Prev[(index + 0) & 15];
+                        Tile TileH = Row.Prev[(index + 1) & 15];
                         side = GetTileHeight(TileG, TileH, TileB, TileA);
                     }
                     if (height.a < side.d || height.b < side.c)
@@ -391,14 +444,14 @@ namespace I_Robot
 
                 // special case for rendering solid sloped tiles
                 // this is done for maximum compatibility with real machine
-                if ((TileA & 0x0040) == 0 && Mode == Mathbox.RenderMode.Polygon)
+                if (!TileA.IsFlat && Mode == Mathbox.RenderMode.Polygon)
                     DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mathbox.RenderMode.Vector);
 
                 // draw the bottom of the cube
-                Vertices[0] = new Vector3(x1, -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
-                Vertices[1] = new Vector3(x1, -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
-                Vertices[2] = new Vector3(x2, -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
-                Vertices[3] = new Vector3(x2, -Parent.ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
+                Vertices[0] = new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1);
+                Vertices[1] = new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2);
+                Vertices[2] = new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2);
+                Vertices[3] = new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1);
                 DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mode);
             }
         }
@@ -482,10 +535,6 @@ namespace I_Robot
             foreach (var b in ScreenBuffers)
                 b.Dispose();
         }
-
-
-        const UInt16 VIEW_POSITION_ADDRESS = 0x12;
-        const UInt16 LIGHT_ADDRESS = 0x44;
 
         #region HELPER
         Vector3 GetVectorAt(UInt16 address)
@@ -855,6 +904,26 @@ namespace I_Robot
                 ScreenManager.SpriteBatch.Begin();
                 ScreenManager.SpriteBatch.Draw(SceneBuffer, Vector2.Zero, Color.White);
                 ScreenManager.SpriteBatch.End();
+
+                TotalDots += displayList.NumDots;
+                TotalVectors += displayList.NumVectors;
+                TotalPolygons += displayList.NumPolygons;
+                int ms = Timer.ElapsedMilliseconds;
+                if (ms >= 1000)
+                {
+                    if (ms < 1100)
+                    {
+                        DotsPerSecond = TotalDots;
+                        VectorsPerSecond = TotalVectors;
+                        PolygonsPerSecond = TotalPolygons;
+                    }
+
+                    Timer.RemoveTime(ms);
+
+                    TotalDots = 0;
+                    TotalVectors = 0;
+                    TotalPolygons = 0;
+                }
 
                 DisplayListManager.Return(displayList);
             }
