@@ -19,12 +19,12 @@ using System;
 namespace I_Robot.Emulation
 {
     /// <summary>
-    /// Interface to a rasterizer that interprets the I Robot display list
+    /// Interface to a rasterizer that interprets I Robot rasterization commands and builds display list
     /// </summary>
     public interface IRasterizer
     {
         /// <summary>
-        /// Sets pointer to mathbox memory
+        /// Sets a pointer to the machine
         /// </summary>
         Machine Machine { set; }
 
@@ -41,19 +41,19 @@ namespace I_Robot.Emulation
         bool EXT_DONE { get; }
 
         /// <summary>
+        /// Rasterizes the object at the given address, using the current lighting vector, camera vector, etc
+        /// </summary>
+        /// <param name="address"></param>
+        void RasterizeObject(UInt16 address);
+
+        /// <summary>
         /// This command kicks off playfield rasterization
         /// </summary>
         void RasterizePlayfield();
 
         /// <summary>
-        /// This command performas an unknown function, likely related to rasterization
+        /// This command performas an unknown function, likely related to rasterization of playfield
         /// </summary>
         void UnknownCommand();
-
-        /// <summary>
-        /// Rasterizes the object at the given address, using the current lighting vector, camera vector, etc
-        /// </summary>
-        /// <param name="address"></param>
-        void RasterizeObject(UInt16 address);
     }
 }

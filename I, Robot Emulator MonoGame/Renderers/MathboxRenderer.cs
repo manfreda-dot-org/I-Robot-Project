@@ -2,15 +2,10 @@ using GameManagement;
 using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using Microsoft.Xna.Framework.Media;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.PerformanceData;
-using System.Net.Security;
-using System.Numerics;
-using System.Text;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -59,18 +54,29 @@ namespace I_Robot
         readonly Game Game;
         readonly ScreenManager ScreenManager;
 
-        // two video buffers on game hardware
-        readonly RenderTarget2D[] Buffers = new RenderTarget2D[2];
-
-        public RenderTarget2D VideoBuffer;
-        public Texture2D Texture => Buffers[0];
-
         Machine mMachine;
         public Machine Machine
         {
             get => mMachine;
             set { mMachine = value; Memory = value.Mathbox.Memory; }
         }
+
+
+        // two video buffers on game hardware
+        readonly RenderTarget2D[] ScreenBuffers = new RenderTarget2D[2];
+
+        // a buffer to render our scene into
+        // when done, we will paint the scene onto our ScreenBuffer
+
+        readonly RenderTarget2D SceneBuffer;
+
+        // BUFSEL controls which buffer is being rendered to and which is being displayed
+        bool BUFSEL;
+        RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
+        public Texture2D Texture => ScreenBuffers[BUFSEL ? 0 : 1];
+
+        bool EXT_START;
+        bool ERASE;
 
         // Pointer to Mathbox memory
         UInt16* Memory;
@@ -86,13 +92,27 @@ namespace I_Robot
         // must be retained between calls of ParseObjectList()
         UInt16 SurfaceList;
 
-        class VertexBufRenderType : IDisposable
+        /// <summary>
+        /// Represents a primitive to render on the display list
+        /// </summary>
+        class DisplayListPrimitive : IDisposable
         {
+            /// <summary>
+            /// The RenderMode of the primitive
+            /// </summary>
             public Mathbox.RenderMode RenderMode;
+
+            /// <summary>
+            /// The number of primitives to render
+            /// </summary>
             public int NumPrimitives;
+
+            /// <summary>
+            /// The VertexBuffer holding the primitives
+            /// </summary>
             public readonly VertexBuffer VertexBuffer;
 
-            public VertexBufRenderType(GraphicsDevice graphicsDevice)
+            public DisplayListPrimitive(GraphicsDevice graphicsDevice)
             {
                 VertexBuffer = new VertexBuffer(graphicsDevice, typeof(VertexPositionColor), 1024 * 3, BufferUsage.WriteOnly);
             }
@@ -103,54 +123,86 @@ namespace I_Robot
             }
         }
 
-        class VertexBufferPool : IDisposable
+        /// <summary>
+        /// A class that manages building of a display list and coordiantion with rendering.
+        /// Essentially there are two display list buffers
+        ///   - one being read from (displayed)
+        ///   - one being written to (built)
+        /// When Commit() is called the two buffers are swapped
+        /// </summary>
+        class DisplayListBuilder : IEnumerable<DisplayListPrimitive>, IDisposable
         {
             readonly GraphicsDevice GraphicsDevice;
-            readonly ConcurrentQueue<VertexBufRenderType> Pool = new ConcurrentQueue<VertexBufRenderType>();
 
-            int index = 0;
-            public ConcurrentStack<VertexBufRenderType> Active => Buffers[index & 1];
-            ConcurrentStack<VertexBufRenderType> Staging => Buffers[(index & 1) ^ 1];
+            // two buffers
+            // - one buffer is always active (ready for render)
+            // - the other buffer is always available for staging new display list commands
+            public ConcurrentStack<DisplayListPrimitive>[] SwapBuffer = new ConcurrentStack<DisplayListPrimitive>[2];
 
-            public ConcurrentStack<VertexBufRenderType>[] Buffers = new ConcurrentStack<VertexBufRenderType>[2];
+            // buffer selection
+            ConcurrentStack<DisplayListPrimitive> Committed => SwapBuffer[Index & 1];
+            ConcurrentStack<DisplayListPrimitive> Staging => SwapBuffer[(Index & 1) ^ 1];
+            int Index = 0; // incrementing this flips the two buffers
+
+            // a resource pool of display list elements to be reused
+            readonly ConcurrentQueue<DisplayListPrimitive> Pool = new ConcurrentQueue<DisplayListPrimitive>();
             int Count = 0;
 
-            public VertexBufferPool(GraphicsDevice graphicsDevice)
+            public DisplayListBuilder(GraphicsDevice graphicsDevice)
             {
                 GraphicsDevice = graphicsDevice;
-                for (int n = 0; n < Buffers.Length; n++)
-                    Buffers[n] = new ConcurrentStack<VertexBufRenderType>();
+                for (int n = 0; n < SwapBuffer.Length; n++)
+                    SwapBuffer[n] = new ConcurrentStack<DisplayListPrimitive>();
             }
 
             public void Dispose()
             {
-                FlipAndReset();
+                // move all elements back into Pool
+                Commit();
+                Commit();
+
                 foreach (var v in Pool)
                     v.Dispose();
             }
 
-
-            public void FlipAndReset()
+            public IEnumerator<DisplayListPrimitive> GetEnumerator()
             {
-                index++;
-                foreach (var v in Staging)
-                    Pool.Enqueue(v);
-                Staging.Clear();
+                return ((IEnumerable<DisplayListPrimitive>)Committed).GetEnumerator();
             }
 
-            public VertexBufRenderType Get()
+            IEnumerator IEnumerable.GetEnumerator()
             {
-                if (!Pool.TryDequeue(out VertexBufRenderType? result))
+                return ((IEnumerable<DisplayListPrimitive>)Committed).GetEnumerator();
+            }
+
+            public DisplayListPrimitive GetNext()
+            {
+                if (!Pool.TryDequeue(out DisplayListPrimitive? result))
                 {
-                    result = new VertexBufRenderType(GraphicsDevice);
+                    result = new DisplayListPrimitive(GraphicsDevice);
                     Count++;
-//                    System.Diagnostics.Debug.WriteLine($"new VertexBuffer(), total = {Count}");
+                    //                    System.Diagnostics.Debug.WriteLine($"new VertexBuffer(), total = {Count}");
                 }
                 Staging.Push(result);
                 return result;
             }
+
+            /// <summary>
+            /// Commits the active display list for rendering
+            /// </summary>
+            public void Commit()
+            {
+                // bump index, which causes active / staging buffers to be swapped
+                Index++;
+
+                // reusue objects from previous display list
+                foreach (var v in Staging)
+                    Pool.Enqueue(v);
+                Staging.Clear();
+            }
         }
-        readonly VertexBufferPool Pool;
+
+        readonly DisplayListBuilder DisplayList;
         Vector3[] Vertices = new Vector3[512];
         Vector3 camTarget;
         Vector3 camPosition;
@@ -167,24 +219,43 @@ namespace I_Robot
                 throw new Exception("VideoInterpreter can only be used with I_Robot.Game");
             Game = game;
 
-            Pool = new VertexBufferPool(Game.GraphicsDevice);
+            DisplayList = new DisplayListBuilder(Game.GraphicsDevice);
+
+            SceneBuffer = new RenderTarget2D(
+             Game.GraphicsDevice,
+             Game.GraphicsDevice.Viewport.Width,
+             Game.GraphicsDevice.Viewport.Height,
+             false,
+             Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
+             DepthFormat.Depth24);
 
             // create our render target buffers
-            for (int n = 0; n < Buffers.Length; n++)
+            for (int n = 0; n < ScreenBuffers.Length; n++)
             {
-                Buffers[n] = new RenderTarget2D(
+                ScreenBuffers[n] = new RenderTarget2D(
                     Game.GraphicsDevice,
                     Game.GraphicsDevice.Viewport.Width,
                     Game.GraphicsDevice.Viewport.Height,
                     false,
                     Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                    DepthFormat.Depth24);
+                    DepthFormat.None,
+                    0,
+                    RenderTargetUsage.PreserveContents);
             }
 
             //Setup Camera
             camTarget = new Vector3(0f, 0f, 0f);
             camPosition = new Vector3(0f, 0f, -3f);
-            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(MathHelper.ToRadians(45f), Game.GraphicsDevice.DisplayMode.AspectRatio, 0.1f, 1000f);
+
+            float TvAspectRatio = (float)4 / 3;
+            float IdealAspectRatio = (float)Emulation.Machine.NATIVE_RESOLUTION.Width / Emulation.Machine.NATIVE_RESOLUTION.Height;
+            float scale = TvAspectRatio / IdealAspectRatio;
+
+            projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
+                MathHelper.ToRadians(45f),
+                Game.GraphicsDevice.Viewport.AspectRatio,
+                0.1f,
+                65536f);
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
             worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Down);
             basicEffect = new BasicEffect(Game.GraphicsDevice);
@@ -199,37 +270,37 @@ namespace I_Robot
 
         public void Dispose()
         {
-            Pool.Dispose();
-            foreach (var b in Buffers)
+            DisplayList.Dispose();
+            foreach (var b in ScreenBuffers)
                 b.Dispose();
         }
-        
+
 
         const UInt16 VIEW_POSITION_ADDRESS = 0x12;
         const UInt16 LIGHT_ADDRESS = 0x44;
 
-#region HELPER
-        Vector3 GetVectorAt(UInt16 address) 
+        #region HELPER
+        Vector3 GetVectorAt(UInt16 address)
         {
             System.Diagnostics.Debug.Assert(address <= (0x8000 - 3));
-            return ((Mathbox.Vector3*)&Memory[address])->ToVector(); 
+            return ((Mathbox.Vector3*)&Memory[address])->ToVector();
         }
 
-        Vector3 GetVertexAt(UInt16 word) 
+        Vector3 GetVertexAt(UInt16 word)
         {
             return GetVectorAt((UInt16)(ObjectVertexTable + (word & 0x3FFF)));
         }
 
-        Matrix3x3 GetMatrix3At(UInt16 address) 
+        Matrix3x3 GetMatrix3At(UInt16 address)
         {
             System.Diagnostics.Debug.Assert(address <= (0x8000 - 18));
-            return ((Mathbox.Matrix*)&Memory[address])->ToMatrix3(); 
+            return ((Mathbox.Matrix*)&Memory[address])->ToMatrix3();
         }
 
-        Matrix GetMatrix4At(UInt16 address) 
+        Matrix GetMatrix4At(UInt16 address)
         {
             System.Diagnostics.Debug.Assert(address <= (0x8000 - 18));
-            return ((Mathbox.Matrix*)&Memory[address])->ToMatrix4(); 
+            return ((Mathbox.Matrix*)&Memory[address])->ToMatrix4();
         }
 
         void LoadLightVector() { Light = GetVectorAt(LIGHT_ADDRESS); }
@@ -294,7 +365,7 @@ namespace I_Robot
 
         Vector3[] LockVertexBuffer()
         {
-            return Vertices;            
+            return Vertices;
         }
 
         VertexPositionColor[] buf = new VertexPositionColor[256 * 3];
@@ -361,15 +432,15 @@ namespace I_Robot
             for (int n = 0; n < i; n++)
                 buf[n].Color = color;
 
-            var obj = Pool.Get();
+            var obj = DisplayList.GetNext();
             obj.RenderMode = renderMode;
             obj.NumPrimitives = numPrimitives;
             obj.VertexBuffer.SetData<VertexPositionColor>(buf, 0, i);
         }
 
-#endregion
+        #endregion
 
-#region WIP
+        #region WIP
 
         void ParseObjectList(UInt16 address)
         {
@@ -551,22 +622,24 @@ namespace I_Robot
 
         #region EMULATOR INTERFACE
 
-        void IRasterizer.EXT_START()
-        {
-            Pool.FlipAndReset();
-        }
+        public bool EXT_DONE { get; private set; }
 
-        void IRasterizer.SetVideoBuffer(int index)
+        void IRasterizer.EXT_START(bool bufsel, bool erase)
         {
-            VideoBuffer = Buffers[index];
-        }
+            // simulate rasterizer being busy
+            EXT_DONE = false;
 
-        void IRasterizer.EraseVideoBuffer()
-        {
-            // this is essentially the same as "starting" a new display list
-            // so we should clear/cache the old one while we build the new one
-//            Pool.Reset();
+            // commit the new display list
+            //BUFSEL = bufsel; // select buffer as necessary
+            ERASE = erase; // erase as necesasary
+            DisplayList.Commit(); // commit the display list
 
+            // start processing of the newly committed display list
+            EXT_START = true;
+
+            // simulate rasterizer being done
+            // makes more sense moving this to when render is complete (provided if it doesn't cause frames to be dropped)
+            EXT_DONE = true;
         }
 
         void IRasterizer.RasterizeObject(UInt16 address)
@@ -585,7 +658,7 @@ namespace I_Robot
         void IRasterizer.UnknownCommand()
         {
         }
-#endregion
+        #endregion
 
         /// <summary>
         /// Renders alphanumerics onto the overlay itself in native resolution
@@ -593,44 +666,59 @@ namespace I_Robot
         /// <param name="graphicsDevice"></param>
         public void Render(GraphicsDevice graphicsDevice)
         {
-            viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
-
-
-
-
-            graphicsDevice.SetRenderTarget(Buffers[0]);
-            graphicsDevice.DepthStencilState = DepthStencilState.Default;
-            graphicsDevice.Clear(Color.Transparent);
-
-
-            basicEffect.Projection = projectionMatrix;
-            basicEffect.View = Matrix.CreateScale(1.0f / 128) * viewMatrix;
-            basicEffect.World = worldMatrix;
-
-            foreach (var obj in Pool.Active)
+            // if game has kicked off rendering
+            if (EXT_START)
             {
-                graphicsDevice.SetVertexBuffer(obj.VertexBuffer);
+                // it's a one shot
+                EXT_START = false;
 
-                //Turn off culling so we see both sides of our rendered triangle
-                Microsoft.Xna.Framework.Graphics.RasterizerState rasterizerState = new RasterizerState();
-                rasterizerState.CullMode = CullMode.None;
-                graphicsDevice.RasterizerState = rasterizerState;
+                viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
 
-                foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
+
+
+
+                graphicsDevice.SetRenderTarget(SceneBuffer);
+                graphicsDevice.DepthStencilState = DepthStencilState.Default;
+                graphicsDevice.Clear(Color.Transparent);
+
+
+                basicEffect.Projection = projectionMatrix;
+                basicEffect.View = Matrix.CreateScale(1.0f / 128) * viewMatrix;
+                basicEffect.World = worldMatrix;
+
+                foreach (DisplayListPrimitive primitive in DisplayList)
                 {
-                    pass.Apply();
-                    switch (obj.RenderMode)
+                    graphicsDevice.SetVertexBuffer(primitive.VertexBuffer);
+
+                    //Turn off culling so we see both sides of our rendered triangle
+                    graphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+                    foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
                     {
-                        case Mathbox.RenderMode.Dot:
-                            break;
-                        case Mathbox.RenderMode.Vector:
-                            graphicsDevice.DrawPrimitives(PrimitiveType.LineStrip, 0, obj.NumPrimitives);
-                            break;
-                        case Mathbox.RenderMode.Polygon:
-                            graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, obj.NumPrimitives);
-                            break;
+                        pass.Apply();
+                        switch (primitive.RenderMode)
+                        {
+                            case Mathbox.RenderMode.Dot:
+                                break;
+                            case Mathbox.RenderMode.Vector:
+                                graphicsDevice.DrawPrimitives(PrimitiveType.LineStrip, 0, primitive.NumPrimitives);
+                                break;
+                            case Mathbox.RenderMode.Polygon:
+                                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleStrip, 0, primitive.NumPrimitives);
+                                break;
+                        }
                     }
                 }
+
+                //EXT_DONE = true;
+
+                // now copy our newly rendered scene ontop of the current screen buffer
+                graphicsDevice.SetRenderTarget(ScreenBuffer);
+                if (ERASE)
+                    graphicsDevice.Clear(Color.Transparent);
+                ScreenManager.SpriteBatch.Begin();
+                ScreenManager.SpriteBatch.Draw(SceneBuffer, Vector2.Zero, Color.White);
+                ScreenManager.SpriteBatch.End();
             }
         }
 

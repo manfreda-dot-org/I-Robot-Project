@@ -73,7 +73,10 @@ namespace I_Robot
         {
             Graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width - 100;
             Graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 100;
-         //   Graphics.IsFullScreen = true;
+            Graphics.PreferredBackBufferWidth = Emulation.Machine.NATIVE_RESOLUTION.Width * 3; 
+            Graphics.PreferredBackBufferHeight = (int)(Graphics.PreferredBackBufferWidth / Emulation.Machine.NativeAspectRatio);
+
+            //   Graphics.IsFullScreen = true;
             Graphics.ApplyChanges();
 
             base.Initialize();
@@ -90,9 +93,10 @@ namespace I_Robot
             // read the ROMs
             if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out RomSet? roms, out string? errMsg) && roms != null)
             {
+                // create a renderer that can interpret and rasterize game commands
                 mMathboxRenderer = new MathboxRenderer(ScreenManager);
 
-                // create hardware that uses the ROMs
+                // now create the hardware
                 mMachine = new Emulation.Machine(roms, mMathboxRenderer);
             }
 
