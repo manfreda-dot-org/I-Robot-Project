@@ -37,6 +37,9 @@ namespace I_Robot
         readonly AlphanumericsRenderer Alphanumerics;
         readonly MathboxRenderer MathboxRenderer;
 
+        bool UnpauseOnActivation;
+
+
         ContentManager? Content;
 
         float pauseAlpha;
@@ -96,8 +99,6 @@ namespace I_Robot
         }
 
 
-        bool CanUnpause;
-
         /// <summary>
         /// Updates the state of the game. This method checks the GameScreen.IsActive
         /// property, so the game will stop updating when the pause menu is active,
@@ -113,9 +114,9 @@ namespace I_Robot
             else
                 pauseAlpha = Math.Max(pauseAlpha - 1f / 16, 0);
 
-            if (CanUnpause && IsActive)
+            if (UnpauseOnActivation && IsActive)
             {
-                CanUnpause = false;
+                UnpauseOnActivation = false;
                 Machine.Paused = false;
             }
         }
@@ -146,12 +147,14 @@ namespace I_Robot
             if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
                 Machine.Paused = true;
-                CanUnpause = true;
+                UnpauseOnActivation = true;
                 ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
             }
 
 
             Keyboard.GetState();
+            if (Keyboard.HasBeenPressed(Keys.Space))
+                Machine.Paused = !Machine.Paused;
             if (Keyboard.HasBeenPressed(Keys.Tab))
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (Keyboard.HasBeenPressed(Keys.F3))
