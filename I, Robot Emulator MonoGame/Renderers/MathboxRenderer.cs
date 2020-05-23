@@ -18,6 +18,7 @@ using GameManagement;
 using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.Direct2D1.Effects;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -392,13 +393,14 @@ namespace I_Robot
                         return;
                     for (int n = 0; n < numvertices; n++)
                     {
+                        float dist = Math.Abs(Vertices[n].Z - camPosition.Z) / 256;
                         buf[i++].Position = Vertices[n];
-                        buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
-                        buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
+                        buf[i++].Position = Vertices[n] + dist * Vector3.Right;
+                        buf[i++].Position = Vertices[n] + dist * Vector3.Down;
 
-                        buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
-                        buf[i++].Position = Vertices[n] + 10 * Vector3.Right + 10 * Vector3.Down;
-                        buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
+                        buf[i++].Position = Vertices[n] + dist * Vector3.Right;
+                        buf[i++].Position = Vertices[n] + dist * Vector3.Right + dist * Vector3.Down;
+                        buf[i++].Position = Vertices[n] + dist * Vector3.Down;
                     }
                     numPrimitives = numvertices * 2;
                     break;
