@@ -71,7 +71,7 @@ namespace I_Robot
         readonly RenderTarget2D SceneBuffer;
 
         // BUFSEL controls which buffer is being rendered to and which is being displayed
-        bool BUFSEL;
+        bool BUFSEL = false;
         RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
         public Texture2D Texture => ScreenBuffers[BUFSEL ? 0 : 1];
 
@@ -244,16 +244,15 @@ namespace I_Robot
             }
 
             //Setup Camera
-            camTarget = new Vector3(0f, 0f, 0f);
-            camPosition = new Vector3(0f, 0f, -3f);
+            camTarget = new Vector3(0f, 0f, 1f);
+            camPosition = new Vector3(0f, 0f, 0f);
 
-            float TvAspectRatio = (float)4 / 3;
             float IdealAspectRatio = (float)Emulation.Machine.NATIVE_RESOLUTION.Width / Emulation.Machine.NATIVE_RESOLUTION.Height;
-            float scale = TvAspectRatio / IdealAspectRatio;
+            float scale = Emulation.Machine.NativeAspectRatio / IdealAspectRatio;
 
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.ToRadians(45f),
-                Game.GraphicsDevice.Viewport.AspectRatio,
+                scale,
                 0.1f,
                 65536f);
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
@@ -673,8 +672,7 @@ namespace I_Robot
                 EXT_START = false;
 
                 viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
-
-
+                //                viewMatrix = Matrix.CreateTranslation(0, -26f / 128, 0) * viewMatrix;
 
 
                 graphicsDevice.SetRenderTarget(SceneBuffer);
