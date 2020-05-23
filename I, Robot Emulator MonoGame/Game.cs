@@ -17,6 +17,7 @@
 using System;
 using GameManagement;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace I_Robot
 {
@@ -71,11 +72,15 @@ namespace I_Robot
 
         protected override void Initialize()
         {
+            Graphics.GraphicsProfile = GraphicsProfile.HiDef;
+            Graphics.PreferMultiSampling = true;
+            //GraphicsDevice.PresentationParameters.MultiSampleCount = 8;
+            Graphics.ApplyChanges();
+
             Graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
             Graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 90;
             //Graphics.PreferredBackBufferWidth = Emulation.Machine.NATIVE_RESOLUTION.Width * 3; 
             //Graphics.PreferredBackBufferHeight = (int)(Graphics.PreferredBackBufferWidth / Emulation.Machine.MonitorAspectRatio);
-
             //   Graphics.IsFullScreen = true;
             Graphics.ApplyChanges();
 
