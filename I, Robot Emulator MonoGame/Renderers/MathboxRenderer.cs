@@ -432,7 +432,9 @@ namespace I_Robot
                 Game.GraphicsDevice.Viewport.Height,
                 false,
                 Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.Depth24);
+                DepthFormat.Depth24,
+                8,
+                RenderTargetUsage.DiscardContents);
 
             // create our two screen buffers
             // these buffers do not require depth sorting, they are simply raw bitmaps
@@ -811,15 +813,20 @@ namespace I_Robot
                 if (Settings.Wireframe)
                 {
                     RasterizerState prevRasterizerState = graphicsDevice.RasterizerState;
-                    RasterizerState rasterizerState = new RasterizerState();
-                    rasterizerState.FillMode = FillMode.WireFrame;
-                    rasterizerState.CullMode = CullMode.None;
-                    graphicsDevice.RasterizerState = rasterizerState;
+                    graphicsDevice.RasterizerState = new RasterizerState()
+                    {
+                        FillMode = FillMode.WireFrame,
+                        CullMode = CullMode.None,
+                        MultiSampleAntiAlias = true,
+                    };
                 }
                 else
                 {
-                    // turn off culling so we see both sides our triangles
-                    graphicsDevice.RasterizerState = RasterizerState.CullNone;
+                    graphicsDevice.RasterizerState = new RasterizerState()
+                    {
+                        CullMode = CullMode.CullClockwiseFace,
+                        MultiSampleAntiAlias = true,
+                    };
                 }
 
                 foreach (DisplayList.Primitive primitive in displayList)
