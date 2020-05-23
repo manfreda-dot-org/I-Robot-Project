@@ -206,11 +206,19 @@ namespace I_Robot
             if (Settings.ShowFPS)
             {
                 SpriteBatch.Begin();
-                SpriteBatch.DrawString(
-                    GameFont,
-                    $"FPS:    {Machine.FPS.ToString("0.00")}", 
-                    new Vector2(10, GraphicsDevice.Viewport.Height - 10 - GameFont.LineSpacing),
-                    Color.Yellow);
+
+                Vector2 pt = new Vector2(10, GraphicsDevice.Viewport.Height - 10 - GameFont.LineSpacing);
+
+                SpriteBatch.DrawString(GameFont, $"Polygons/sec:    {String.Format("{0:n0}", MathboxRenderer.PolygonsPerSecond)}", pt, Color.Yellow);
+                pt.Y -= GameFont.LineSpacing;
+                SpriteBatch.DrawString(GameFont, $"Vectors/sec:    {String.Format("{0:n0}", MathboxRenderer.VectorsPerSecond)}", pt, Color.Yellow);
+                pt.Y -= GameFont.LineSpacing;
+                SpriteBatch.DrawString(GameFont, $"Dots/sec:    {String.Format("{0:n0}", MathboxRenderer.DotsPerSecond)}", pt, Color.Yellow);
+                pt.Y -= GameFont.LineSpacing;
+                SpriteBatch.DrawString(GameFont, $"FPS:    {Machine.FPS.ToString("0.00")}", pt, Color.Yellow);
+                pt.Y -= GameFont.LineSpacing;
+
+
                 SpriteBatch.End();
             }
 
