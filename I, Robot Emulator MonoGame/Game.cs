@@ -71,10 +71,10 @@ namespace I_Robot
 
         protected override void Initialize()
         {
-            Graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width - 100;
-            Graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 100;
-            Graphics.PreferredBackBufferWidth = Emulation.Machine.NATIVE_RESOLUTION.Width * 3; 
-            Graphics.PreferredBackBufferHeight = (int)(Graphics.PreferredBackBufferWidth / Emulation.Machine.NativeAspectRatio);
+            Graphics.PreferredBackBufferWidth = GraphicsDevice.DisplayMode.Width;
+            Graphics.PreferredBackBufferHeight = GraphicsDevice.DisplayMode.Height - 90;
+            //Graphics.PreferredBackBufferWidth = Emulation.Machine.NATIVE_RESOLUTION.Width * 3; 
+            //Graphics.PreferredBackBufferHeight = (int)(Graphics.PreferredBackBufferWidth / Emulation.Machine.MonitorAspectRatio);
 
             //   Graphics.IsFullScreen = true;
             Graphics.ApplyChanges();

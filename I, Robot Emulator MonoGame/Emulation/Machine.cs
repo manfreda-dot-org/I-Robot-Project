@@ -56,19 +56,40 @@ namespace I_Robot.Emulation
         ////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
+        /// Native resolution of display
+        /// </summary>
+        public static readonly Size NATIVE_RESOLUTION = new Size(
+            Alphanumerics.CHAR_WIDTH * Alphanumerics.COLUMNS,
+            Alphanumerics.CHAR_HEIGHT * Alphanumerics.VISIBLE_ROWS);
+
+        /// <summary>
         /// Standard 4:3 TV monitor
         /// </summary>
-        public const float NativeAspectRatio = 4f / 3; 
+        public const double MonitorAspectRatio = 4d / 3;
 
-        public static readonly Size NATIVE_RESOLUTION = new Size(Alphanumerics.COLUMNS * Alphanumerics.CHAR_WIDTH, Alphanumerics.VISIBLE_ROWS * Alphanumerics.CHAR_HEIGHT);
+        /// <summary>
+        /// Aspect ratio if pixels were rendered 1:1
+        /// </summary>
+        public static readonly double NativeAspectRatio = (double)NATIVE_RESOLUTION.Width / NATIVE_RESOLUTION.Height;
 
-        // Video clocks 320 x 256 pixels per frame, at 5 MHz
+
+        /// <summary>
+        /// Video clocks 320 x 256 pixels per frame, at 5 MHz
+        /// </summary>
         public const double DOT_CLOCK = 5000000;
+
+        /// <summary>
+        /// Number of horizontal dots clocked per scanline
+        /// </summary>
         public const int HORIZONTAL_DOTS = 320;
+
+        /// <summary>
+        /// Number of vertical dots clocked per video frame
+        /// </summary>
         public const int VERTICAL_DOTS = 256;
 
         /// <summary>
-        /// Approximately 61 FPS
+        /// Video refresh rate, approximately 61 FPS
         /// </summary>
         public const double VIDEO_REFRESH_HZ = (DOT_CLOCK / HORIZONTAL_DOTS / VERTICAL_DOTS);
 
@@ -97,6 +118,9 @@ namespace I_Robot.Emulation
         /// </summary>
         public const int VBLANK_SCANLINE = 240;
 
+        /// <summary>
+        /// Enumerated types of resets
+        /// </summary>
         public enum RESET_TYPE
         {
             COLD,

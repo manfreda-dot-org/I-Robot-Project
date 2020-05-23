@@ -6,6 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -77,6 +78,8 @@ namespace I_Robot
 
         bool EXT_START;
         bool ERASE;
+        bool mEXT_DONE = true;
+
 
         // Pointer to Mathbox memory
         UInt16* Memory;
@@ -203,7 +206,7 @@ namespace I_Robot
         }
 
         readonly DisplayListBuilder DisplayList;
-        Vector3[] Vertices = new Vector3[512];
+        Vector3[] Vertices = new Vector3[2048];
         Vector3 camTarget;
         Vector3 camPosition;
         Matrix projectionMatrix;
@@ -247,12 +250,11 @@ namespace I_Robot
             camTarget = new Vector3(0f, 0f, 1f);
             camPosition = new Vector3(0f, 0f, 0f);
 
-            float IdealAspectRatio = (float)Emulation.Machine.NATIVE_RESOLUTION.Width / Emulation.Machine.NATIVE_RESOLUTION.Height;
-            float scale = Emulation.Machine.NativeAspectRatio / IdealAspectRatio;
+            double scaleToMonitor = Emulation.Machine.MonitorAspectRatio / Emulation.Machine.NativeAspectRatio;
 
             projectionMatrix = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.ToRadians(45f),
-                scale,
+                (float)(Game.GraphicsDevice.Viewport.AspectRatio / scaleToMonitor),
                 0.1f,
                 65536f);
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
@@ -263,7 +265,6 @@ namespace I_Robot
             // Lighting requires normal information which VertexPositionColor does not have
             // If you want to use lighting and VPC you need to create a custom def
             basicEffect.LightingEnabled = false;
-
         }
 
 
@@ -367,7 +368,7 @@ namespace I_Robot
             return Vertices;
         }
 
-        VertexPositionColor[] buf = new VertexPositionColor[256 * 3];
+        VertexPositionColor[] buf = new VertexPositionColor[2048];
         void UnlockVertexBuffer(int numvertices, Color color, Mathbox.RenderMode renderMode)
         {
             if (numvertices <= 0)
@@ -386,13 +387,13 @@ namespace I_Robot
                 case Mathbox.RenderMode.Dot:
                     for (int n = 0; n < numvertices; n++)
                     {
-                        buf[i++].Position = Vertices[0];
-                        buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
-                        buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
+                        buf[i++].Position = Vertices[n];
+                        buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
+                        buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
 
-                        buf[i++].Position = Vertices[0] + 10 * Vector3.Right;
-                        buf[i++].Position = Vertices[0] + 10 * Vector3.Right + 10 * Vector3.Down;
-                        buf[i++].Position = Vertices[0] + 10 * Vector3.Down;
+                        buf[i++].Position = Vertices[n] + 10 * Vector3.Right;
+                        buf[i++].Position = Vertices[n] + 10 * Vector3.Right + 10 * Vector3.Down;
+                        buf[i++].Position = Vertices[n] + 10 * Vector3.Down;
                     }
                     numPrimitives = numvertices * 2;
                     break;
@@ -621,12 +622,12 @@ namespace I_Robot
 
         #region EMULATOR INTERFACE
 
-        public bool EXT_DONE { get; private set; }
+        bool IRasterizer.EXT_DONE => mEXT_DONE;
 
         void IRasterizer.EXT_START(bool bufsel, bool erase)
         {
             // simulate rasterizer being busy
-            EXT_DONE = false;
+            mEXT_DONE = false;
 
             // commit the new display list
             //BUFSEL = bufsel; // select buffer as necessary
@@ -638,7 +639,7 @@ namespace I_Robot
 
             // simulate rasterizer being done
             // makes more sense moving this to when render is complete (provided if it doesn't cause frames to be dropped)
-            EXT_DONE = true;
+            mEXT_DONE = true;
         }
 
         void IRasterizer.RasterizeObject(UInt16 address)
@@ -697,6 +698,7 @@ namespace I_Robot
                         switch (primitive.RenderMode)
                         {
                             case Mathbox.RenderMode.Dot:
+                                graphicsDevice.DrawPrimitives(PrimitiveType.TriangleList, 0, primitive.NumPrimitives);
                                 break;
                             case Mathbox.RenderMode.Vector:
                                 graphicsDevice.DrawPrimitives(PrimitiveType.LineStrip, 0, primitive.NumPrimitives);
