@@ -96,6 +96,8 @@ namespace I_Robot
         }
 
 
+        bool CanUnpause;
+
         /// <summary>
         /// Updates the state of the game. This method checks the GameScreen.IsActive
         /// property, so the game will stop updating when the pause menu is active,
@@ -111,7 +113,11 @@ namespace I_Robot
             else
                 pauseAlpha = Math.Max(pauseAlpha - 1f / 16, 0);
 
-            //Machine.Paused = !IsActive;
+            if (CanUnpause && IsActive)
+            {
+                CanUnpause = false;
+                Machine.Paused = false;
+            }
         }
 
         /// <summary>
@@ -139,8 +145,9 @@ namespace I_Robot
             PlayerIndex player;
             if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
             {
-                Machine.Paused = !Machine.Paused;
-//                ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
+                Machine.Paused = true;
+                CanUnpause = true;
+                ScreenManager.AddScreen(new MainMenuScreen(ScreenManager), ControllingPlayer);
             }
 
 

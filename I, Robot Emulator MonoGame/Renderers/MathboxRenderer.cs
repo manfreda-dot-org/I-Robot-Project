@@ -31,6 +31,10 @@ using Vector3 = Microsoft.Xna.Framework.Vector3;
 
 namespace I_Robot
 {
+    /// <summary>
+    /// I, Robot Mathbox interpreter
+    /// This class holds the non-portable code related to rasterization of in-game objects
+    /// </summary>
     unsafe public class MathboxRenderer : IRasterizer
     {
         readonly Game Game;
@@ -384,6 +388,8 @@ namespace I_Robot
             {
                 default: return;
                 case Mathbox.RenderMode.Dot:
+                    if (!Settings.ShowDots)
+                        return;
                     for (int n = 0; n < numvertices; n++)
                     {
                         buf[i++].Position = Vertices[n];
@@ -397,11 +403,15 @@ namespace I_Robot
                     numPrimitives = numvertices * 2;
                     break;
                 case Mathbox.RenderMode.Vector:
+                    if (!Settings.ShowVectors)
+                        return;
                     for (int n = 0; n < numvertices; n++)
                         buf[i++].Position = Vertices[n];
                     numPrimitives = numvertices - 1;
                     break;
                 case Mathbox.RenderMode.Polygon:
+                    if (!Settings.ShowPolygons) 
+                        return;
                     // convert triangle fan
                     int i1 = 1;
                     int i2 = numvertices - 1;
@@ -964,17 +974,27 @@ namespace I_Robot
                 graphicsDevice.DepthStencilState = DepthStencilState.Default;
                 graphicsDevice.Clear(Color.Transparent);
 
-
                 basicEffect.Projection = projectionMatrix;
                 basicEffect.View = Matrix.CreateScale(1.0f / 128) * viewMatrix;
                 basicEffect.World = worldMatrix;
 
+                if (Settings.Wireframe)
+                {
+                    RasterizerState prevRasterizerState = graphicsDevice.RasterizerState;
+                    RasterizerState rasterizerState = new RasterizerState();
+                    rasterizerState.FillMode = FillMode.WireFrame;
+                    rasterizerState.CullMode = CullMode.None;
+                    graphicsDevice.RasterizerState = rasterizerState;
+                }
+                else
+                {
+                    // turn off culling so we see both sides our triangles
+                    graphicsDevice.RasterizerState = RasterizerState.CullNone;
+                }
+
                 foreach (DisplayListPrimitive primitive in DisplayList)
                 {
                     graphicsDevice.SetVertexBuffer(primitive.VertexBuffer);
-
-                    //Turn off culling so we see both sides of our rendered triangle
-                    graphicsDevice.RasterizerState = RasterizerState.CullNone;
 
                     foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
                     {
