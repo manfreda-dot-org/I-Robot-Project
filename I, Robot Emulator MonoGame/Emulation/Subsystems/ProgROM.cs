@@ -72,11 +72,39 @@ namespace I_Robot.Emulation
                 Array.Copy(r209, 0, ROM_6000, 0x2000, r209.Data.Length);
             if (r210 != null)
                 Array.Copy(r210, 0, ROM_6000, 0x6000, r210.Data.Length);
+
+
+            // patch the code base to "enhance" the game
+            PatchRom();
         }
 
         public override void Dispose()
         {
         }
+
+        /// <summary>
+        /// Patch the code base to "enhance" the game
+        /// </summary>
+        void PatchRom()
+        {
+            const byte NOP = 0x12;
+
+            Patch(0xDBCF, new byte[2] { NOP, NOP }); // tetras rotate even when far away
+            Patch(0xDBEC, new byte[2] { NOP, NOP }); // meteors render solid even when far away
+        }
+
+        void Patch(UInt16 address, byte[] patch)
+        {
+            if (address >= 0x6000)
+            {
+                address -= 0x6000;
+                for (int n = 0; n < patch.Length; n++)
+                    ROM_6000[address++] = patch[n];
+            }
+            else
+                throw new ArgumentOutOfRangeException();
+        }
+
 
         /// <summary>
         /// Resets the program ROM
