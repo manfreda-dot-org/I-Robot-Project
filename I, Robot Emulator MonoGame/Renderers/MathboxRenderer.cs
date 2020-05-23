@@ -19,7 +19,6 @@ using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Windows.Controls;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -61,7 +60,7 @@ namespace I_Robot
         // BUFSEL controls which buffer is being rendered to and which is being displayed
         bool BUFSEL = false;
         RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
-        public Texture2D Texture => ScreenBuffers[BUFSEL ? 0 : 1];
+        public Texture2D Texture => ScreenBuffer;
 
         bool mEXT_DONE = true;
 
@@ -172,6 +171,7 @@ namespace I_Robot
             {
                 // Get address of the three rows that determine how tiles
                 // in the current row are drawn
+                System.Diagnostics.Debug.Assert(Memory[0x70] == 0xE00);
                 int rowbase = 0xE00; // Memory[0x70]
                 Row.Prev = &Memory[rowbase + 16 * ((row - 1) & 31)];
                 Row.This = &Memory[rowbase + 16 * row];
@@ -494,7 +494,7 @@ namespace I_Robot
             return ((Mathbox.Vector3*)&Memory[address])->ToVector();
         }
 
-        Vector3 GetVertexAt(UInt16 word)
+        Vector3 GetVertexFromTable(UInt16 word)
         {
             return GetVectorAt((UInt16)(ObjectVertexTable + (word & 0x3FFF)));
         }
@@ -693,11 +693,11 @@ namespace I_Robot
             if ((Memory[address] & 0x4000) == 0)
             {
                 // get the normal vector
-                Vector3 normal = GetVertexAt(Memory[address]);
+                Vector3 normal = GetVertexFromTable(Memory[address]);
                 normal = Vector3.Transform(normal, WorldRotation);
 
                 // get the first coordinate
-                Vector3 pt = GetVertexAt(Memory[address + 1]);
+                Vector3 pt = GetVertexFromTable(Memory[address + 1]);
                 Vector3.Transform(pt, WorldRotation);
                 pt += WorldPosition;
 
@@ -721,12 +721,12 @@ namespace I_Robot
             Color color = GetColor(flags, shade);
 
             // prepare the vertex buffer
-            PrepareVertexBuffer(address, color, (Mathbox.RenderMode)flags & Mathbox.RenderMode.Mask);
+            BuildNewPrimitive(address, color, (Mathbox.RenderMode)flags & Mathbox.RenderMode.Mask);
 
             return true;
         }
 
-        void PrepareVertexBuffer(UInt16 address, Color color, Mathbox.RenderMode type)
+        void BuildNewPrimitive(UInt16 address, Color color, Mathbox.RenderMode type)
         {
             UInt16* pface = &Memory[address + 1];
 
@@ -735,7 +735,7 @@ namespace I_Robot
             {
                 UInt16 word = *pface++;
 
-                Vector3 pt = GetVertexAt(word);
+                Vector3 pt = GetVertexFromTable(word);
                 pt = Vector3.Transform(pt, WorldRotation) + WorldPosition;
                 Vertices[index++] = pt;
 
@@ -761,12 +761,16 @@ namespace I_Robot
             // simulate rasterizer being busy
             mEXT_DONE = false;
 
+
+            // select buffer as necessary
+            //BUFSEL = bufsel
+
             // commit the new display list
-            //BUFSEL = bufsel; // select buffer as necessary
             DisplayListManager.CommitDisplayList(erase); // commit the display list
 
             // simulate rasterizer being done
-            // makes more sense moving this to when render is complete (provided if it doesn't cause frames to be dropped)
+            // technically this should take place after rendering is complete
+            // however this might cause frames to be dropped
             mEXT_DONE = true;
         }
 
@@ -842,7 +846,7 @@ namespace I_Robot
                     }
                 }
 
-                //EXT_DONE = true;
+                mEXT_DONE = true;
 
                 // now copy our newly rendered scene ontop of the current screen buffer
                 graphicsDevice.SetRenderTarget(ScreenBuffer);
