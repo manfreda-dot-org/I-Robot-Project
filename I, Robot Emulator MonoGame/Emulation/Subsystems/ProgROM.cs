@@ -88,9 +88,16 @@ namespace I_Robot.Emulation
         void PatchRom()
         {
             const byte NOP = 0x12;
+            const byte BRA = 0x20;
 
-            Patch(0xDBCF, new byte[2] { NOP, NOP }); // tetras rotate even when far away
-            Patch(0xDBEC, new byte[2] { NOP, NOP }); // meteors render solid even when far away
+            // hacks / cheats
+            //Patch(0x828E, new byte[] { 0x01 }); // collisions disabled
+            Patch(0x9707, new byte[] { BRA }); // can always jump to pyramid
+            Patch(0xD83F, new byte[] { BRA }); // space chase object can't collide
+
+            // graphical improvements
+            Patch(0xDBCF, new byte[] { NOP, NOP }); // tetras rotate even when far away
+            Patch(0xDBEC, new byte[] { NOP, NOP }); // meteors render solid even when far away
         }
 
         void Patch(UInt16 address, byte[] patch)
