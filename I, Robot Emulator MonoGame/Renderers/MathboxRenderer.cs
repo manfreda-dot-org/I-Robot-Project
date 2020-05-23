@@ -19,9 +19,6 @@ using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
-using System.Collections;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
 using Matrix3x3 = SharpDX.Matrix3x3;
@@ -37,8 +34,8 @@ namespace I_Robot
     /// </summary>
     unsafe public class MathboxRenderer : IRasterizer
     {
-        readonly Game Game;
-        readonly ScreenManager ScreenManager;
+        public readonly Game Game;
+        public readonly ScreenManager ScreenManager;
 
         Machine mMachine;
         public Machine Machine
@@ -98,298 +95,11 @@ namespace I_Robot
         }
         readonly PlayfieldManagement Playfield = new PlayfieldManagement();
 
-        /// <summary>
-        /// Represents all of the dots, vectors, and polygons in a single display list
-        /// </summary>
-        class DisplayList : IEnumerable<DisplayList.Primitive>, IDisposable
-        {
-            public readonly Primitive.Dot Dots;
-            public readonly Primitive.Vector Vectors;
-            public readonly Primitive.Polygon Polygons;
 
-            public DisplayList(MathboxRenderer mathboxRenderer)
-            {
-                Dots = new Primitive.Dot(mathboxRenderer);
-                Vectors = new Primitive.Vector(mathboxRenderer);
-                Polygons = new Primitive.Polygon(mathboxRenderer);
-            }
-
-            public void Reset()
-            {
-                Dots.Reset();
-                Vectors.Reset();
-                Polygons.Reset();
-            }
-
-            public void Commit()
-            {
-                Dots.Commit();
-                Vectors.Commit();
-                Polygons.Commit();
-            }
-
-            public void Dispose()
-            {
-                Dots.Dispose();
-                Vectors.Dispose();
-                Polygons.Dispose();
-            }
-
-            IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
-            public IEnumerator<Primitive> GetEnumerator()
-            {
-                if (Dots.NumPrimitives > 0)
-                    yield return Dots;
-                if (Vectors.NumPrimitives > 0)
-                    yield return Vectors;
-                if (Polygons.NumPrimitives > 0)
-                    yield return Polygons;
-            }
-
-            /// <summary>
-            /// Represents a primitive to render on the display list
-            /// </summary>
-            public abstract class Primitive : IDisposable
-            {
-                const int MaxVertices = 8192;
-
-                readonly MathboxRenderer MathboxRenderer;
-                readonly VertexPositionColor[] Buffer = new VertexPositionColor[MaxVertices];
-                int Index;
-
-                /// <summary>
-                /// The VertexBuffer holding the primitives
-                /// </summary>
-                public readonly VertexBuffer VertexBuffer;
-
-                /// <summary>
-                /// PrimitiveType for rendering
-                /// </summary>
-                public readonly PrimitiveType Type;
-
-                /// <summary>
-                /// The number of primitives to render
-                /// </summary>
-                public int NumPrimitives { get; private set; }
-
-
-                // buffer used to assemble vertices
-                public Primitive(MathboxRenderer mathboxRenderer, Mathbox.RenderMode renderMode)
-                {
-                    MathboxRenderer = mathboxRenderer;
-                    VertexBuffer = new VertexBuffer(mathboxRenderer.Game.GraphicsDevice, typeof(VertexPositionColor), MaxVertices, BufferUsage.WriteOnly);
-                    Type = (renderMode == Mathbox.RenderMode.Vector) ? PrimitiveType.LineList : PrimitiveType.TriangleList;
-                }
-
-                public void Dispose()
-                {
-                    VertexBuffer.Dispose();
-                }
-
-                public void Reset()
-                {
-                    Index = 0;
-                    NumPrimitives = 0;
-                }
-
-                public void Commit()
-                {
-                    if (Index > 0)
-                        VertexBuffer.SetData<VertexPositionColor>(Buffer, 0, Index);
-                }
-
-                abstract public void AddPrimitive(Vector3[] vertices, int numvertices, Color color);
-
-                public class Dot : Primitive
-                {
-                    public Dot(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Dot) { }
-
-                    public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
-                    {
-                        System.Diagnostics.Debug.Assert(numVertices > 0);
-
-                        if (Settings.ShowDots)
-                        {
-                            for (int n = 0; n < numVertices; n++)
-                            {
-                                float dist = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 256;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n];
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
-
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right + dist * Vector3.Down;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
-                            }
-                            NumPrimitives += numVertices * 2;
-                        }
-                    }
-                }
-
-                public class Vector : Primitive
-                {
-                    public Vector(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Vector) { }
-
-                    public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
-                    {
-                        System.Diagnostics.Debug.Assert(numVertices > 1);
-                        if (Settings.ShowVectors)
-                        {
-                            for (int n = 1; n < numVertices; n++)
-                            {
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n - 1];
-
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n];
-                            }
-                            NumPrimitives += numVertices - 1;
-                        }
-                    }
-                }
-
-                public class Polygon : Primitive
-                {
-                    public Polygon(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Polygon) { }
-
-                    public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
-                    {
-                        System.Diagnostics.Debug.Assert(numVertices > 2);
-
-                        if (Settings.ShowPolygons)
-                        {
-                            for (int n = 2; n < numVertices; n++)
-                            {
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[0];
-
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n - 1];
-
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n];
-
-                            }
-                            NumPrimitives += numVertices - 2;
-                        }
-                    }
-                }
-            }
-
-
-            class Pool : IDisposable
-            {
-                readonly MathboxRenderer MathboxRenderer;
-                readonly ConcurrentQueue<DisplayList> Queue = new ConcurrentQueue<DisplayList>();
-
-                public Pool(MathboxRenderer mathboxRenderer)
-                {
-                    MathboxRenderer = mathboxRenderer;
-                }
-
-                public DisplayList Get()
-                {
-                    if (Queue.TryDequeue(out DisplayList? result))
-                    {
-                        result.Reset();
-                        return result;
-                    }
-                    return new DisplayList(MathboxRenderer);
-                }
-
-                public void Return(DisplayList displayList)
-                {
-                    Queue.Enqueue(displayList);
-                }
-
-                public void Dispose()
-                {
-                    foreach (DisplayList displayList in Queue)
-                        displayList.Dispose();
-                }
-            }
-
-            /// <summary>
-            /// A class that manages building of a display list and coordiantion with rendering.
-            /// As display lists are created, they are queued up
-            /// The renderer should dequeue them for processing
-            /// When Commit() is called the WIP display list is added to the queue
-            /// </summary>
-            public class Builder
-            {
-                readonly MathboxRenderer MathboxRenderer;
-                readonly Pool mPool;
-                readonly ConcurrentQueue<DisplayList> Queue = new ConcurrentQueue<DisplayList>();
-                DisplayList WIP;
-
-                public Builder(MathboxRenderer mathboxRenderer)
-                {
-                    MathboxRenderer = mathboxRenderer;
-                    mPool = new Pool(mathboxRenderer);
-                    WIP = mPool.Get();
-                }
-
-                public void Dispose()
-                {
-                    foreach (DisplayList displayList in Queue)
-                        displayList.Dispose();
-                    mPool.Dispose();
-                    WIP.Dispose();
-                }
-
-                public bool GetNext(out DisplayList? displayList)
-                {
-                    for (; ; )
-                    {
-                        Queue.TryDequeue(out displayList);
-                        //                        if (Queue.IsEmpty)
-                        break;
-                        //                        mPool.Return(displayList);
-                    }
-                    return displayList != null;
-                }
-
-                public void Return(DisplayList displayList)
-                {
-                    mPool.Return(displayList);
-                }
-
-                /// <summary>
-                /// Commits the active display list for rendering
-                /// </summary>
-                public void CommitDisplayList()
-                {
-                    WIP.Commit();
-                    Queue.Enqueue(WIP);
-                    WIP = mPool.Get();
-                }
-
-                public void AddPrimitive(Vector3[] vertices, int numVertices, Color color, Mathbox.RenderMode renderMode)
-                {
-                    if (numVertices <= 0)
-                        return;
-                    else if (renderMode == Mathbox.RenderMode.Dot || numVertices == 1)
-                        WIP.Dots.AddPrimitive(vertices, numVertices, color);
-                    else if (renderMode == Mathbox.RenderMode.Vector || numVertices == 2)
-                        WIP.Vectors.AddPrimitive(vertices, numVertices, color);
-                    else
-                        WIP.Polygons.AddPrimitive(vertices, numVertices, color);
-                }
-
-            }
-        }
-
-
-        readonly DisplayList.Builder mDisplayList;
+        readonly DisplayList.Manager mDisplayList;
         readonly Vector3[] Vertices = new Vector3[2048];
         Vector3 camTarget;
-        Vector3 camPosition;
+        public Vector3 camPosition { get; private set; }
         Matrix projectionMatrix;
         Matrix viewMatrix;
         Matrix worldMatrix;
@@ -403,7 +113,7 @@ namespace I_Robot
                 throw new Exception("VideoInterpreter can only be used with I_Robot.Game");
             Game = game;
 
-            mDisplayList = new DisplayList.Builder(this);
+            mDisplayList = new DisplayList.Manager(this);
 
             // create our scene buffer
             // this buffer has a z-buffer
