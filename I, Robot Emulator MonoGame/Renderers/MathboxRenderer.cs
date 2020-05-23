@@ -366,13 +366,8 @@ namespace I_Robot
             //Device->SetTransform(D3DTS_WORLD, &world);
         }
 
-        Vector3[] LockVertexBuffer()
-        {
-            return Vertices;
-        }
-
         VertexPositionColor[] buf = new VertexPositionColor[2048];
-        void UnlockVertexBuffer(int numvertices, Color color, Mathbox.RenderMode renderMode)
+        void CommitPrimitive(int numvertices, Color color, Mathbox.RenderMode renderMode)
         {
             if (numvertices <= 0)
                 return;
@@ -407,25 +402,24 @@ namespace I_Robot
                     break;
                 case Mathbox.RenderMode.Polygon:
                     // convert triangle fan
-                    int a = 0;
-                    int b = 1;
-                    int c = numvertices - 1;
+                    int i1 = 1;
+                    int i2 = numvertices - 1;
 
-                    buf[i++].Position = Vertices[a];
-                    buf[i++].Position = Vertices[b];
+                    buf[i++].Position = Vertices[0];
+                    buf[i++].Position = Vertices[i1];
                     for (; ; )
                     {
-                        buf[i++].Position = Vertices[c];
-                        int next = b + 1;
-                        a = b; b = c; c = next;
-                        if (b == c)
+                        buf[i++].Position = Vertices[i2];
+                        int next = i1 + 1;
+                        if (next == i2)
                             break;
+                        i1 = i2; i2 = next;
 
-                        buf[i++].Position = Vertices[c];
-                        next = b - 1;
-                        a = b; b = c; c = next;
-                        if (b == c)
+                        buf[i++].Position = Vertices[i2];
+                        next = i1 - 1;
+                        if (next == i2)
                             break;
+                        i1 = i2; i2 = next;
 
                     }
                     numPrimitives = numvertices - 2;
@@ -599,7 +593,6 @@ namespace I_Robot
         void PrepareVertexBuffer(UInt16 address, Color color, Mathbox.RenderMode type)
         {
             UInt16* pface = &Memory[address + 1];
-            Vector3[] dst = LockVertexBuffer();
 
             // add points to buffer
             for (int index = 0; ;)
@@ -608,12 +601,12 @@ namespace I_Robot
 
                 Vector3 pt = GetVertexAt(word);
                 pt = Vector3.Transform(pt, WorldRotation) + WorldPosition;
-                dst[index++] = pt;
+                Vertices[index++] = pt;
 
                 // is this the last point of the plygon?
                 if ((word & 0x8000) != 0)
                 {
-                    UnlockVertexBuffer(index, color, type);
+                    CommitPrimitive(index, color, type);
                     return;
                 }
             }
@@ -665,7 +658,12 @@ namespace I_Robot
             SetWorldMatrix(ref Playfield.Rotation);
 
             // determine rendering method (dot/vector/polygon)
-            Playfield.Mode = (Mathbox.RenderMode)Memory[0x72] & Mathbox.RenderMode.Mask;
+            switch (Memory[0x72])
+            {
+                case 0x0000: Playfield.Mode = Mathbox.RenderMode.Polygon; break;
+                case 0x0100: Playfield.Mode = Mathbox.RenderMode.Vector; break;
+                default: Playfield.Mode = Mathbox.RenderMode.Dot; break;
+            }
 
             // get address of playfield object buffer
             Playfield.ObjectList = Memory[0x6B];
@@ -809,8 +807,6 @@ namespace I_Robot
 
         void DrawPlayfieldTile(int index, Vector3 corner)
         {
-            Vector3[] ptr;
-
             // local tile map (we are rendering tile A)
             //  TileF   TileD   TileC
             //  TileE   TileA   TileB
@@ -871,12 +867,11 @@ namespace I_Robot
                 // draw if tile to the left is lower than current tile
                 if (height.a < side.b || height.d < side.c)
                 {
-                    ptr = LockVertexBuffer();
-                    ptr[0] = new Vector3(x1, height.a, z1);
-                    ptr[1] = new Vector3(x1, height.d, z2);
-                    ptr[2] = new Vector3(x1, side.c, z2);
-                    ptr[3] = new Vector3(x1, side.b, z1);
-                    UnlockVertexBuffer(4, GetColor(colorIndex - 1), Playfield.Mode);
+                    Vertices[0] = new Vector3(x1, height.a, z1);
+                    Vertices[1] = new Vector3(x1, height.d, z2);
+                    Vertices[2] = new Vector3(x1, side.c, z2);
+                    Vertices[3] = new Vector3(x1, side.b, z1);
+                    CommitPrimitive(4, GetColor(colorIndex - 1), Playfield.Mode);
                 }
             }
             else if (x2 < 0)
@@ -893,12 +888,11 @@ namespace I_Robot
                 // draw if tile to the right is lower than current tile
                 if (height.b < side.a || height.c < side.d)
                 {
-                    ptr = LockVertexBuffer();
-                    ptr[0] = new Vector3(x2, height.b, z1);
-                    ptr[1] = new Vector3(x2, side.a, z1);
-                    ptr[2] = new Vector3(x2, side.d, z2);
-                    ptr[3] = new Vector3(x2, height.c, z2);
-                    UnlockVertexBuffer(4, GetColor(colorIndex - 1), Playfield.Mode);
+                    Vertices[0] = new Vector3(x2, height.b, z1);
+                    Vertices[1] = new Vector3(x2, side.a, z1);
+                    Vertices[2] = new Vector3(x2, side.d, z2);
+                    Vertices[3] = new Vector3(x2, height.c, z2);
+                    CommitPrimitive(4, GetColor(colorIndex - 1), Playfield.Mode);
                 }
             }
 
@@ -920,35 +914,32 @@ namespace I_Robot
                 }
                 if (height.a < side.d || height.b < side.c)
                 {
-                    ptr = LockVertexBuffer();
-                    ptr[0] = new Vector3(x1, height.a, z1);
-                    ptr[1] = new Vector3(x1, side.d, z1);
-                    ptr[2] = new Vector3(x2, side.c, z1);
-                    ptr[3] = new Vector3(x2, height.b, z1);
-                    UnlockVertexBuffer(4, GetColor(colorIndex - 2), Playfield.Mode);
+                    Vertices[0] = new Vector3(x1, height.a, z1);
+                    Vertices[1] = new Vector3(x1, side.d, z1);
+                    Vertices[2] = new Vector3(x2, side.c, z1);
+                    Vertices[3] = new Vector3(x2, height.b, z1);
+                    CommitPrimitive(4, GetColor(colorIndex - 2), Playfield.Mode);
                 }
             }
 
             // draw the top of the cube
-            ptr = LockVertexBuffer();
-            ptr[0] = new Vector3(x1, height.a, z1);
-            ptr[1] = new Vector3(x2, height.b, z1);
-            ptr[2] = new Vector3(x2, height.c, z2);
-            ptr[3] = new Vector3(x1, height.d, z2);
-            UnlockVertexBuffer(4, GetColor(colorIndex), Playfield.Mode);
+            Vertices[0] = new Vector3(x1, height.a, z1);
+            Vertices[1] = new Vector3(x2, height.b, z1);
+            Vertices[2] = new Vector3(x2, height.c, z2);
+            Vertices[3] = new Vector3(x1, height.d, z2);
+            CommitPrimitive(4, GetColor(colorIndex), Playfield.Mode);
 
             // special case for rendering solid sloped tiles
             // this is done for maximum compatibility with real machine
             if ((TileA & 0x0040) == 0 && Playfield.Mode == Mathbox.RenderMode.Polygon)
-                Playfield.Mode = Mathbox.RenderMode.Vector;
+                CommitPrimitive(4, GetColor(colorIndex), Mathbox.RenderMode.Vector);
 
             // draw the bottom of the cube
-            ptr = LockVertexBuffer();
-            ptr[0] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
-            ptr[1] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
-            ptr[2] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
-            ptr[3] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
-            UnlockVertexBuffer(4, GetColor(colorIndex), Playfield.Mode);
+            Vertices[0] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
+            Vertices[1] = new Vector3(x1, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
+            Vertices[2] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z2);
+            Vertices[3] = new Vector3(x2, -ViewPosition.Y + Mathbox.TILE_SIZE_Y, z1);
+            CommitPrimitive(4, GetColor(colorIndex), Playfield.Mode);
         }
 
 
