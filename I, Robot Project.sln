@@ -14,6 +14,9 @@ Global
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Emulator Trace|Any CPU = Emulator Trace|Any CPU
+		Emulator Trace|x64 = Emulator Trace|x64
+		Emulator Trace|x86 = Emulator Trace|x86
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
@@ -24,6 +27,11 @@ Global
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Debug|x64.Build.0 = Debug|x64
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Debug|x86.ActiveCfg = Release|Win32
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Debug|x86.Build.0 = Release|Win32
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Emulator Trace|Any CPU.ActiveCfg = Emulator Trace|Win32
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Emulator Trace|x64.ActiveCfg = Emulator Trace|x64
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Emulator Trace|x64.Build.0 = Emulator Trace|x64
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Emulator Trace|x86.ActiveCfg = Emulator Trace|Win32
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Emulator Trace|x86.Build.0 = Emulator Trace|Win32
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Release|Any CPU.ActiveCfg = Release|Win32
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Release|x64.ActiveCfg = Release|x64
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Release|x64.Build.0 = Release|x64
@@ -33,6 +41,9 @@ Global
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Debug|x64.ActiveCfg = Debug|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Debug|x86.ActiveCfg = Debug|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Debug|x86.Build.0 = Debug|Win32
+		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Emulator Trace|Any CPU.ActiveCfg = Release|Win32
+		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Emulator Trace|x64.ActiveCfg = Release|Win32
+		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Emulator Trace|x86.ActiveCfg = Release|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Release|Any CPU.ActiveCfg = Release|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Release|x64.ActiveCfg = Release|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Release|x86.ActiveCfg = Release|Win32
@@ -43,6 +54,12 @@ Global
 		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x64.Build.0 = Debug|Any CPU
 		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x86.ActiveCfg = Debug|x86
 		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x86.Build.0 = Debug|x86
+		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|Any CPU.ActiveCfg = Emulator Trace|Any CPU
+		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|Any CPU.Build.0 = Emulator Trace|Any CPU
+		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x64.ActiveCfg = Emulator Trace|Any CPU
+		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x64.Build.0 = Emulator Trace|Any CPU
+		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x86.ActiveCfg = Emulator Trace|x86
+		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x86.Build.0 = Emulator Trace|x86
 		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|x64.ActiveCfg = Release|Any CPU
