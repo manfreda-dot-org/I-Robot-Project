@@ -404,7 +404,7 @@ static uint8 op_neg(mc6809__t* cpu, uint8 const src)
     cpu->CC_N = (res > 0x7F);
     cpu->CC_Z = (res == 0x00);
     cpu->CC_V = (src == 0x80);
-    cpu->CC_C = (src > 0x7F);
+    cpu->CC_C = (src != 0x00);
     return res;
 }
 
