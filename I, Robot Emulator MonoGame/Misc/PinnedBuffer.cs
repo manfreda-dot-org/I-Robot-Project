@@ -15,16 +15,14 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace I_Robot
 {
     /// <summary>
-    /// Class that allocates and pins a buffer in memory
-    /// Memory is pinned so garbage collector can't move it
-    /// An unsafe byte pointer to the data is available
+    /// Class that allocates and pins a buffer in memory.<br/>
+    /// Memory is pinned so garbage collector can't move it.<br/>
+    /// An unsafe byte pointer to the data is available.<br/>
     /// </summary>
     /// <typeparam name="T">type of data to be pinned, must be basic unmanaged type</typeparam>
     [Serializable]

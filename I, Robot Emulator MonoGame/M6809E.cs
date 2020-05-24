@@ -162,20 +162,75 @@ namespace I_Robot
         readonly PageReadFunctionManager PageReadFunction;
         readonly PageWriteFunctionManager PageWriteFunction;
 
+        /// <summary>
+        /// Current clock cycle
+        /// </summary>
         public UInt64 Clock { get => Get_6809_Clock(State); set => Set_6809_Clock(State, value); }
+
+        /// <summary>
+        /// Gets/sets A register
+        /// </summary>
         public byte A { get => Get_6809_A(State); set => Set_6809_A(State, value); }
+
+        /// <summary>
+        /// Gets/sets B register
+        /// </summary>
         public byte B { get => Get_6809_B(State); set => Set_6809_B(State, value); }
+
+        /// <summary>
+        /// Gets/sets DP register
+        /// </summary>
         public byte DP { get => Get_6809_DP(State); set => Set_6809_DP(State, value); }
+
+        /// <summary>
+        /// Gets/sets CC register
+        /// </summary>
         public byte CC { get => Get_6809_B(State); set => Set_6809_CC(State, value); }
+
+        /// <summary>
+        /// Gets/sets D register
+        /// </summary>
         public UInt16 D { get => Get_6809_D(State); set => Set_6809_D(State, value); }
+
+        /// <summary>
+        /// Gets/sets X register
+        /// </summary>
         public UInt16 X { get => Get_6809_X(State); set => Set_6809_X(State, value); }
+
+        /// <summary>
+        /// Gets/sets Y register
+        /// </summary>
         public UInt16 Y { get => Get_6809_Y(State); set => Set_6809_Y(State, value); }
+
+        /// <summary>
+        /// Gets/sets U register
+        /// </summary>
         public UInt16 U { get => Get_6809_U(State); set => Set_6809_U(State, value); }
+
+        /// <summary>
+        /// Gets/sets SP register
+        /// </summary>
         public UInt16 SP { get => Get_6809_SP(State); set => Set_6809_SP(State, value); }
+
+        /// <summary>
+        /// Gets/sets PC register
+        /// </summary>
         public UInt16 PC { get => Get_6809_PC(State); set => Set_6809_PC(State, value); }
 
+
+        /// <summary>
+        /// Gets/sets NMI assert
+        /// </summary>
         public bool NMI { get => Get_6809_NMI(State); set => Set_6809_NMI(State, value); }
+
+        /// <summary>
+        /// Gets/sets FIRQ assert
+        /// </summary>
         public bool FIRQ { get => Get_6809_FIRQ(State); set => Set_6809_FIRQ(State, value); }
+
+        /// <summary>
+        /// Gets/sets IRQ assert
+        /// </summary>
         public bool IRQ { get => Get_6809_IRQ(State); set => Set_6809_IRQ(State, value); }
 
         readonly IntPtr State;
@@ -229,7 +284,7 @@ namespace I_Robot
 
 
 
-#region IO
+        #region IO
 
         public void SetPageIO(byte page, byte* ptr)
         {
@@ -327,13 +382,13 @@ namespace I_Robot
             }
         }
 
-#endregion
+        #endregion
 
         /// <summary>
         /// Resets the 6809 and registers a periodic callback
         /// </summary>
-        /// <param name="callback"></param>
-        /// <param name="cycles"></param>
+        /// <param name="callback">callback delegate which will be called periodically</param>
+        /// <param name="cycles">callback will be called this number of cycles</param>
         public void Reset(PeriodicDelegate? callback, double cycles)
         {
             M6809_Reset(State, callback, cycles);
@@ -347,7 +402,7 @@ namespace I_Robot
             Reset(null, 0);
         }
 
-       /// <summary>
+        /// <summary>
         /// Executes the specified number of machine cycles
         /// </summary>
         /// <param name="cyclesToRun">number of machine cycles to execute</param>

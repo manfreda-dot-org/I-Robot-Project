@@ -92,6 +92,81 @@ namespace I_Robot.Emulation
         }
 
         /// <summary>
+        /// 16-bit instruction for rendering an object
+        /// </summary>
+        public struct ObjectInstruction
+        {
+            readonly UInt16 Value;
+
+            public bool LoadViewMatrix => ((Value & 0x4000) == 0);
+            public bool LoadPrimitiveListAddressAndRotationMatrix => ((Value & 0x0800) == 0);
+            public bool ObjectPositionIsRelative => ((Value & 0x0400) != 0);
+
+            private ObjectInstruction(UInt16 value) { Value = value; }
+
+            //public static implicit operator UInt16(ObjectInstruction word) => word.Value;
+            public static implicit operator ObjectInstruction(UInt16 value) => new ObjectInstruction(value);
+        }
+
+        /// <summary>
+        /// 16-bit instruction for rendering a primitive<br/>
+        /// format:<br/><c>
+        ///    0--- --tt -scc cccc<br/>
+        ///    1-ii --tt -scc cccc<br/>
+        ///    |||| |||| |||| ||||<br/>
+        ///    |||| |||| || \\_\\\\___ 0x003F  color index<br/>
+        ///    |||| |||| | \__________ 0x0040  1 = surface is shaded, 0 = surface is not shaded<br/>
+        ///    |||| ||||  \___________ 0x0080  ???<br/>
+        ///    |||| || \\_____________ 0x0300  render as dot/vector/polygon<br/>
+        ///    |||| | \_______________ 0x0400  0 = absolute position, 1 = relative position<br/>
+        ///    ||||  \________________ 0x0800  ???<br/>
+        ///    || \\__________________ 0x3000  cull branch type<br/>
+        ///    | \____________________ 0x4000  ???<br/>
+        ///     \_____________________ 0x8000  1 = branch culling</c><br/>
+        /// </summary>
+        public struct PrimitiveInstruction
+        {
+            public enum eBranchType
+            {
+                BranchAlways = 0x0000,
+                BranchIfVisible = 0x1000,
+                BranchIfHidden = 0x2000,
+                BranchNever = 0x3000,
+            }
+
+            readonly UInt16 Value;
+
+            public bool IsBranchInstruction => Value >= 0x8000;
+            public eBranchType BranchType => (eBranchType)(Value & 0x3000);
+            public bool SkipRender => (Value & 0x3000) != 0;
+            public RenderMode RenderMode => (Mathbox.RenderMode)Value & Mathbox.RenderMode.Mask;
+            public bool IsShaded => (Value & 0x0040) != 0;
+            public int ColorIndex => Value & 0x3F;
+
+            private PrimitiveInstruction(UInt16 value) { Value = value; }
+
+            //public static implicit operator UInt16(PrimitiveInstruction word) => word.Value;
+            public static implicit operator PrimitiveInstruction(UInt16 value) => new PrimitiveInstruction(value);
+        }
+
+        /// <summary>
+        /// 16-bit instruction for a vertex
+        /// </summary>
+        public struct VertexInstruction
+        {
+            readonly UInt16 Value;
+
+            public bool IsLastVertex => (Value >= 0x8000);
+            public bool IsNormalVector => ((Value & 0x4000) == 0);
+            public int VertexOffset => (Value & 0x3FFF);
+
+            private VertexInstruction(UInt16 value) { Value = value; }
+
+            //public static implicit operator UInt16(VertexInstruction word) => word.Value;
+            public static implicit operator VertexInstruction(UInt16 value) => new VertexInstruction(value);
+        }
+
+        /// <summary>
         /// Enumeration of the different rendering modes that the I, Robot hardware supports
         /// </summary>
         public enum RenderMode : UInt16
@@ -176,9 +251,9 @@ namespace I_Robot.Emulation
             new PinnedBuffer<byte>(0x2000) };
 
         /// <summary>
-        /// A full 32k x 16 bits of Mathbox memory
-        /// Lower 8k x 16 bits of memory are RAM
-        /// remaining memory is from mathbox ROMs
+        /// A full 32k x 16 bits of Mathbox memory<br/>
+        /// Lower 8k x 16 bits of memory are RAM<br/>
+        /// remaining memory is from mathbox ROMs<br/>
         /// </summary>
         public readonly PinnedBuffer<UInt16> Memory16 = new PinnedBuffer<UInt16>(0x8000);
 
@@ -387,11 +462,11 @@ namespace I_Robot.Emulation
         }
 
         /// <summary>
-        /// Pitch function (rotate about X axis).
-        ///
-        ///                     [ 1   0   0  ]
-        ///  matrix = matrix x	[ 0  cos sin ]
-        ///                     [ 0 -sin cos ]
+        /// Pitch function (rotate about X axis).<br/>
+        ///<br/><code>
+        ///                    [ 1   0   0  ]<br/>
+        ///  matrix = matrix x [ 0  cos sin ]<br/>
+        ///                    [ 0 -sin cos ]<br/></code>
         /// </summary>
         /// <param name="pMatrix">pointer to matrix</param>
         /// <param name="sin">sin() of angle to rotate by</param>
@@ -459,9 +534,8 @@ namespace I_Robot.Emulation
         }
 
         /// <summary>
-        /// Matrix multiply 
-        /// performs A x B = C
-        /// result is C transpose
+        /// Matrix multiply<br/> 
+        /// Performs C = Transpose(A x B)<br/>
         /// </summary>
         /// <param name="pA">pointer to first matrix</param>
         /// <param name="pB">pointer to second matrix</param>

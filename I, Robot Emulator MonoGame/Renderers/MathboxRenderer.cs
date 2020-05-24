@@ -138,10 +138,13 @@ namespace I_Robot
             readonly MathboxRenderer Parent;
             readonly DisplayList.Manager DisplayListManager;
             readonly UInt16[] Memory;
-            readonly Vector3[] Vertices = new Vector3[10];
+            readonly Vector3[] Vertices = new Vector3[400]; // 200 is largest I've seen
 
-            UInt16 ObjectVertexTable;
-            UInt16 SurfaceList;
+            UInt16 VertexTableAddr;
+            UInt16 PrimitiveListAddress;
+#if DEBUG
+            int MaxVertices = 0;
+#endif      
 
             public ObjectRenderer(MathboxRenderer mathboxRenderer)
             {
@@ -151,9 +154,9 @@ namespace I_Robot
             }
 
 
-            Vector3 GetVertexFromTable(UInt16 word)
+            Vector3 GetVertexFromTable(VertexInstruction vertex)
             {
-                return Parent.GetVectorAt((UInt16)(ObjectVertexTable + (word & 0x3FFF)));
+                return Parent.GetVectorAt((UInt16)(VertexTableAddr + vertex.VertexOffset));
             }
 
             public void RasterizeObject(UInt16 address)
@@ -165,9 +168,24 @@ namespace I_Robot
                 Parent.EndRender();
             }
 
+
+            /// <summary>
+            /// Parses the list of objects to render
+            /// </summary>
+            /// <param name="address">base address of object list</param>
             public void ParseObjectList(UInt16 address)
             {
-                int index;
+                // address+0  Object position.X
+                // address+1  Object position.Y
+                // address+2  Object position.Z
+                // address+3  Object Instruction
+                // address+4  Address of view matrix
+                //    address+5  Address of rotation matrix (only if specified by instruction)
+                //    address+6  Address of surface list (only if specified by instruction)
+                // address +5 or + 7 first child object
+#if false
+                Debug.WriteLine($"{Memory[address+0].HexString()} {Memory[address + 1].HexString()} {Memory[address + 2].HexString()} {Memory[address + 3].HexString()} {Memory[address + 4].HexString()} {Memory[address + 5].HexString()} {Memory[address + 6].HexString()}");
+#endif
 
                 for (; ; )
                 {
@@ -181,31 +199,30 @@ namespace I_Robot
                     // 0x1000 = ?
                     // 0x0800 = don't load base address or rotation matrix
                     // 0x0400 = x/y/z value is relative offset, not absolute position
-                    UInt16 control = Memory[address + 3];
+                    Mathbox.ObjectInstruction opcode = Memory[address + 3];
 
                     // load camera matrix
-                    if ((control & 0x4000) == 0)
+                    if (opcode.LoadViewMatrix)
                         Parent.LoadViewMatrix(Memory[address + 4]);
 
-                    // Get new base address and rotation matrix if they exist
-                    if ((control & 0x0800) != 0)
-                        index = 5;
-                    else
+                    // Get new primitive list address and rotation matrix if they exist
+                    int childAddr = address + 5;
+                    if (opcode.LoadPrimitiveListAddressAndRotationMatrix)
                     {
-                        SurfaceList = Memory[address + 6];
-                        if (SurfaceList >= 0x8000)
+                        PrimitiveListAddress = Memory[address + 6];
+                        if (PrimitiveListAddress >= 0x8000)
                             return;
                         Parent.LoadRotationMatrix(Memory[address + 5]);
-                        index = 7;
+                        childAddr += 2;
                     }
 
                     // Don't render invalid objects
-                    if (SurfaceList >= 0x8000)
+                    if (PrimitiveListAddress >= 0x8000)
                         return;
 
                     // Determine position of object
                     Vector3 pt = Parent.GetVectorAt(address);
-                    if ((control & 0x0400) != 0)
+                    if (opcode.ObjectPositionIsRelative)
                     {
                         // relative position
                         Parent.WorldPosition += Vector3.Transform(pt, Parent.ViewRotation);
@@ -220,12 +237,12 @@ namespace I_Robot
                     Parent.SetWorldMatrix(ref Parent.WorldPosition, ref Parent.WorldRotation);
 
                     // parese the surfaces in this object
-                    ParseSurfaceList(SurfaceList);
+                    ParsePrimitiveList(PrimitiveListAddress);
 
                     // parse all child objects
                     for (; ; )
                     {
-                        UInt16 child = Memory[address + (index++)];
+                        UInt16 child = Memory[childAddr++];
                         if (child == 0 || child >= 0x8000)
                             return;
                         if (child == 0x0002)
@@ -239,51 +256,54 @@ namespace I_Robot
                 }
             }
 
-            void ParseSurfaceList(UInt16 address)
+            void ParsePrimitiveList(UInt16 address)
             {
                 // get pointer to vertex list
-                ObjectVertexTable = Memory[address++];
+                VertexTableAddr = Memory[address++];
 
                 for (; ; )
                 {
-                    // get face pointer
-                    UInt16 pface = Memory[address++];
+                    // get primitive pointer
+                    UInt16 primitiveAddress = Memory[address++];
 
-                    // exit when end of surface list is encountered
-                    if (pface >= 0x8000)
+                    // exit when end of primitive list is encountered
+                    if (primitiveAddress >= 0x8000)
                         return;
 
                     // get control flags
-                    UInt16 flags = Memory[address++];
+                    PrimitiveInstruction opCode = Memory[address++];
 
                     // fill vertex buffer
-                    bool visible = RenderFace(pface, flags);
+                    bool visible = RenderPrimitive(primitiveAddress, opCode);
 
                     // keep/remove hidden surface 'groups'/'chunks'
                     // 8000 = jump always
                     // 9000 = jump if surface is visible
                     // A000 = jump if this surface is invisible
-                    if ((flags & 0x8000) != 0)
+                    if (opCode.IsBranchInstruction)
                     {
-                        if (((flags & 0x2000) != 0) && visible)
-                            address++;
-                        else if (((flags & 0x1000) != 0) && !visible)
-                            address++;
-                        else
-                            address += Memory[address]; // Int16, could jump forward or backward
+                        // NOTE: branch is Int16, could jump forward or backward
+                        switch (opCode.BranchType)
+                        {
+                            case PrimitiveInstruction.eBranchType.BranchAlways: address += Memory[address]; break;
+                            case PrimitiveInstruction.eBranchType.BranchIfHidden: address += (!visible ? Memory[address] : (UInt16)1); break;
+                            case PrimitiveInstruction.eBranchType.BranchIfVisible:address += (visible ? Memory[address] : (UInt16)1); break;
+                            case PrimitiveInstruction.eBranchType.BranchNever: address++; break;
+                        }
                     }
                 }
             }
 
-            bool RenderFace(UInt16 address, int flags)
+            bool RenderPrimitive(UInt16 address, PrimitiveInstruction opCode)
             {
                 float shade = 0;
 
-                // should we check the normal vector to see if this polygon is visible
-                if ((Memory[address] & 0x4000) == 0)
+                // check if first vertex is a normal vector
+                VertexInstruction vertex = Memory[address];
+                if (vertex.IsNormalVector)
                 {
                     // get the normal vector
-                    Vector3 normal = GetVertexFromTable(Memory[address]);
+                    Vector3 normal = GetVertexFromTable(vertex);
                     normal = Vector3.Transform(normal, Parent.WorldRotation);
 
                     // get the first coordinate
@@ -295,41 +315,47 @@ namespace I_Robot
                         return false; // not visible
 
                     // if shading enabled
-                    if ((flags & 0x0040) != 0)
+                    if (opCode.IsShaded)
                     {
+                        // both values are 14 bit fractional precision
+                        // so dot product must be dividied by 2^(14+14) to normalize from 0.0 - 1.0
+                        // but then we multiply by 8 (2^3) to convert to a pallete index
+                        // so we divide by 2^(14+14-3)
                         const float scale = 1.0f / (1 << 25);
                         shade = Vector3.Dot(normal, Parent.Light) * scale;
                         shade = Math.Min(7, Math.Max(0, shade));
                     }
                 }
 
-                if ((flags & 0x3000) != 0)
-                    return true; // don't render
-
-                // prepare color
-                Color color = Parent.GetColor(flags, shade);
+                // should we skip rendering?
+                if (opCode.SkipRender)
+                    return true; // would have been visible
 
                 // prepare the vertex buffer
-                BuildNewPrimitive(address, color, (Mathbox.RenderMode)flags & Mathbox.RenderMode.Mask);
+                BuildPrimitive(address, Parent.GetColor(opCode.ColorIndex, shade), opCode.RenderMode);
 
                 return true;
             }
 
-            void BuildNewPrimitive(UInt16 address, Color color, Mathbox.RenderMode type)
+            void BuildPrimitive(UInt16 address, Color color, Mathbox.RenderMode renderMode)
             {
                 // add points to buffer
-                for (int index = 0; ;)
+                for (int numVertices = 0; ;)
                 {
-                    UInt16 word = Memory[++address];
-
-                    Vector3 pt = GetVertexFromTable(word);
-                    pt = Vector3.Transform(pt, Parent.D3DTS_WORLD);
-                    Vertices[index++] = pt;
+                    VertexInstruction vertex = Memory[++address];
+                    Vertices[numVertices++] = Vector3.Transform(GetVertexFromTable(vertex), Parent.D3DTS_WORLD);
 
                     // is this the last point of the plygon?
-                    if ((word & 0x8000) != 0)
+                    if (vertex.IsLastVertex)
                     {
-                        DisplayListManager.AddPrimitive(Vertices, index, color, type);
+#if DEBUG
+                        if (MaxVertices < numVertices)
+                        {
+                            MaxVertices = numVertices;
+                            Debug.WriteLine($"Max Vertices = {MaxVertices}");
+                        }
+#endif
+                        DisplayListManager.AddPrimitive(Vertices, numVertices, color, renderMode);
                         return;
                     }
                 }
@@ -745,7 +771,7 @@ namespace I_Robot
                 b.Dispose();
         }
 
-        #region HELPER
+#region HELPER
 
         Vector3 GetVectorAt(UInt16 address)
         {
@@ -782,9 +808,9 @@ namespace I_Robot
                 address = 0x15;
             WorldRotation = GetMatrix4At(address);
         }
-        #endregion
+#endregion
 
-        #region RASTERIZER
+#region RASTERIZER
 
         void StartRender()
         {
@@ -822,9 +848,9 @@ namespace I_Robot
             D3DTS_WORLD = rotation * Matrix.CreateTranslation(position);
         }
 
-        #endregion
+#endregion
 
-        #region EMULATOR INTERFACE
+#region EMULATOR INTERFACE
 
         bool IRasterizer.EXT_DONE => mEXT_DONE;
 
@@ -855,9 +881,9 @@ namespace I_Robot
 
         void IRasterizer.UnknownCommand() { }
 
-        #endregion
+#endregion
 
-        #region GAME SCREEN
+#region GAME SCREEN
 
         /// <summary>
         /// Renders any queued display lists
@@ -960,6 +986,6 @@ namespace I_Robot
             ScreenManager.SpriteBatch.End();
         }
 
-        #endregion
+#endregion
     }
 }
