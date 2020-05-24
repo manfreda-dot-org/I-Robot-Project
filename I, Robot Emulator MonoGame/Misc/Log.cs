@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 
 namespace I_Robot
@@ -24,7 +25,6 @@ namespace I_Robot
     {
         static public void LogMessage(string s)
         {
-            System.Diagnostics.Debug.WriteLine(s);
             Trace.WriteLine(s);
             //System.Windows.Forms.MessageBox.Show(s, "Message");
         }

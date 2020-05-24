@@ -54,12 +54,13 @@ namespace I_Robot
         public readonly ScreenManager ScreenManager;
 
         Machine mMachine;
+
         public Machine Machine
         {
             get => mMachine;
             set {
                 mMachine = value; 
-                Memory = value.Mathbox.Memory;
+                Memory = value.Mathbox.Memory16;
                 Playfield.Memory = Memory;
             }
         }
@@ -114,11 +115,11 @@ namespace I_Robot
         RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
         public Texture2D Texture => ScreenBuffer;
 
+        bool mERASE = true;
         bool mEXT_DONE = true;
 
-
         // Pointer to Mathbox memory
-        UInt16* Memory;
+        UInt16[] Memory;
 
         Vector3 Light;
         Vector3 ViewPosition;
@@ -139,15 +140,15 @@ namespace I_Robot
             readonly Vector3[] Vertices = new Vector3[10];
 
             // Pointer to Mathbox memory
-            public UInt16* Memory;
+            public UInt16[] Memory;
 
             class RowInfo
             {
                 public int Count;
                 public int ObjectCount;
-                public UInt16* Prev;
-                public UInt16* This;
-                public UInt16* Next;
+                public UInt16 Prev;
+                public UInt16 This;
+                public UInt16 Next;
             }
 
             Mathbox.RenderMode Mode;
@@ -227,9 +228,9 @@ namespace I_Robot
             {
                 // Get address of the three rows that determine how tiles
                 // in the current row are drawn
-                Row.Prev = &Memory[TileTableBaseAddress + 16 * ((row - 1) & 31)];
-                Row.This = &Memory[TileTableBaseAddress + 16 * row];
-                Row.Next = &Memory[TileTableBaseAddress + 16 * ((row + 1) & 31)];
+                Row.Prev = (UInt16)( TileTableBaseAddress + 16 * ((row - 1) & 31));
+                Row.This = (UInt16)(TileTableBaseAddress + 16 * row);
+                Row.Next = (UInt16)(TileTableBaseAddress + 16 * ((row + 1) & 31));
 
                 // there are 15 tiles per row
                 // some are to the left of the camera, some to the right
@@ -326,7 +327,7 @@ namespace I_Robot
                 //          TileG   TileH
 
                 // get this tile
-                Tile TileA = Row.This[(index + 0) & 15];
+                Tile TileA = Memory[Row.This + ((index + 0) & 15)];
 
                 // check if object must be rendered with this tile
                 if (TileA.HoldsObject)
@@ -356,9 +357,9 @@ namespace I_Robot
                 float z2 = corner.Z + Tile.DEPTH_Z;
 
                 // determine tile height offset
-                Tile TileB = Row.This[(index + 1) & 15];
-                Tile TileC = Row.Next[(index + 1) & 15];
-                Tile TileD = Row.Next[(index + 0) & 15];
+                Tile TileB = Memory[Row.This + ((index + 1) & 15)];
+                Tile TileC = Memory[Row.Next + ((index + 1) & 15)];
+                Tile TileD = Memory[Row.Next + ((index + 0) & 15)];
                 TILE_HEIGHT height = GetTileHeight(TileA, TileB, TileC, TileD);
 
                 // draw left or right side of cube
@@ -372,8 +373,8 @@ namespace I_Robot
                         side.b = side.c = -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y;
                     else
                     {
-                        Tile TileE = Row.This[(index - 1) & 15];
-                        Tile TileF = Row.Next[(index - 1) & 15];
+                        Tile TileE = Memory[Row.This + ((index - 1) & 15)];
+                        Tile TileF = Memory[Row.Next + ((index - 1) & 15)];
                         side = GetTileHeight(TileE, TileA, TileD, TileF);
                     }
 
@@ -421,8 +422,8 @@ namespace I_Robot
                         side.c = side.d = -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y;
                     else
                     {
-                        Tile TileG = Row.Prev[(index + 0) & 15];
-                        Tile TileH = Row.Prev[(index + 1) & 15];
+                        Tile TileG = Memory[Row.Prev + ((index + 0) & 15)];
+                        Tile TileH = Memory[Row.Prev + ((index + 10) & 15)];
                         side = GetTileHeight(TileG, TileH, TileB, TileA);
                     }
                     if (height.a < side.d || height.b < side.c)
@@ -540,7 +541,7 @@ namespace I_Robot
         Vector3 GetVectorAt(UInt16 address)
         {
             System.Diagnostics.Debug.Assert(address <= (0x8000 - 3));
-            return ((Mathbox.Vector3*)&Memory[address])->ToVector();
+            return new Vector3((Int16)Memory[address], (Int16)Memory[address + 1], (Int16)Memory[address + 2]);
         }
 
         Vector3 GetVertexFromTable(UInt16 word)
@@ -548,16 +549,16 @@ namespace I_Robot
             return GetVectorAt((UInt16)(ObjectVertexTable + (word & 0x3FFF)));
         }
 
-        Matrix3x3 GetMatrix3At(UInt16 address)
-        {
-            System.Diagnostics.Debug.Assert(address <= (0x8000 - 18));
-            return ((Mathbox.Matrix*)&Memory[address])->ToMatrix3();
-        }
-
         Matrix GetMatrix4At(UInt16 address)
         {
             System.Diagnostics.Debug.Assert(address <= (0x8000 - 18));
-            return ((Mathbox.Matrix*)&Memory[address])->ToMatrix4();
+
+            const float scale = 1.0f / 0x4000;
+            return new Matrix(
+                (Int16)Memory[address + 0] * scale, (Int16)Memory[address + 3] * scale, (Int16)Memory[address + 6] * scale, 0,
+                (Int16)Memory[address + 1] * scale, (Int16)Memory[address + 4] * scale, (Int16)Memory[address + 7] * scale, 0,
+                (Int16)Memory[address + 2] * scale, (Int16)Memory[address + 5] * scale, (Int16)Memory[address + 8] * scale, 0,
+                0, 0, 0, 1);
         }
 
         void LoadLightVector() { Light = GetVectorAt(LIGHT_ADDRESS); }
@@ -777,12 +778,10 @@ namespace I_Robot
 
         void BuildNewPrimitive(UInt16 address, Color color, Mathbox.RenderMode type)
         {
-            UInt16* pface = &Memory[address + 1];
-
             // add points to buffer
             for (int index = 0; ;)
             {
-                UInt16 word = *pface++;
+                UInt16 word = Memory[++address];
 
                 Vector3 pt = GetVertexFromTable(word);
                 pt = Vector3.Transform(pt, WorldRotation) + WorldPosition;
@@ -805,17 +804,23 @@ namespace I_Robot
 
         bool IRasterizer.EXT_DONE => mEXT_DONE;
 
-        void IRasterizer.EXT_START(bool bufsel, bool erase)
+        void IRasterizer.ERASE(bool bufsel)
+        {
+            mERASE = true;
+        }
+
+        void IRasterizer.EXT_START(bool bufsel)
         {
             // simulate rasterizer being busy
             mEXT_DONE = false;
-
 
             // select buffer as necessary
             //BUFSEL = bufsel
 
             // commit the new display list
-            DisplayListManager.CommitDisplayList(erase); // commit the display list
+            DisplayListManager.CommitDisplayList(mERASE); // commit the display list
+            Machine.EmulatorTrace($"CommitDisplayList({mERASE})");
+            mERASE = false;
 
             // simulate rasterizer being done
             // technically this should take place after rendering is complete

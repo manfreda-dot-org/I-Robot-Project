@@ -70,6 +70,7 @@ namespace I_Robot.Emulation
                 if (mBankSelect != value)
                 {
                     mBankSelect = value;
+                    //EmulatorTrace($"Bank 0800 = {value}");
 
                     // setup M6809 page read/write pointers
                     if (value < Bank.Length)

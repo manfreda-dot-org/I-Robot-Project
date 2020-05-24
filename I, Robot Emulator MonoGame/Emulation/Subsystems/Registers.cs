@@ -430,7 +430,14 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Writes to this register reset the IRQ line
         /// </summary>
-        public byte CLEAR_IRQ { set { Machine.M6809E.IRQ = false; } }
+        public byte CLEAR_IRQ 
+        {
+            set 
+            {
+                //EmulatorTrace("CLEAR_IRQ");
+                Machine.M6809E.IRQ = false; 
+            }
+        }
 
         /// <summary>
         /// Writes to this register reset the hardware watchdog
@@ -440,7 +447,14 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Writes to this register reset the FIRQ line
         /// </summary>
-        public byte CLEAR_FIRQ { set { Machine.M6809E.FIRQ = false; } }
+        public byte CLEAR_FIRQ
+        {
+            set
+            {
+                //EmulatorTrace("CLEAR_FIRQ");
+                Machine.M6809E.FIRQ = false;
+            }
+        }
 
         /// <summary>
         /// Writes to this register control bank switching at 2000 - 3FFF, mathbox start, and video processor start

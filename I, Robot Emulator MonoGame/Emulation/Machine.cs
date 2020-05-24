@@ -164,6 +164,10 @@ namespace I_Robot.Emulation
             /// <param name="info">The System.Runtime.Serialization.SerializationInfo to populate with data.</param>
             /// <param name="context">The destination (see System.Runtime.Serialization.StreamingContext) for this serialization.</param>
             abstract public void GetObjectData(SerializationInfo info, StreamingContext context);
+
+            [Conditional("ENABLE_EMULATOR_TRACE")]
+            public void EmulatorTrace(string s) => Machine.EmulatorTrace(s);
+
         }
 
         class SpeedThrottler
@@ -206,62 +210,6 @@ namespace I_Robot.Emulation
             }
         }
 
-        public readonly LEDs LEDs;
-        public readonly CoinCounters CoinCounters;
-
-        public readonly M6809E M6809E = new M6809E();
-
-        public readonly RAM_0000 RAM_0000;
-        public readonly RAM_0800 RAM_0800;
-        public readonly EEPROM EEPROM;
-        public readonly Bank_2000 Bank_2000;
-        public readonly ProgROM ProgROM;
-
-        public readonly ADC ADC;
-        public readonly Alphanumerics Alphanumerics;
-        public readonly Mathbox Mathbox;
-        public readonly Palette Palette;
-        public readonly Quad_POKEY Quad_POKEY;
-        public readonly Registers Registers;
-        public readonly VideoProcessor VideoProcessor;
-
-        readonly List<Subsystem> Subsystems = new List<Subsystem>();
-
-        readonly SpeedThrottler Throttle = new SpeedThrottler();
-
-        byte mScanline = 0;
-        public byte Scanline
-        {
-            get => mScanline;
-            private set
-            {
-                mScanline = value;
-                //  IRQ asserted on lines:   48, 112, 176, 240
-                //  IRQ deasserted on lines: 16,  80, 144, 208
-                if ((Scanline & 0x10) == 0x10)
-                    M6809E.IRQ = (((Scanline - 16) & 0x20) != 0);
-            }
-        }
-
-        public bool VBLANK { get { return Scanline >= VBLANK_SCANLINE; } }
-
-        public bool Paused = false;
-
-        Int32 CyclesToRun = 0;
-
-        const byte CALLBACK_SCANLINES = 16;
-
-        readonly M6809E.PeriodicDelegate ScanlineCallback;
-
-        readonly Thread Thread;
-        readonly object Lock = new object();
-        bool mDisposed = false;
-
-        public double FPS { get; private set; }
-        readonly TimeAccumulator FPS_Time = new TimeAccumulator();
-        int FrameCount = 0;
-
-
         class TimeAccumulator
         {
             Stopwatch Stopwatch = new Stopwatch();
@@ -291,6 +239,85 @@ namespace I_Robot.Emulation
         }
 
         public readonly RomSet Roms;
+
+        readonly List<Subsystem> Subsystems = new List<Subsystem>();
+        readonly SpeedThrottler Throttle = new SpeedThrottler();
+
+        public readonly M6809E M6809E = new M6809E();
+
+        public readonly LEDs LEDs;
+        public readonly CoinCounters CoinCounters;
+
+        public readonly RAM_0000 RAM_0000;
+        public readonly RAM_0800 RAM_0800;
+        public readonly EEPROM EEPROM;
+        public readonly Bank_2000 Bank_2000;
+        public readonly ProgROM ProgROM;
+
+        public readonly ADC ADC;
+        public readonly Alphanumerics Alphanumerics;
+        public readonly Mathbox Mathbox;
+        public readonly Palette Palette;
+        public readonly Quad_POKEY Quad_POKEY;
+        public readonly Registers Registers;
+        public readonly VideoProcessor VideoProcessor;
+
+        public bool Paused = false;
+
+        Int32 CyclesToRun = 0;
+
+        const byte CALLBACK_SCANLINES = 16;
+
+        readonly M6809E.PeriodicDelegate ScanlineCallback;
+
+        readonly Thread Thread;
+        readonly object Lock = new object();
+        bool mDisposed = false;
+
+        readonly TimeAccumulator FPS_Time = new TimeAccumulator();
+        int FrameCount = 0;
+
+        #region PROPERTIES
+
+        /// <summary>
+        /// Current scanline being emulated
+        /// </summary>
+        public byte Scanline
+        {
+            get => mScanline;
+            private set
+            {
+                mScanline = value;
+                VBLANK = (value >= VBLANK_SCANLINE);
+                //  IRQ asserted on lines:   48, 112, 176, 240
+                //  IRQ deasserted on lines: 16,  80, 144, 208
+                if ((Scanline & 0x10) == 0x10)
+                    M6809E.IRQ = (((Scanline - 16) & 0x20) != 0);
+            }
+        }
+        byte mScanline = 0;
+
+        /// <summary>
+        /// VBLANK hardware signal
+        /// </summary>
+        public bool VBLANK
+        {
+            get => mVBLANK;
+            private set
+            {
+                if (mVBLANK != value)
+                {
+                    mVBLANK = value;
+                    EmulatorTrace($"VBLANK = {value}");
+                }
+            }
+        }
+        bool mVBLANK = false;
+
+        public double FPS { get; private set; }
+
+        #endregion
+
 
         public Machine(RomSet roms, IRasterizer rasterizer)
         {
@@ -377,11 +404,11 @@ namespace I_Robot.Emulation
                 if (mDisposed)
                     return;
 
-                System.Diagnostics.Debug.WriteLine($"Machine reset: {type}");
+                EmulatorTrace($"Machine reset: {type}");
 
                 foreach (Subsystem subsystem in Subsystems)
                 {
-                    System.Diagnostics.Debug.WriteLine($"\tReset: {subsystem.Name}");
+                    EmulatorTrace($"\tReset: {subsystem.Name}");
                     subsystem.Reset();
                 }
 
@@ -442,13 +469,13 @@ namespace I_Robot.Emulation
 
         UInt32 LastInstruction = 0;
 
-        [Conditional("DEBUG")]
-        public void TraceSignal(string s)
+        [Conditional("ENABLE_EMULATOR_TRACE")]
+        public void EmulatorTrace(string s)
         {
             UInt32 prev = LastInstruction;
             LastInstruction = (UInt32)M6809E.Clock;
             UInt32 delta = LastInstruction - prev;
-            System.Diagnostics.Debug.WriteLine($"Delta {delta.ToString("0000000")}  {s}");
+            System.Diagnostics.Trace.WriteLine($"Delta {delta.ToString("0000000")}  {s}");
         }
 
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)

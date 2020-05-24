@@ -57,7 +57,6 @@ namespace I_Robot.Emulation
 
         public override void Reset()
         {
-
         }
 
         /// <summary>
@@ -71,7 +70,7 @@ namespace I_Robot.Emulation
                 if (mBUFSEL != value)
                 {
                     mBUFSEL = value;
-                    Machine.TraceSignal($"BUFSEL = {value}");
+                    EmulatorTrace($"BUFSEL = {value}");
                 }
             }
         }
@@ -87,7 +86,15 @@ namespace I_Robot.Emulation
                 if (mERASE != value)
                 {
                     mERASE = value;
-                    Machine.TraceSignal($"ERASE = {value}");
+                    if (value)
+                    {
+                        EmulatorTrace($"ERASE(BUFSEL={BUFSEL})");
+                        Rasterizer.ERASE(BUFSEL);
+                    }
+#if false
+                    else
+                        EmulatorTrace($"ERASE = False");
+#endif
                 }
             }
         }
@@ -103,14 +110,16 @@ namespace I_Robot.Emulation
                 if (mEXT_START != value)
                 {
                     mEXT_START = value;
-                    if (!value)
-                        Machine.TraceSignal($"EXT_START = false");
                     // start rasterizer on assertion
                     if (value)
                     {
-                        Rasterizer.EXT_START(ERASE, BUFSEL);
-                        Machine.TraceSignal($"EXT_START(erase={ERASE}, bufsel={BUFSEL})");
+                        EmulatorTrace($"EXT_START(BUFSEL={BUFSEL})");
+                        Rasterizer.EXT_START(BUFSEL);
                     }
+#if false
+                    else
+                        EmulatorTrace($"EXT_START = False");
+#endif
                 }
             }
         }

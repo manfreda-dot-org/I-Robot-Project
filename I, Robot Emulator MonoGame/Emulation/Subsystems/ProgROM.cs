@@ -93,7 +93,7 @@ namespace I_Robot.Emulation
             // hacks / cheats
             //Patch(0x828E, new byte[] { 0x01 }); // collisions disabled
             Patch(0x9707, new byte[] { BRA }); // can always jump to pyramid
-            Patch(0xD83F, new byte[] { BRA }); // space chase object can't collide
+            //Patch(0xD83F, new byte[] { BRA }); // space chase object can't collide
 
             // graphical improvements
             Patch(0xDBCF, new byte[] { NOP, NOP }); // tetras rotate even when far away
@@ -141,6 +141,7 @@ namespace I_Robot.Emulation
                 if (mBankSelect != value)
                 {
                     mBankSelect = value;
+                    //EmulatorTrace($"Bank 4000 = {value}");
 
                     // setup M6809 page read pointers
                     if (value < Bank_4000.Length)

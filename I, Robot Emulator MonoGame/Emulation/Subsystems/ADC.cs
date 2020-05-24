@@ -46,9 +46,15 @@ namespace I_Robot.Emulation
                 {
                     // writes to this range kickff ADC conversions of joystick values
                     if ((address & 0x1) == 0)
+                    {
+                        //EmulatorTrace("ADC_START(Y_AXIS)");
                         ADC_RESULT = Joystick.ADC_Y;
+                    }
                     else
+                    {
+                        //EmulatorTrace("ADC_START(X_AXIS)");
                         ADC_RESULT = Joystick.ADC_X;
+                    }
                 });
         }
         public override void Dispose()

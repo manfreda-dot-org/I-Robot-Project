@@ -15,6 +15,7 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
+using System.Windows.Documents;
 
 namespace I_Robot.Emulation
 {
@@ -29,11 +30,16 @@ namespace I_Robot.Emulation
         Machine Machine { set; }
 
         /// <summary>
+        /// Called when game program asserts ERASE
+        /// </summary>
+        /// <param name="BUFSEL">buffer to erase</param>
+        void ERASE(bool BUFSEL);
+
+        /// <summary>
         /// Called when game program asserts EXT_START
         /// </summary>
         /// <param name="BUFSEL">buffer to render to</param>
-        /// <param name="ERASE">true if buffer should be erased before rendering</param>
-        void EXT_START(bool BUFSEL, bool ERASE);
+        void EXT_START(bool BUFSEL);
 
         /// <summary>
         /// Gets the state of the video processor

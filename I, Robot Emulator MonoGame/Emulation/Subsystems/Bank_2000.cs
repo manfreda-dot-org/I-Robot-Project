@@ -98,8 +98,7 @@ namespace I_Robot.Emulation
             if (BankSelect != bank)
             {
                 BankSelect = bank;
-
-                // System.Diagnostics.Debug.WriteLine($"Bank 2000: OUT0 = {out0.HexString()}  EXT_COM_SWAP = {Machine.Registers.STATWR.EXT_COM_SWAP}");
+                EmulatorTrace($"Bank 2000: {bank}");
 
                 switch (bank)
                 {
