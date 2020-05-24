@@ -24,6 +24,9 @@ namespace I_Robot.Emulation
     /// </summary>
     public interface IRasterizer : IDisposable
     {
+        /// <summary>
+        /// Interface for a factory that can create a rasterizer for the emulator.
+        /// </summary>
         public interface Factory
         {
             /// <summary>

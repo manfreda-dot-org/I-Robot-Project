@@ -203,7 +203,8 @@ namespace I_Robot
             // now assemble the screen
             GraphicsDevice.SetRenderTarget(null);
             MathboxRenderer.Draw(GraphicsDevice);
-            Alphanumerics.Draw(GraphicsDevice);
+            if (Settings.ShowAlphanumerics)
+                Alphanumerics.Draw(GraphicsDevice);
 
             if (Settings.ShowFPS)
             {

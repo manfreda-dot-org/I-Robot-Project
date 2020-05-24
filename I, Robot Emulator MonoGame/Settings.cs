@@ -110,6 +110,17 @@ namespace I_Robot
             }
         }
 
+        static public bool ShowAlphanumerics
+        {
+            get => Properties.Settings.Default.ShowAlphanumerics;
+            set
+            {
+                Properties.Settings.Default.ShowAlphanumerics = value;
+                Properties.Settings.Default.Save();
+            }
+        }
+
+
         static public bool ShowDots
         {
             get => Properties.Settings.Default.ShowDots;

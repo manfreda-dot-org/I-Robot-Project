@@ -29,18 +29,27 @@ namespace I_Robot
             : base(screenManager, "RENDERING")
         {
             // Create our menu items
-            MenuItems.Add(new MenuItem(ShowDotsText, ShowDotsMenuSelected));
+            MenuItems.Add(new MenuItem(ShowAlphanumericsText, ShowOverlayMenuSelected));
+            MenuItems.Add(new MenuItem(ShowDotsText, ShowDotsMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem(ShowVectorsText, ShowVectorsMenuSelected));
             MenuItems.Add(new MenuItem(ShowPolygonsText, ShowPolygonsMenuSelected));
             MenuItems.Add(new MenuItem(WireframeText, WireframeMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("BACK", OnCancel, 1));
         }
 
-        string ShowDotsText => $"SHOW    DOTS:    {(Settings.ShowDots ? "YES" : "NO")}";
-        string ShowVectorsText => $"SHOW    VECTORS:    {(Settings.ShowVectors ? "YES" : "NO")}";
-        string ShowPolygonsText => $"SHOW    POLYGONS:    {(Settings.ShowPolygons ? "YES" : "NO")}";
+        string ShowAlphanumericsText => $"ALPHANUMERICS    OVERLAY:    {(Settings.ShowAlphanumerics ? "ON" : "OFF")}";
+        string ShowDotsText => $"RENDER    DOTS:    {(Settings.ShowDots ? "YES" : "NO")}";
+        string ShowVectorsText => $"RENDER    VECTORS:    {(Settings.ShowVectors ? "YES" : "NO")}";
+        string ShowPolygonsText => $"RENDER    POLYGONS:    {(Settings.ShowPolygons ? "YES" : "NO")}";
         string WireframeText => $"RENDERING    MODE:    {(Settings.Wireframe ? "WIREFRAME" : "NORMAL")}";
 
+
+
+        void ShowOverlayMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            Settings.ShowAlphanumerics = !Settings.ShowAlphanumerics;
+            if (sender is MenuItem item) item.Text = ShowAlphanumericsText;
+        }
 
         void ShowDotsMenuSelected(object? sender, PlayerIndexEventArgs e)
         {

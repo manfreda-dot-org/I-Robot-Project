@@ -178,5 +178,17 @@ namespace I_Robot.Properties {
                 this["ShowFPS"] = value;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("True")]
+        public bool ShowAlphanumerics {
+            get {
+                return ((bool)(this["ShowAlphanumerics"]));
+            }
+            set {
+                this["ShowAlphanumerics"] = value;
+            }
+        }
     }
 }
