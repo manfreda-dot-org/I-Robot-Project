@@ -616,10 +616,10 @@ namespace I_Robot
                     // draw if tile to the left is lower than current tile
                     if (height.a < side.b || height.d < side.c)
                     {
-                        Vertices[0] = new Vector3(x1, height.a, z1);
-                        Vertices[1] = new Vector3(x1, height.d, z2);
-                        Vertices[2] = new Vector3(x1, side.c, z2);
-                        Vertices[3] = new Vector3(x1, side.b, z1);
+                        Vertices[0] = Vector3.Transform(new Vector3(x1, height.a, z1), Parent.D3DTS_WORLD);
+                        Vertices[1] = Vector3.Transform(new Vector3(x1, height.d, z2), Parent.D3DTS_WORLD);
+                        Vertices[2] = Vector3.Transform(new Vector3(x1, side.c, z2), Parent.D3DTS_WORLD);
+                        Vertices[3] = Vector3.Transform(new Vector3(x1, side.b, z1), Parent.D3DTS_WORLD);
                         DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex - 1), Mode);
                     }
                 }
@@ -637,10 +637,10 @@ namespace I_Robot
                     // draw if tile to the right is lower than current tile
                     if (height.b < side.a || height.c < side.d)
                     {
-                        Vertices[0] = new Vector3(x2, height.b, z1);
-                        Vertices[1] = new Vector3(x2, side.a, z1);
-                        Vertices[2] = new Vector3(x2, side.d, z2);
-                        Vertices[3] = new Vector3(x2, height.c, z2);
+                        Vertices[0] = Vector3.Transform(new Vector3(x2, height.b, z1), Parent.D3DTS_WORLD);
+                        Vertices[1] = Vector3.Transform(new Vector3(x2, side.a, z1), Parent.D3DTS_WORLD);
+                        Vertices[2] = Vector3.Transform(new Vector3(x2, side.d, z2), Parent.D3DTS_WORLD);
+                        Vertices[3] = Vector3.Transform(new Vector3(x2, height.c, z2), Parent.D3DTS_WORLD);
                         DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex - 1), Mode);
                     }
                 }
@@ -663,19 +663,19 @@ namespace I_Robot
                     }
                     if (height.a < side.d || height.b < side.c)
                     {
-                        Vertices[0] = new Vector3(x1, height.a, z1);
-                        Vertices[1] = new Vector3(x1, side.d, z1);
-                        Vertices[2] = new Vector3(x2, side.c, z1);
-                        Vertices[3] = new Vector3(x2, height.b, z1);
+                        Vertices[0] = Vector3.Transform(new Vector3(x1, height.a, z1), Parent.D3DTS_WORLD);
+                        Vertices[1] = Vector3.Transform(new Vector3(x1, side.d, z1), Parent.D3DTS_WORLD);
+                        Vertices[2] = Vector3.Transform(new Vector3(x2, side.c, z1), Parent.D3DTS_WORLD);
+                        Vertices[3] = Vector3.Transform(new Vector3(x2, height.b, z1), Parent.D3DTS_WORLD);
                         DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex - 2), Mode);
                     }
                 }
 
                 // draw the top of the cube
-                Vertices[0] = new Vector3(x1, height.a, z1);
-                Vertices[1] = new Vector3(x2, height.b, z1);
-                Vertices[2] = new Vector3(x2, height.c, z2);
-                Vertices[3] = new Vector3(x1, height.d, z2);
+                Vertices[0] = Vector3.Transform(new Vector3(x1, height.a, z1), Parent.D3DTS_WORLD);
+                Vertices[1] = Vector3.Transform(new Vector3(x2, height.b, z1), Parent.D3DTS_WORLD);
+                Vertices[2] = Vector3.Transform(new Vector3(x2, height.c, z2), Parent.D3DTS_WORLD);
+                Vertices[3] = Vector3.Transform(new Vector3(x1, height.d, z2), Parent.D3DTS_WORLD);
                 DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mode);
 
                 // special case for rendering solid sloped tiles
@@ -684,10 +684,10 @@ namespace I_Robot
                     DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mathbox.RenderMode.Vector);
 
                 // draw the bottom of the cube
-                Vertices[0] = new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1);
-                Vertices[1] = new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2);
-                Vertices[2] = new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2);
-                Vertices[3] = new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1);
+                Vertices[0] = Vector3.Transform(new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1), Parent.D3DTS_WORLD);
+                Vertices[1] = Vector3.Transform(new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2), Parent.D3DTS_WORLD);
+                Vertices[2] = Vector3.Transform(new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2), Parent.D3DTS_WORLD);
+                Vertices[3] = Vector3.Transform(new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1), Parent.D3DTS_WORLD);
                 DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mode);
             }
         }
