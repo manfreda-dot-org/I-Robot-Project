@@ -48,7 +48,7 @@ namespace I_Robot.Emulation
             /// Default width of a tile along the X axis
             /// </summary>
             public const int WIDTH_X = 128;
-            
+
             public const int DEFAULT_HEIGHT_Y = 256;
 
             /// <summary>
@@ -129,14 +129,16 @@ namespace I_Robot.Emulation
             public enum eBranchType
             {
                 BranchAlways = 0x0000,
-                BranchIfVisible = 0x1000,
-                BranchIfHidden = 0x2000,
-                BranchNever = 0x3000,
+                BranchIfFaceVisible = 0x1000,
+                BranchIfFaceHidden = 0x2000,
+                BranchAlwaysAlias = 0x3000,
             }
 
             readonly UInt16 Value;
 
             public bool IsBranchInstruction => Value >= 0x8000;
+            public bool IsBranchAbsolute => (Value & 0x4000) != 0;
+            public bool IsBranchRelative => (Value & 0x4000) == 0;
             public eBranchType BranchType => (eBranchType)(Value & 0x3000);
             public bool SkipRender => (Value & 0x3000) != 0;
             public RenderMode RenderMode => (Mathbox.RenderMode)Value & Mathbox.RenderMode.Mask;

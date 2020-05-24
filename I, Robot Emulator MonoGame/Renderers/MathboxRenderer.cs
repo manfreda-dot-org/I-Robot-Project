@@ -277,22 +277,26 @@ namespace I_Robot
                     PrimitiveInstruction opCode = Memory[address++];
 
                     // fill vertex buffer
-                    bool visible = RenderPrimitive(primitiveAddress, opCode);
+                    bool faceVisible = RenderPrimitive(primitiveAddress, opCode);
 
                     // keep/remove hidden surface 'groups'/'chunks'
-                    // 8000 = jump always
-                    // 9000 = jump if surface is visible
-                    // A000 = jump if this surface is invisible
                     if (opCode.IsBranchInstruction)
                     {
-                        // NOTE: branch is Int16, could jump forward or backward
+                        // assume we will branch (this takes care of BRA states)
+                        bool branch = true;
+
                         switch (opCode.BranchType)
                         {
-                            case PrimitiveInstruction.eBranchType.BranchAlways: address += Memory[address]; break;
-                            case PrimitiveInstruction.eBranchType.BranchIfHidden: address += (!visible ? Memory[address] : (UInt16)1); break;
-                            case PrimitiveInstruction.eBranchType.BranchIfVisible:address += (visible ? Memory[address] : (UInt16)1); break;
-                            case PrimitiveInstruction.eBranchType.BranchNever: address++; break;
+                            case PrimitiveInstruction.eBranchType.BranchIfFaceHidden: branch = !faceVisible; break;
+                            case PrimitiveInstruction.eBranchType.BranchIfFaceVisible: branch = faceVisible; break;
                         }
+
+                        if (!branch)
+                            address++;
+                        else if (opCode.IsBranchRelative)
+                            address += Memory[address]; // NOTE: branch is Int16, could jump forward or backward
+                        else
+                            address = Memory[address];
                     }
                 }
             }
