@@ -37,6 +37,22 @@ namespace I_Robot
     /// </summary>
     unsafe public class MathboxRenderer : IRasterizer
     {
+        public class Factory : IRasterizer.Factory
+        {
+            readonly ScreenManager ScreenManager;
+
+            public Factory(ScreenManager screenManager)
+            {
+                ScreenManager = screenManager;
+            }
+
+            IRasterizer IRasterizer.Factory.CreateRasterizer(Machine machine)
+            {
+                // All of our screens have empty constructors so we can just use Activator
+                return new MathboxRenderer(machine, ScreenManager);
+            }
+        }
+
         // special addresses in mathbox memory
         const UInt16 VIEW_POSITION_ADDRESS = 0x12;
         const UInt16 LIGHT_ADDRESS = 0x44;
@@ -49,22 +65,6 @@ namespace I_Robot
         const UInt16 PLAYFIELD_Z_FRAC = 0x75;
         const UInt16 PLAYFIELD_X_OFFSET = 0x76;
         const UInt16 PLAYFIELD_Z_OFFSET = 0x77;
-
-        public readonly Game Game;
-        public readonly ScreenManager ScreenManager;
-
-        Machine mMachine;
-
-        public Machine Machine
-        {
-            get => mMachine;
-            set {
-                mMachine = value; 
-                Memory = value.Mathbox.Memory16;
-                Playfield.Memory = Memory;
-            }
-        }
-
 
         class TimeAccumulator
         {
@@ -94,6 +94,13 @@ namespace I_Robot
             }
         }
 
+
+        public readonly Game Game;
+        public readonly ScreenManager ScreenManager;
+
+        readonly Machine Machine;
+        readonly UInt16[] Memory; // Pointer to Mathbox memory
+
         readonly TimeAccumulator Timer = new TimeAccumulator();
         int TotalDots = 0;
         int TotalVectors = 0;
@@ -118,9 +125,6 @@ namespace I_Robot
         bool mERASE = true;
         bool mEXT_DONE = true;
 
-        // Pointer to Mathbox memory
-        UInt16[] Memory;
-
         Vector3 Light;
         Vector3 ViewPosition;
         Matrix ViewRotation;
@@ -140,7 +144,7 @@ namespace I_Robot
             readonly Vector3[] Vertices = new Vector3[10];
 
             // Pointer to Mathbox memory
-            public UInt16[] Memory;
+            readonly UInt16[] Memory;
 
             class RowInfo
             {
@@ -161,6 +165,7 @@ namespace I_Robot
             public PlayfieldRenderer(MathboxRenderer mathboxRenderer)
             {
                 Parent = mathboxRenderer;
+                Memory = Parent.Memory;
                 DisplayListManager = Parent.DisplayListManager;
             }
 
@@ -468,8 +473,10 @@ namespace I_Robot
         Matrix worldMatrix;
         BasicEffect basicEffect;
 
-        public MathboxRenderer(ScreenManager screenManager)
+        MathboxRenderer(Machine machine, ScreenManager screenManager)
         {
+            Machine = machine;
+            Memory = Machine.Mathbox.Memory16;
             ScreenManager = screenManager;
 
             if (!(screenManager.Game is I_Robot.Game game))
@@ -477,6 +484,7 @@ namespace I_Robot
             Game = game;
 
             DisplayListManager = new DisplayList.Manager(this);
+            Playfield = new PlayfieldRenderer(this);
 
             // create our scene buffer
             // this buffer has a z-buffer
@@ -505,8 +513,6 @@ namespace I_Robot
                     0,
                     RenderTargetUsage.PreserveContents);
             }
-
-            Playfield = new PlayfieldRenderer(this);
 
             //Setup Camera
             camTarget = new Vector3(0f, 0f, 1f);

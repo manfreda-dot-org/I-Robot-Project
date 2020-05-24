@@ -98,11 +98,8 @@ namespace I_Robot
             // read the ROMs
             if (RomSet.ReadRomSetFromZipArchive("irobot.zip", out RomSet? roms, out string? errMsg) && roms != null)
             {
-                // create a renderer that can interpret and rasterize game commands
-                mMathboxRenderer = new MathboxRenderer(ScreenManager);
-
                 // now create the hardware
-                mMachine = new Emulation.Machine(roms, mMathboxRenderer);
+                mMachine = new Emulation.Machine(roms, new MathboxRenderer.Factory(ScreenManager));
             }
 
             LoadingScreen.Load(ScreenManager, true, null, new GameScreen(ScreenManager));

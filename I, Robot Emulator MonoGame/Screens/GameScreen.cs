@@ -52,6 +52,11 @@ namespace I_Robot
         /// </summary>
         public GameScreen(ScreenManager screenManager) : base(screenManager)
         {
+            if (!(Game.Machine.Rasterizer is MathboxRenderer mathboxRenderer))
+                throw new Exception();
+            MathboxRenderer = mathboxRenderer;
+            Alphanumerics = new AlphanumericsRenderer(this);
+
             TransitionOnTime = TimeSpan.FromSeconds(1.5);
             TransitionOffTime = TimeSpan.FromSeconds(0.5);
 
@@ -59,9 +64,6 @@ namespace I_Robot
                 new Buttons[] { Buttons.Start, Buttons.Back },
                 new Keys[] { Keys.Escape },
                 true);
-
-            MathboxRenderer = Game.MathboxRenderer;
-            Alphanumerics = new AlphanumericsRenderer(this);
         }
 
         /// <summary>

@@ -24,11 +24,16 @@ namespace I_Robot.Emulation
     /// </summary>
     public interface IRasterizer
     {
-        /// <summary>
-        /// Sets a pointer to the machine that the rasterizer interoperates with
-        /// </summary>
-        Machine Machine { set; }
-
+        public interface Factory
+        {
+            /// <summary>
+            /// Creates a rasterizer for the given machine
+            /// </summary>
+            /// <param name="machine">The machine the rasterizer belongs to.</param>
+            /// <returns>The newly created rasterizer.</returns>
+            IRasterizer CreateRasterizer(Machine machine);
+        }
+        
         /// <summary>
         /// Called when game program asserts ERASE
         /// </summary>

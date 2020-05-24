@@ -244,6 +244,7 @@ namespace I_Robot.Emulation
         readonly SpeedThrottler Throttle = new SpeedThrottler();
 
         public readonly M6809E M6809E = new M6809E();
+        public readonly IRasterizer Rasterizer;
 
         public readonly LEDs LEDs;
         public readonly CoinCounters CoinCounters;
@@ -319,7 +320,7 @@ namespace I_Robot.Emulation
         #endregion
 
 
-        public Machine(RomSet roms, IRasterizer rasterizer)
+        public Machine(RomSet roms, IRasterizer.Factory rasterizerFactory)
         {
             Roms = roms;
 
@@ -332,19 +333,19 @@ namespace I_Robot.Emulation
 
             ADC = new ADC(this);
             Alphanumerics = new Alphanumerics(this);
-            Mathbox = new Mathbox(this, rasterizer);
+            Mathbox = new Mathbox(this);
             Palette = new Palette(this);
             Registers = new Registers(this);
-            VideoProcessor = new VideoProcessor(this, rasterizer);
+            VideoProcessor = new VideoProcessor(this);
 
             RAM_0000 = new RAM_0000(this);
             RAM_0800 = new RAM_0800(this);
             EEPROM = new EEPROM(this);
             Bank_2000 = new Bank_2000(this);
 
-            // let the interpreter know about this hardware
+            // create a new rasterizer for this machine
             // must be done after subsystems are loaded
-            rasterizer.Machine = this;
+            Rasterizer = rasterizerFactory.CreateRasterizer(this);
 
             // setup a periodic callback from the 6809 engine to update scanline counter
             ScanlineCallback = new M6809E.PeriodicDelegate(() =>
@@ -408,11 +409,12 @@ namespace I_Robot.Emulation
 
                 foreach (Subsystem subsystem in Subsystems)
                 {
-                    EmulatorTrace($"\tReset: {subsystem.Name}");
+                    EmulatorTrace($"Reset: {subsystem.Name}");
                     subsystem.Reset();
                 }
-
+                EmulatorTrace("Reset: M6809E");
                 M6809E.Reset(ScanlineCallback, CPU_CYCLES_PER_SCANLINE * CALLBACK_SCANLINES);
+                EmulatorTrace(M6809E.ToString());
 
                 Scanline = 0;
                 CyclesToRun = (int)CPU_CYCLES_PER_VIDEO_FRAME;

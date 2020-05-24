@@ -192,11 +192,6 @@ namespace I_Robot.Emulation
         /// </summary>
         public readonly UInt16* Memory;
 
-        /// <summary>
-        /// Interface to the rasterizer that interprets rendering commands
-        /// </summary>
-        readonly IRasterizer Rasterizer;
-
         bool mMATH_START = false;
 
         /// <summary>
@@ -208,12 +203,10 @@ namespace I_Robot.Emulation
         public readonly M6809E.ReadDelegate ReadRamFunction;
         public readonly M6809E.WriteDelegate WriteRamFunction;
 
-        public Mathbox(Machine machine, IRasterizer interpreter) : base(machine, "Mathbox")
+        public Mathbox(Machine machine) : base(machine, "Mathbox")
         {
             Memory = Memory16;
             pData = (byte*)Memory;
-
-            Rasterizer = interpreter;
 
             //  Mathbox     CPU           hi                lo
             //  2000-2FFF   0:2000-3FFF   136029-104[0000]  136029-103[0000]
@@ -352,12 +345,12 @@ namespace I_Robot.Emulation
                             case COMMAND.START_PLAYFIELD:
                                 EmulatorTrace("MATH_START(START_PLAYFIELD)");
                                 // route to interpreter
-                                Rasterizer.RasterizePlayfield();
+                                Machine.Rasterizer.RasterizePlayfield();
                                 break;
                             case COMMAND.UNKNOWN:
                                 EmulatorTrace("MATH_START(UNKNOWN)");
                                 // route to interpreter
-                                Rasterizer.UnknownCommand();
+                                Machine.Rasterizer.UnknownCommand();
                                 break;
                             case COMMAND.ROLL:
                                 EmulatorTrace("MATH_START(ROLL)");
@@ -382,7 +375,7 @@ namespace I_Robot.Emulation
                             default:
                                 EmulatorTrace($"MATH_START({Memory[0].HexString()})");
                                 // route to interpreter
-                                Rasterizer.RasterizeObject(Memory[0]);
+                                Machine.Rasterizer.RasterizeObject(Memory[0]);
                                 break;
                         }
 

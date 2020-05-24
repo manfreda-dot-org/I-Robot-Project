@@ -337,9 +337,6 @@ namespace I_Robot
         public void Reset(PeriodicDelegate? callback, double cycles)
         {
             M6809_Reset(State, callback, cycles);
-
-            Debug.WriteLine("M6809E RESET");
-            Debug.WriteLine(this.ToString());
         }
 
         /// <summary>
