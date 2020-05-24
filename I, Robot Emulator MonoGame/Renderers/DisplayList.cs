@@ -22,6 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Diagnostics;
 
 namespace I_Robot
@@ -109,7 +110,7 @@ namespace I_Robot
         public abstract class Primitive : IDisposable
         {
             // at least 10,000 are needed, not sure of max
-            const int MaxVertices = 20000;
+            const int MaxVertices = 200000;
 
 #if DEBUG
             static int LargestPrimitive = 0;
@@ -243,14 +244,83 @@ namespace I_Robot
             /// </summary>
             public class Vector : Primitive
             {
+                const int NumSides = 6;
+                const float Diameter = 1.5f;
+
                 public Vector(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Polygon) { }
 
                 public int NumVectors { get; private set; }
+                readonly Vector3[] Radials1 = new Vector3[NumSides];
+                readonly Vector3[] Radials2 = new Vector3[NumSides];
 
                 public override void Reset()
                 {
                     base.Reset();
                     NumVectors = 0;
+                }
+
+                protected void AddCylinder(Vector3 point1, Vector3 point2, Color color)
+                {
+                    float radius1 = Diameter / 2 * point1.Z / 512;
+                    float radius2 = Diameter / 2 * point2.Z / 512;
+
+                    Vector3 axis = point2 - point1;
+
+                    // Get two vectors perpendicular to the axis.
+                    Vector3 v1;
+                    if ((axis.Z < -0.01) || (axis.Z > 0.01))
+                        v1 = new Vector3(axis.Z, axis.Z, -axis.X - axis.Y);
+                    else
+                        v1 = new Vector3(-axis.Y - axis.Z, axis.X, axis.X);
+                    v1.Normalize();
+                    Vector3 v2 = Vector3.Cross(v1, axis); v2.Normalize();
+                    Vector3 axis_norm = axis; axis_norm.Normalize();
+
+                    // Make the vectors have length radius.
+                    Vector3 v3 = axis_norm * radius1;
+                    Vector3 v4 = axis_norm * radius2;
+
+                    for (int i = 0; i < NumSides; i++)
+                    {
+                        double theta = i * (2 * Math.PI / NumSides);
+                        Radials1[i] = (float)Math.Cos(theta) * v1 * radius1 + (float)Math.Sin(theta) * v2 * radius1;
+                        Radials2[i] = (float)Math.Cos(theta) * v1 * radius2 + (float)Math.Sin(theta) * v2 * radius2;
+                    }
+
+                    for (int prev = NumSides - 1, i = 0; i < NumSides; prev = i++)
+                    {
+                        //Trace.WriteLine($"{Index}, {NumVectors}");
+                        // end caps
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point1 - v3;
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point1 + Radials1[prev];
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point1 + Radials1[i];
+
+                        // end caps
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point2 + v4;
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point2 + Radials2[prev];
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point2 + Radials2[i];
+
+                        // sides
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point1 + Radials1[prev];
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point2 + Radials2[prev];
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point1 + Radials1[i];
+
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point2 + Radials2[prev];
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point2 + Radials2[i];
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = point1 + Radials1[i];
+                    }
                 }
 
                 public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
@@ -271,58 +341,11 @@ namespace I_Robot
                         }
                         NumPrimitives += numVertices - 1;
                         NumVectors += numVertices - 1;
-
 #else
                         for (int n = 1; n < numVertices; n++)
-                        {
-                            Vector3 l1 = new Vector3(vertices[n - 1].X, vertices[n - 1].Y ,0);
-                            Vector3 l2 = new Vector3(vertices[n].X, vertices[n].Y, 0);
-                            Vector3 norm = l2 - l1;
-                            norm.Normalize();
-                            Vector3 perp = new Vector3(norm.Y, norm.X, 0);
-
-                            float siz1 = Math.Abs(vertices[n - 1].Z - MathboxRenderer.camPosition.Z) / 512;
-                            float siz2 = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 512;
-
-                            // move lines slightly towards view to help avoid z-buffering issues
-                            Vector3 v1 = vertices[n - 1] - siz1*norm; v1.Z -= siz1;
-                            Vector3 v2 = vertices[n - 1] - siz1*perp; v2.Z -= siz1;
-                            Vector3 v3 = vertices[n] - siz2 * perp; v3.Z -= siz2;
-                            Vector3 v4 = vertices[n] + siz2* norm; v4.Z -= siz2;
-                            Vector3 v5 = vertices[n] + siz2 * perp; v5.Z -= siz2;
-                            Vector3 v6 = vertices[n-1] + siz1*perp; v6.Z -= siz1;
-
-
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v1;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v2;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v3;
-
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v1;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v3;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v4;
-
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v1;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v4;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v5;
-
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v1;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v5;
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = v6;
-                        }
+                            AddCylinder(vertices[n - 1], vertices[n], color);
                         NumVectors += numVertices - 1;
-                        NumPrimitives += 4 * (numVertices - 1);
+                        NumPrimitives += 4 * NumSides * (numVertices - 1);
 #endif
                     }
                 }
