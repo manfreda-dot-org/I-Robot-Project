@@ -22,7 +22,7 @@ namespace I_Robot.Emulation
     /// <summary>
     /// Interface to a rasterizer that can interpert I Robot Mathbox commands and build a rasterizable display list
     /// </summary>
-    public interface IRasterizer
+    public interface IRasterizer : IDisposable
     {
         public interface Factory
         {

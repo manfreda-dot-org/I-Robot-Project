@@ -393,6 +393,9 @@ namespace I_Robot.Emulation
 
                         try { M6809E.Dispose(); }
                         catch { }
+
+                        try { Rasterizer.Dispose(); }
+                        catch { }
                     }
                 }
             }

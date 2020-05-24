@@ -30,7 +30,6 @@ namespace I_Robot
     public class Game : Microsoft.Xna.Framework.Game
     {
         Emulation.Machine? mMachine;
-        MathboxRenderer? mMathboxRenderer;
 
         GraphicsDeviceManager Graphics;
         public ScreenManager? ScreenManager;
@@ -61,16 +60,6 @@ namespace I_Robot
                 if (mMachine == null)
                     throw new Exception();
                 return mMachine;
-            }
-        }
-
-        public MathboxRenderer MathboxRenderer
-        {
-            get
-            {
-                if (mMathboxRenderer == null)
-                    throw new Exception();
-                return mMathboxRenderer;
             }
         }
 
