@@ -778,8 +778,7 @@ namespace I_Robot
 
         Vector3 GetVectorAt(UInt16 address)
         {
-            System.Diagnostics.Debug.Assert(address <= (0x8000 - 3));
-            return new Vector3((Int16)Memory[address], (Int16)Memory[address + 1], (Int16)Memory[address + 2]);
+            return new Vector3((Int16)Memory[address & 0x7FFF], (Int16)Memory[(address + 1) & 0x7FFF], (Int16)Memory[(address + 2) & 0x7FFF]);
         }
 
         Matrix GetMatrix4At(UInt16 address)
@@ -931,7 +930,7 @@ namespace I_Robot
                 {
                     graphicsDevice.RasterizerState = new RasterizerState()
                     {
-                        CullMode = CullMode.CullClockwiseFace,
+                        CullMode = CullMode.None,
                         MultiSampleAntiAlias = true,
                     };
                 }

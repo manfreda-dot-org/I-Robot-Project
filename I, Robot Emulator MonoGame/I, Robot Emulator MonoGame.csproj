@@ -10,6 +10,9 @@
     <Platforms>AnyCPU;x86</Platforms>
     <Nullable>enable</Nullable>
     <Configurations>Debug;Release;Trace;Emulator Trace</Configurations>
+    <Copyright>Copyright 2020 John Manfreda, All rights reserved.</Copyright>
+    <PackageProjectUrl>https://github.com/manfreda-dot-org/I-Robot-Project</PackageProjectUrl>
+    <Version>0.0.99</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

@@ -243,7 +243,7 @@ namespace I_Robot
             /// </summary>
             public class Vector : Primitive
             {
-                public Vector(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Vector) { }
+                public Vector(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Polygon) { }
 
                 public int NumVectors { get; private set; }
 
@@ -258,6 +258,7 @@ namespace I_Robot
                     System.Diagnostics.Debug.Assert(numVertices > 1);
                     if (Settings.ShowVectors)
                     {
+#if false
                         for (int n = 1; n < numVertices; n++)
                         {
                             Buffer[Index].Color = color;
@@ -270,6 +271,59 @@ namespace I_Robot
                         }
                         NumPrimitives += numVertices - 1;
                         NumVectors += numVertices - 1;
+
+#else
+                        for (int n = 1; n < numVertices; n++)
+                        {
+                            Vector3 l1 = new Vector3(vertices[n - 1].X, vertices[n - 1].Y ,0);
+                            Vector3 l2 = new Vector3(vertices[n].X, vertices[n].Y, 0);
+                            Vector3 norm = l2 - l1;
+                            norm.Normalize();
+                            Vector3 perp = new Vector3(norm.Y, norm.X, 0);
+
+                            float siz1 = Math.Abs(vertices[n - 1].Z - MathboxRenderer.camPosition.Z) / 512;
+                            float siz2 = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 512;
+
+                            // move lines slightly towards view to help avoid z-buffering issues
+                            Vector3 v1 = vertices[n - 1] - siz1*norm; v1.Z -= siz1;
+                            Vector3 v2 = vertices[n - 1] - siz1*perp; v2.Z -= siz1;
+                            Vector3 v3 = vertices[n] - siz2 * perp; v3.Z -= siz2;
+                            Vector3 v4 = vertices[n] + siz2* norm; v4.Z -= siz2;
+                            Vector3 v5 = vertices[n] + siz2 * perp; v5.Z -= siz2;
+                            Vector3 v6 = vertices[n-1] + siz1*perp; v6.Z -= siz1;
+
+
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v1;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v2;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v3;
+
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v1;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v3;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v4;
+
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v1;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v4;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v5;
+
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v1;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v5;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = v6;
+                        }
+                        NumVectors += numVertices - 1;
+                        NumPrimitives += 4 * (numVertices - 1);
+#endif
                     }
                 }
             }
