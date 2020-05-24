@@ -475,7 +475,7 @@ namespace I_Robot.Emulation
             UInt32 prev = LastInstruction;
             LastInstruction = (UInt32)M6809E.Clock;
             UInt32 delta = LastInstruction - prev;
-            System.Diagnostics.Trace.WriteLine($"Delta {delta.ToString("0000000")}  {s}");
+            Trace.WriteLine($"Delta {delta.ToString("0000000")}  {s}");
         }
 
         void ISerializable.GetObjectData(SerializationInfo info, StreamingContext context)

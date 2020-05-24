@@ -15,6 +15,7 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 
@@ -190,17 +191,13 @@ namespace I_Robot
 
             UndefinedRead = new M6809E.ReadDelegate((UInt16 address) =>
             {
-#if DEBUG
-                System.Diagnostics.Debug.WriteLine($"Undefined read @ {address.HexString()}");
-#endif
+                Debug.WriteLine($"Undefined read @ {address.HexString()}");
                 return 0;
             });
 
             UndefinedWrite = new M6809E.WriteDelegate((UInt16 address, byte data) =>
             {
-#if DEBUG
-                System.Diagnostics.Debug.WriteLine($"Undefined write @ {address.HexString()} = {data.HexString()}");
-#endif
+                Debug.WriteLine($"Undefined write @ {address.HexString()} = {data.HexString()}");
             });
 
             PageReadPointer = new PageReadPointerManager(State);
@@ -341,10 +338,8 @@ namespace I_Robot
         {
             M6809_Reset(State, callback, cycles);
 
-#if DEBUG
-            System.Diagnostics.Debug.WriteLine("M6809E RESET");
-            System.Diagnostics.Debug.WriteLine(this.ToString());
-#endif
+            Debug.WriteLine("M6809E RESET");
+            Debug.WriteLine(this.ToString());
         }
 
         /// <summary>
@@ -367,7 +362,7 @@ namespace I_Robot
             Result result = M6809_Run(State, cyclesToRun);
             cyclesRun = (UInt32)Clock - start;
             if (result != Result.OK)
-                System.Diagnostics.Debug.WriteLine($"M6809E error = {result}");
+                Debug.WriteLine($"M6809E error = {result}");
             System.Diagnostics.Debug.Assert(result == Result.OK);
             return result;
         }

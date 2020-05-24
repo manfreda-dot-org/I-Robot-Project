@@ -15,6 +15,7 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
+using System.Diagnostics;
 using System.Runtime.Serialization;
 
 namespace I_Robot.Emulation
@@ -51,7 +52,7 @@ namespace I_Robot.Emulation
                     if (value)
                     {
                         Settings.LeftCoinCounter++;
-                        System.Diagnostics.Debug.WriteLine($"Left coin counter = {Settings.LeftCoinCounter}");
+                        Trace.WriteLine($"Left coin counter = {Settings.LeftCoinCounter}");
                     }
                 }
             }
@@ -68,7 +69,7 @@ namespace I_Robot.Emulation
                     if (value)
                     {
                         Settings.RightCoinCounter++;
-                        System.Diagnostics.Debug.WriteLine($"Right coin counter = {Settings.RightCoinCounter}");
+                        Trace.WriteLine($"Right coin counter = {Settings.RightCoinCounter}");
                     }
                 }
             }

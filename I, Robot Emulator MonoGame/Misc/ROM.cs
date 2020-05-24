@@ -17,6 +17,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -134,7 +135,7 @@ namespace I_Robot
             for (int n = 0; n < Data.Length; n++)
                 Checksum += Data[n];
 
-            System.Diagnostics.Debug.WriteLine($"ROM {filename} loaded, checksum = {ChecksumString(Checksum)}");
+            Trace.WriteLine($"ROM {filename} loaded, checksum = {ChecksumString(Checksum)}");
         }
 
         public byte this[int index]

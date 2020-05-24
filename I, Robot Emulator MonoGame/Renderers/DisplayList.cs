@@ -167,7 +167,7 @@ namespace I_Robot
                 if (LargestPrimitive < Index)
                 {
                     LargestPrimitive = Index;
-                    System.Diagnostics.Debug.WriteLine($"Largest DisplayList.Primitive = {Index} vertices ");
+                    Debug.WriteLine($"Largest DisplayList.Primitive = {Index} vertices ");
                 }
 #endif
 
