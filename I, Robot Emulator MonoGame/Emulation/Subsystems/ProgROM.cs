@@ -90,10 +90,12 @@ namespace I_Robot.Emulation
             const byte NOP = 0x12;
             const byte BRA = 0x20;
 
+#if DEBUG
             // hacks / cheats
             //Patch(0x828E, new byte[] { 0x01 }); // collisions disabled
             Patch(0x9707, new byte[] { BRA }); // can always jump to pyramid
-            //Patch(0xD83F, new byte[] { BRA }); // space chase object can't collide
+                                               //Patch(0xD83F, new byte[] { BRA }); // space chase object can't collide
+#endif
 
             // graphical improvements
             Patch(0xDBCF, new byte[] { NOP, NOP }); // tetras rotate even when far away
