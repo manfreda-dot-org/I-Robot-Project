@@ -28,6 +28,8 @@ namespace I_Robot
         static PinnedBuffer<byte> Null64k = new PinnedBuffer<byte>(0x10000);
         static public byte* pNullPage = Null64k;
 
+        [DllImport("kernel32.dll")] static extern void RtlZeroMemory(IntPtr dst, int length);
+
         #region M6809E.dll
 
         public enum Result : int
@@ -242,7 +244,9 @@ namespace I_Robot
 
         public M6809E()
         {
-            State = Marshal.AllocHGlobal(Get_6809_StructSize());
+            int size = Get_6809_StructSize();
+            State = Marshal.AllocHGlobal(size);
+            RtlZeroMemory(State, size);
 
             UndefinedRead = new M6809E.ReadDelegate((UInt16 address) =>
             {
