@@ -125,11 +125,13 @@ namespace I_Robot
         bool mERASE = true;
         bool mEXT_DONE = true;
 
+        // emulated vectors and matrices
         Vector3 Light;
         Vector3 ViewPosition;
         Matrix ViewRotation;
         Vector3 WorldPosition;
         Matrix WorldRotation;
+        Matrix D3DTS_WORLD;
 
         UInt16 ObjectVertexTable;
 
@@ -616,15 +618,12 @@ namespace I_Robot
 
         void SetWorldMatrix(ref Matrix rotation)
         {
-            // Device->SetTransform(D3DTS_WORLD, &rotation);
+            D3DTS_WORLD = rotation;
         }
 
         void SetWorldMatrix(ref Vector3 position, ref Matrix rotation)
         {
-            //Matrix world;
-            //D3DXMatrixTranslation(&world, position.x, position.y, position.z);
-            //world = rotation* world;
-            //Device->SetTransform(D3DTS_WORLD, &world);
+            D3DTS_WORLD = rotation * Matrix.CreateTranslation(position);
         }
 
         #endregion
@@ -754,8 +753,7 @@ namespace I_Robot
 
                 // get the first coordinate
                 Vector3 pt = GetVertexFromTable(Memory[address + 1]);
-                Vector3.Transform(pt, WorldRotation);
-                pt += WorldPosition;
+                pt = Vector3.Transform(pt, D3DTS_WORLD);
 
                 // check if surface is visible
                 if (Vector3.Dot(normal, pt) <= 0)
@@ -790,7 +788,7 @@ namespace I_Robot
                 UInt16 word = Memory[++address];
 
                 Vector3 pt = GetVertexFromTable(word);
-                pt = Vector3.Transform(pt, WorldRotation) + WorldPosition;
+                pt = Vector3.Transform(pt, D3DTS_WORLD);
                 Vertices[index++] = pt;
 
                 // is this the last point of the plygon?
