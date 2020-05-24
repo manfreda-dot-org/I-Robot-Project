@@ -18,6 +18,7 @@ using GameManagement;
 using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SharpDX.DXGI;
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography;
@@ -132,6 +133,8 @@ namespace I_Robot
         Vector3 WorldPosition;
         Matrix WorldRotation;
         Matrix D3DTS_WORLD;
+
+        public bool PauseOnNextRender = false;
 
         class ObjectRenderer
         {
@@ -896,6 +899,12 @@ namespace I_Robot
             // is there a new display list to render?
             while (DisplayListManager.GetNext(out DisplayList? displayList) && displayList != null)
             {
+                if (PauseOnNextRender)
+                {
+                    PauseOnNextRender = false;
+                    Machine.Paused = true;
+                }
+
                 viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
                 //                viewMatrix = Matrix.CreateTranslation(0, -26f / 128, 0) * viewMatrix;
 

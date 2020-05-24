@@ -40,7 +40,6 @@ namespace I_Robot
 
         bool UnpauseOnActivation;
 
-
         ContentManager? Content;
 
         float pauseAlpha;
@@ -158,6 +157,11 @@ namespace I_Robot
             Keyboard.GetState();
             if (Keyboard.HasBeenPressed(Keys.Space))
                 Machine.Paused = !Machine.Paused;
+            if (Keyboard.HasBeenPressed(Keys.Enter))
+            {
+                MathboxRenderer.PauseOnNextRender = true;
+                Machine.Paused = false;
+            }               
             if (Keyboard.HasBeenPressed(Keys.Tab))
                 Settings.TestSwitch = !Settings.TestSwitch;
             if (Keyboard.HasBeenPressed(Keys.F3))
