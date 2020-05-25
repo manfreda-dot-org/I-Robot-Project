@@ -1,7 +1,7 @@
-![irobot](https://user-images.githubusercontent.com/64547232/82756603-1d9bb900-9da9-11ea-828e-55ed8d382aab.png)
+![irobot](https://user-images.githubusercontent.com/64547232/82836070-d5a59080-9e93-11ea-99b8-5d6c96c7680a.png)
 
 I, Robot 2020
-Verion 1.00
+Verion 1.01
 
 https://github.com/manfreda-dot-org/I-Robot-Project
 
@@ -23,7 +23,7 @@ standard MAME ROMset can be used.  Place your ROMs are in a file called
 CONTROLS:
 
 Keyboard commands
-left-control: fire button
+left-shift / left-control: fire button
 1: start 1 button
 2: start 2 button
 5: insert left coin
