@@ -1,0 +1,19 @@
+LIBRARY     6809.DLL
+
+EXPORTS
+    _M6809_IRQ_Pending = IRQnotify
+    _M6809_REG_A = R6809A
+    _M6809_REG_B = R6809B
+    _M6809_REG_CC = R6809CC
+    _M6809_REG_DP = R6809DP
+    _M6809_REG_PC = R6809PC
+    _M6809_REG_S = R6809S
+    _M6809_REG_U = R6809U
+    _M6809_REG_X = R6809X
+    _M6809_REG_Y = R6809Y
+    _M6809_PageReadFunction = ReadFunction
+    _M6809_PageReadPointer = ReadPointer
+    _M6809_Reset = Reset6809
+    _M6809_Run = Run6809
+    _M6809_PageWriteFunction = WriteFunction
+    _M6809_PageWritePointer = WritePointer

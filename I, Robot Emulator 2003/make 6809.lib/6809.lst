@@ -1,0 +1,49 @@
+Publics by module
+
+_M6809_IRQ_Pending	size = 0
+	_M6809_IRQ_Pending              
+
+_M6809_PageReadFunction	size = 0
+	_M6809_PageReadFunction         
+
+_M6809_PageReadPointer	size = 0
+	_M6809_PageReadPointer          
+
+_M6809_PageWriteFunction	size = 0
+	_M6809_PageWriteFunction        
+
+_M6809_PageWritePointer	size = 0
+	_M6809_PageWritePointer         
+
+_M6809_REG_A	size = 0
+	_M6809_REG_A                    
+
+_M6809_REG_B	size = 0
+	_M6809_REG_B                    
+
+_M6809_REG_CC	size = 0
+	_M6809_REG_CC                   
+
+_M6809_REG_DP	size = 0
+	_M6809_REG_DP                   
+
+_M6809_REG_PC	size = 0
+	_M6809_REG_PC                   
+
+_M6809_REG_S	size = 0
+	_M6809_REG_S                    
+
+_M6809_REG_U	size = 0
+	_M6809_REG_U                    
+
+_M6809_REG_X	size = 0
+	_M6809_REG_X                    
+
+_M6809_REG_Y	size = 0
+	_M6809_REG_Y                    
+
+_M6809_Reset	size = 0
+	_M6809_Reset                    
+
+_M6809_Run	size = 0
+	_M6809_Run                      
