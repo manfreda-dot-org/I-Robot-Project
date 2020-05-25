@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "M6809E", "M6809E dll\6809 D
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "I Robot Emulator 1998", "I, Robot Emulator 1998\I Robot.vcxproj", "{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "I, Robot Emulator MonoGame", "I, Robot Emulator MonoGame\I, Robot Emulator MonoGame.csproj", "{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "I, Robot Emulator 2020", "I, Robot Emulator 2020\I, Robot Emulator 2020.csproj", "{E6161C39-2A3E-47C1-A53A-6B81F5495B51}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -20,6 +20,9 @@ Global
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Trace|Any CPU = Trace|Any CPU
+		Trace|x64 = Trace|x64
+		Trace|x86 = Trace|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Debug|Any CPU.ActiveCfg = Release|Win32
@@ -37,6 +40,9 @@ Global
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Release|x64.Build.0 = Release|x64
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Release|x86.ActiveCfg = Release|Win32
 		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Release|x86.Build.0 = Release|Win32
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Trace|Any CPU.ActiveCfg = Release|x64
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Trace|x64.ActiveCfg = Emulator Trace|x64
+		{A64D4FB3-A21B-464C-95AF-112B237947F5}.Trace|x86.ActiveCfg = Emulator Trace|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Debug|Any CPU.ActiveCfg = Debug|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Debug|x64.ActiveCfg = Debug|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Debug|x86.ActiveCfg = Debug|Win32
@@ -48,24 +54,33 @@ Global
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Release|x64.ActiveCfg = Release|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Release|x86.ActiveCfg = Release|Win32
 		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Release|x86.Build.0 = Release|Win32
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x64.Build.0 = Debug|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x86.ActiveCfg = Debug|x86
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Debug|x86.Build.0 = Debug|x86
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|Any CPU.ActiveCfg = Emulator Trace|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|Any CPU.Build.0 = Emulator Trace|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x64.ActiveCfg = Emulator Trace|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x64.Build.0 = Emulator Trace|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x86.ActiveCfg = Emulator Trace|x86
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Emulator Trace|x86.Build.0 = Emulator Trace|x86
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|Any CPU.Build.0 = Release|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|x64.ActiveCfg = Release|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|x64.Build.0 = Release|Any CPU
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|x86.ActiveCfg = Release|x86
-		{BC447B3F-DA74-49D7-939E-4D1E8BD8E515}.Release|x86.Build.0 = Release|x86
+		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Trace|Any CPU.ActiveCfg = Release|Win32
+		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Trace|x64.ActiveCfg = Release|Win32
+		{D8FB6B53-EADE-4DCE-8A21-B69CE8CCDA76}.Trace|x86.ActiveCfg = Release|Win32
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Debug|x64.Build.0 = Debug|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Debug|x86.ActiveCfg = Debug|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Debug|x86.Build.0 = Debug|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Emulator Trace|Any CPU.ActiveCfg = Emulator Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Emulator Trace|Any CPU.Build.0 = Emulator Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Emulator Trace|x64.ActiveCfg = Emulator Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Emulator Trace|x64.Build.0 = Emulator Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Emulator Trace|x86.ActiveCfg = Emulator Trace|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Emulator Trace|x86.Build.0 = Emulator Trace|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Release|x64.ActiveCfg = Release|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Release|x64.Build.0 = Release|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Release|x86.ActiveCfg = Release|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Release|x86.Build.0 = Release|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Trace|Any CPU.ActiveCfg = Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Trace|Any CPU.Build.0 = Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Trace|x64.ActiveCfg = Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Trace|x64.Build.0 = Trace|Any CPU
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Trace|x86.ActiveCfg = Trace|x86
+		{E6161C39-2A3E-47C1-A53A-6B81F5495B51}.Trace|x86.Build.0 = Trace|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
