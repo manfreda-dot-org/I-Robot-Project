@@ -7,7 +7,7 @@ https://github.com/manfreda-dot-org/I-Robot-Project
 
 Modern emulation for 1984 Atari coin-op "I, Robot"
 
-This is my attempt to make a "definitive" high-resolution version of the
+This is my attempt to make the "definitive" high-resolution version of the
 emulator.  This version makes full use of modern graphics card features and
 anti-aliasing.
 
@@ -17,8 +17,8 @@ A number of cheats / hacks have been built into the game.  Check the menus.
 ROMS:
 
 You will need a copy of the original I, Robot ROMs to use this emulator. The
-standard MAME ROMset can be used.  Place your ROMs are in a file called
-"irobot.zip" and put the zip file in the same directory as the emulator.
+standard MAME ROMset can be used.  Place your ROMs in a file called
+"irobot.zip" and place in the same directory as the emulator.
 
 CONTROLS:
 
