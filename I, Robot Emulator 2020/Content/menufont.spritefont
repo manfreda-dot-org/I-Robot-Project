@@ -2,7 +2,7 @@
 <XnaContent xmlns:Graphics="Microsoft.Xna.Framework.Content.Pipeline.Graphics">
 	<Asset Type="Graphics:FontDescription">
 		<FontName>Atari</FontName>
-		<Size>26</Size>
+		<Size>24</Size>
 		<Spacing>9</Spacing>
 		<Style>Regular</Style>
 		<CharacterRegions>

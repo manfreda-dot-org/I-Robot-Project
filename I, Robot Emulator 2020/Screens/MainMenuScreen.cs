@@ -15,6 +15,7 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using GameManagement;
+using Microsoft.Xna.Framework;
 
 namespace I_Robot
 {
@@ -35,6 +36,23 @@ namespace I_Robot
             MenuItems.Add(new MenuItem("CHEATS", CheatsMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("RESET    GAME", OnResetMachine, 1));
             MenuItems.Add(new MenuItem("QUIT", QuitMenuSelected, 1));
+        }
+
+        public override void Draw(GameTime gameTime)
+        {
+            base.Draw(gameTime);
+            
+            SpriteBatch.Begin();
+            SpriteBatch.DrawString(
+                MenuFont, 
+                $"v1.01   Copyright 2020 John Manfreda    lordfrito@manfreda.org", 
+                new Vector2(50, ScreenManager.GraphicsDevice.Viewport.Height - MenuFont.LineSpacing), 
+                Color.CornflowerBlue, 
+                0, 
+                Vector2.Zero, 
+                0.3F, 
+                Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0);
+            SpriteBatch.End();
         }
 
         string SoundString => $"SOUND:    {(Settings.SoundEnabled ? "ENABLED" : "DISABLED")}";
