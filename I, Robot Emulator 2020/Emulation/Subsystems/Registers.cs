@@ -402,7 +402,7 @@ namespace I_Robot.Emulation
                 REGISTER_1040 reg = 0xFF;
                 reg.START_1 = Keyboard.IsPressed(Keys.D1);
                 reg.START_2 = Keyboard.IsPressed(Keys.D2);
-                reg.FIRE = Keyboard.IsPressed(Keys.LeftControl);
+                reg.FIRE = Keyboard.IsPressed(Keys.LeftControl) || Keyboard.IsPressed(Keys.LeftShift);
                 return reg;
             }
         }
