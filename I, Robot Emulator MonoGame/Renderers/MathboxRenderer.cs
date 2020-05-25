@@ -123,7 +123,7 @@ namespace I_Robot
         RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
         public Texture2D Texture => ScreenBuffer;
 
-        bool mERASE = true;
+        int mERASE = 1;
         bool mEXT_DONE = true;
 
         // emulated vectors and matrices
@@ -860,7 +860,7 @@ namespace I_Robot
 
         bool IRasterizer.EXT_DONE => mEXT_DONE;
 
-        void IRasterizer.ERASE(bool bufsel) => mERASE = true;
+        void IRasterizer.ERASE(bool bufsel) => mERASE++;
 
         void IRasterizer.EXT_START(bool bufsel)
         {
@@ -871,9 +871,10 @@ namespace I_Robot
             //BUFSEL = bufsel
 
             // commit the new display list
-            DisplayListManager.CommitDisplayList(mERASE); // commit the display list
-            Machine.EmulatorTrace($"CommitDisplayList({mERASE})");
-            mERASE = false;
+            bool erase = (mERASE > 0);
+            mERASE = 0;
+            DisplayListManager.CommitDisplayList(erase); // commit the display list
+            Machine.EmulatorTrace($"CommitDisplayList({erase})");
 
             // simulate rasterizer being done
             // technically this should take place after rendering is complete
@@ -899,9 +900,15 @@ namespace I_Robot
         {
             CheckPolysPerSecond();
 
-            // is there a new display list to render?
-            while (DisplayListManager.GetNext(out DisplayList? displayList) && displayList != null)
+            if (mERASE > 1)
             {
+                graphicsDevice.SetRenderTarget(ScreenBuffer);
+                graphicsDevice.Clear(Color.Transparent);
+                mERASE = 0;
+            }
+
+            while (DisplayListManager.GetNext(out DisplayList? displayList) && displayList != null)
+            { 
                 if (PauseOnNextRender)
                 {
                     PauseOnNextRender = false;
@@ -939,20 +946,22 @@ namespace I_Robot
                     };
                 }
 
-                foreach (DisplayList.Primitive primitive in displayList)
+                if (displayList != null)
                 {
-                    System.Diagnostics.Debug.Assert(primitive.NumPrimitives > 0);
-
-                    graphicsDevice.SetVertexBuffer(primitive.VertexBuffer);
-
-                    foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
+                    foreach (DisplayList.Primitive primitive in displayList)
                     {
-                        pass.Apply();
-                        graphicsDevice.DrawPrimitives(primitive.Type, 0, primitive.NumPrimitives);
-                    }
-                }
+                        System.Diagnostics.Debug.Assert(primitive.NumPrimitives > 0);
 
-                mEXT_DONE = true;
+                        graphicsDevice.SetVertexBuffer(primitive.VertexBuffer);
+
+                        foreach (EffectPass pass in basicEffect.CurrentTechnique.Passes)
+                        {
+                            pass.Apply();
+                            graphicsDevice.DrawPrimitives(primitive.Type, 0, primitive.NumPrimitives);
+                        }
+                    }
+                    mEXT_DONE = true;
+                }
 
                 // now copy our newly rendered scene ontop of the current screen buffer
                 graphicsDevice.SetRenderTarget(ScreenBuffer);
