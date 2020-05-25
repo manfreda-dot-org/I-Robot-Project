@@ -362,7 +362,7 @@ namespace I_Robot
                             Debug.WriteLine($"Max Vertices = {MaxVertices}");
                         }
 #endif
-                        DisplayListManager.AddPrimitive(Vertices, numVertices, color, renderMode);
+                        DisplayListManager.AddPrimitive(renderMode, Vertices, numVertices, color);
                         return;
                     }
                 }
@@ -389,7 +389,7 @@ namespace I_Robot
                 public UInt16 Next;
             }
 
-            Mathbox.RenderMode Mode;
+            Mathbox.RenderMode renderMode;
             Matrix Rotation;
             UInt16 ObjectList;
             int TileTableBaseAddress;
@@ -420,9 +420,9 @@ namespace I_Robot
                 // determine rendering method (dot/vector/polygon)
                 switch (Memory[PLAYFIELD_RENDERING_MODE])
                 {
-                    case 0x0000: Mode = Mathbox.RenderMode.Polygon; break;
-                    case 0x0100: Mode = Mathbox.RenderMode.Vector; break;
-                    default: Mode = Mathbox.RenderMode.Dot; break;
+                    case 0x0000: renderMode = Mathbox.RenderMode.Polygon; break;
+                    case 0x0100: renderMode = Mathbox.RenderMode.Vector; break;
+                    default: renderMode = Mathbox.RenderMode.Dot; break;
                 }
 
                 // get address of playfield object buffer
@@ -624,7 +624,7 @@ namespace I_Robot
                         Vertices[1] = Vector3.Transform(new Vector3(x1, height.d, z2), Parent.D3DTS_WORLD);
                         Vertices[2] = Vector3.Transform(new Vector3(x1, side.c, z2), Parent.D3DTS_WORLD);
                         Vertices[3] = Vector3.Transform(new Vector3(x1, side.b, z1), Parent.D3DTS_WORLD);
-                        DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex - 1), Mode);
+                        DisplayListManager.AddPrimitive(renderMode, Vertices, 4, Parent.GetColor(colorIndex - 1));
                     }
                 }
                 else if (x2 < 0)
@@ -645,7 +645,7 @@ namespace I_Robot
                         Vertices[1] = Vector3.Transform(new Vector3(x2, side.a, z1), Parent.D3DTS_WORLD);
                         Vertices[2] = Vector3.Transform(new Vector3(x2, side.d, z2), Parent.D3DTS_WORLD);
                         Vertices[3] = Vector3.Transform(new Vector3(x2, height.c, z2), Parent.D3DTS_WORLD);
-                        DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex - 1), Mode);
+                        DisplayListManager.AddPrimitive(renderMode, Vertices, 4, Parent.GetColor(colorIndex - 1));
                     }
                 }
 
@@ -671,7 +671,7 @@ namespace I_Robot
                         Vertices[1] = Vector3.Transform(new Vector3(x1, side.d, z1), Parent.D3DTS_WORLD);
                         Vertices[2] = Vector3.Transform(new Vector3(x2, side.c, z1), Parent.D3DTS_WORLD);
                         Vertices[3] = Vector3.Transform(new Vector3(x2, height.b, z1), Parent.D3DTS_WORLD);
-                        DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex - 2), Mode);
+                        DisplayListManager.AddPrimitive(renderMode, Vertices, 4, Parent.GetColor(colorIndex - 2));
                     }
                 }
 
@@ -680,19 +680,19 @@ namespace I_Robot
                 Vertices[1] = Vector3.Transform(new Vector3(x2, height.b, z1), Parent.D3DTS_WORLD);
                 Vertices[2] = Vector3.Transform(new Vector3(x2, height.c, z2), Parent.D3DTS_WORLD);
                 Vertices[3] = Vector3.Transform(new Vector3(x1, height.d, z2), Parent.D3DTS_WORLD);
-                DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mode);
+                DisplayListManager.AddPrimitive(renderMode, Vertices, 4, Parent.GetColor(colorIndex));
 
                 // special case for rendering solid sloped tiles
                 // this is done for maximum compatibility with real machine
-                if (!TileA.IsFlat && Mode == Mathbox.RenderMode.Polygon)
-                    DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mathbox.RenderMode.Vector);
+                if (!TileA.IsFlat && renderMode == Mathbox.RenderMode.Polygon)
+                    DisplayListManager.AddPrimitive(Mathbox.RenderMode.Vector, Vertices, 4, Parent.GetColor(colorIndex));
 
                 // draw the bottom of the cube
                 Vertices[0] = Vector3.Transform(new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1), Parent.D3DTS_WORLD);
                 Vertices[1] = Vector3.Transform(new Vector3(x1, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2), Parent.D3DTS_WORLD);
                 Vertices[2] = Vector3.Transform(new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z2), Parent.D3DTS_WORLD);
                 Vertices[3] = Vector3.Transform(new Vector3(x2, -Parent.ViewPosition.Y + Tile.DEFAULT_HEIGHT_Y, z1), Parent.D3DTS_WORLD);
-                DisplayListManager.AddPrimitive(Vertices, 4, Parent.GetColor(colorIndex), Mode);
+                DisplayListManager.AddPrimitive(renderMode, Vertices, 4, Parent.GetColor(colorIndex));
             }
         }
 
@@ -729,7 +729,7 @@ namespace I_Robot
                 Game.GraphicsDevice.Viewport.Height,
                 false,
                 Game.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.Depth24,
+                DepthFormat.None,
                 8,
                 RenderTargetUsage.DiscardContents);
 
@@ -933,7 +933,7 @@ namespace I_Robot
                     graphicsDevice.RasterizerState = new RasterizerState()
                     {
                         FillMode = FillMode.WireFrame,
-                        CullMode = CullMode.None,
+                        CullMode = CullMode.CullClockwiseFace,
                         MultiSampleAntiAlias = true,
                     };
                 }
@@ -941,7 +941,7 @@ namespace I_Robot
                 {
                     graphicsDevice.RasterizerState = new RasterizerState()
                     {
-                        CullMode = CullMode.None,
+                        CullMode = CullMode.CullClockwiseFace,
                         MultiSampleAntiAlias = true,
                     };
                 }

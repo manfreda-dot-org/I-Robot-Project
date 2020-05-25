@@ -24,6 +24,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace I_Robot
 {
@@ -40,39 +41,30 @@ namespace I_Robot
         /// <summary>
         /// Batched dot primitives
         /// </summary>
-        public readonly Primitive.Dot Dots;
-
-        /// <summary>
-        /// Batched vector primitives
-        /// </summary>
-        public readonly Primitive.Vector Vectors;
-
-        /// <summary>
-        /// Batched polygon primitives
-        /// </summary>
-        public readonly Primitive.Polygon Polygons;
+        public readonly Primitive Primitives;
 
         public DisplayList(MathboxRenderer mathboxRenderer)
         {
-            Dots = new Primitive.Dot(mathboxRenderer);
-            Vectors = new Primitive.Vector(mathboxRenderer);
-            Polygons = new Primitive.Polygon(mathboxRenderer);
+            Primitives = new Primitive(mathboxRenderer);
         }
 
         ~DisplayList() { Dispose(); }
 
-        public int NumDots => Dots.NumDots;
-        public int NumVectors => Vectors.NumVectors;
-        public int NumPolygons => Polygons.NumPolygons;
+        public int NumDots => Primitives.NumDots;
+        public int NumVectors => Primitives.NumVectors;
+        public int NumPolygons => Primitives.NumPolygons;
 
         /// <summary>
         /// Resets / empties all of the primitives
         /// </summary>
         public void Reset()
         {
-            Dots.Reset();
-            Vectors.Reset();
-            Polygons.Reset();
+            Primitives.Reset();
+        }
+
+        public void AddPrimitive(Mathbox.RenderMode renderMode, Vector3[] vertices, int numVertices, Color color)
+        {
+            Primitives.AddPrimitive(renderMode, vertices, numVertices, color);
         }
 
         /// <summary>
@@ -81,36 +73,33 @@ namespace I_Robot
         public void Commit(bool erase)
         {
             Erase = erase;
-            Dots.Commit();
-            Vectors.Commit();
-            Polygons.Commit();
+            Primitives.Commit();
         }
 
         public void Dispose()
         {
-            Dots.Dispose();
-            Vectors.Dispose();
-            Polygons.Dispose();
+            Primitives.Dispose();
         }
 
         IEnumerator IEnumerable.GetEnumerator() { return GetEnumerator(); }
         public IEnumerator<Primitive> GetEnumerator()
         {
-            if (Dots.NumPrimitives > 0)
-                yield return Dots;
-            if (Vectors.NumPrimitives > 0)
-                yield return Vectors;
-            if (Polygons.NumPrimitives > 0)
-                yield return Polygons;
+            if (Primitives.NumPrimitives > 0)
+                yield return Primitives;
         }
 
         /// <summary>
         /// Base class of a primitive batch to render on the display list
         /// </summary>
-        public abstract class Primitive : IDisposable
+        public class Primitive : IDisposable
         {
             // at least 10,000 are needed, not sure of max
-            const int MaxVertices = 200000;
+            const int MaxVertices = 1000000;
+
+            const int CylinderSides = 6;
+            const float CylinderDiameter = 1.5f;
+            readonly Vector3[] Radials1 = new Vector3[CylinderSides];
+            readonly Vector3[] Radials2 = new Vector3[CylinderSides];
 
 #if DEBUG
             static int LargestPrimitive = 0;
@@ -132,18 +121,21 @@ namespace I_Robot
             /// <summary>
             /// PrimitiveType for rendering
             /// </summary>
-            public readonly PrimitiveType Type;
+            public PrimitiveType Type => PrimitiveType.TriangleList;
 
             /// <summary>
             /// The number of primitives to render
             /// </summary>
             public int NumPrimitives { get; private set; }
 
-            public Primitive(MathboxRenderer mathboxRenderer, Mathbox.RenderMode renderMode)
+            public int NumDots { get; private set; }
+            public int NumVectors { get; private set; }
+            public int NumPolygons { get; private set; }
+
+            public Primitive(MathboxRenderer mathboxRenderer)
             {
                 MathboxRenderer = mathboxRenderer;
                 VertexBuffer = new VertexBuffer(mathboxRenderer.Game.GraphicsDevice, typeof(VertexPositionColor), MaxVertices, BufferUsage.WriteOnly);
-                Type = (renderMode == Mathbox.RenderMode.Vector) ? PrimitiveType.LineList : PrimitiveType.TriangleList;
             }
 
             ~Primitive() { Dispose(); }
@@ -157,6 +149,9 @@ namespace I_Robot
             {
                 Index = 0;
                 NumPrimitives = 0;
+                NumDots = 0;
+                NumVectors = 0;
+                NumPolygons = 0;
             }
 
             /// <summary>
@@ -179,215 +174,158 @@ namespace I_Robot
             /// <summary>
             /// Adds a new set of primitives to the batch
             /// </summary>
+            /// <param name="renderMode">type of primitive to render</param>
             /// <param name="vertices">buffer containing the vertices to add</param>
-            /// <param name="numvertices">number of vertices to add</param>
+            /// <param name="numVertices">number of vertices to add</param>
             /// <param name="color">color of the batched primitives</param>
-            abstract public void AddPrimitive(Vector3[] vertices, int numvertices, Color color);
-
-            /// <summary>
-            /// A primitive batch that renders dots
-            /// </summary>
-            public class Dot : Primitive
+            public void AddPrimitive(Mathbox.RenderMode renderMode, Vector3[] vertices, int numVertices, Color color)
             {
-                public Dot(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Dot) { }
+                if (renderMode == Mathbox.RenderMode.Dot || numVertices == 1)
+                    AddDotPrimitive(vertices, numVertices, color);
+                else if (renderMode == Mathbox.RenderMode.Vector || numVertices == 2)
+                    AddVectorPrimitive(vertices, numVertices, color);
+                else if (numVertices >= 3)
+                    AddPolygonPrimitive(vertices, numVertices, color);
 
-                public int NumDots { get; private set; }
-
-                public override void Reset()
-                {
-                    base.Reset();
-                    NumDots = 0;
-                }
-
-                public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
-                {
-#if DEBUG
-                    try
-                    {
-#endif
-                        System.Diagnostics.Debug.Assert(numVertices > 0);
-
-                        if (Settings.ShowDots)
-                        {
-                            for (int n = 0; n < numVertices; n++)
-                            {
-                                float dist = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 256;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n];
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
-
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Right + dist * Vector3.Down;
-                                Buffer[Index].Color = color;
-                                Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
-                            }
-                            NumPrimitives += numVertices * 2;
-                            NumDots += numVertices;
-                        }
-#if DEBUG
-                    }
-                    catch
-                    {
-                        throw new Exception("Primitive buffer is too small");
-                    }
-#endif
-                }
             }
 
-            /// <summary>
-            /// A primitive batch that renders vectors
-            /// </summary>
-            public class Vector : Primitive
+            void AddDotPrimitive(Vector3[] vertices, int numVertices, Color color)
             {
-                const int NumSides = 6;
-                const float Diameter = 1.5f;
-
-                public Vector(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Polygon) { }
-
-                public int NumVectors { get; private set; }
-                readonly Vector3[] Radials1 = new Vector3[NumSides];
-                readonly Vector3[] Radials2 = new Vector3[NumSides];
-
-                public override void Reset()
+#if DEBUG
+                try
                 {
-                    base.Reset();
-                    NumVectors = 0;
-                }
-
-                protected void AddCylinder(Vector3 point1, Vector3 point2, Color color)
-                {
-                    float radius1 = Diameter / 2 * point1.Z / 512;
-                    float radius2 = Diameter / 2 * point2.Z / 512;
-
-                    Vector3 axis = point2 - point1;
-
-                    // Get two vectors perpendicular to the axis.
-                    Vector3 v1;
-                    if ((axis.Z < -0.01) || (axis.Z > 0.01))
-                        v1 = new Vector3(axis.Z, axis.Z, -axis.X - axis.Y);
-                    else
-                        v1 = new Vector3(-axis.Y - axis.Z, axis.X, axis.X);
-                    v1.Normalize();
-                    Vector3 v2 = Vector3.Cross(v1, axis); v2.Normalize();
-                    Vector3 axis_norm = axis; axis_norm.Normalize();
-
-                    // Make the vectors have length radius.
-                    Vector3 v3 = axis_norm * radius1;
-                    Vector3 v4 = axis_norm * radius2;
-
-                    for (int i = 0; i < NumSides; i++)
-                    {
-                        double theta = i * (2 * Math.PI / NumSides);
-                        Radials1[i] = (float)Math.Cos(theta) * v1 * radius1 + (float)Math.Sin(theta) * v2 * radius1;
-                        Radials2[i] = (float)Math.Cos(theta) * v1 * radius2 + (float)Math.Sin(theta) * v2 * radius2;
-                    }
-
-                    for (int prev = NumSides - 1, i = 0; i < NumSides; prev = i++)
-                    {
-                        //Trace.WriteLine($"{Index}, {NumVectors}");
-                        // end caps
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point1 - v3;
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point1 + Radials1[prev];
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point1 + Radials1[i];
-
-                        // end caps
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point2 + v4;
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point2 + Radials2[prev];
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point2 + Radials2[i];
-
-                        // sides
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point1 + Radials1[prev];
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point2 + Radials2[prev];
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point1 + Radials1[i];
-
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point2 + Radials2[prev];
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point2 + Radials2[i];
-                        Buffer[Index].Color = color;
-                        Buffer[Index++].Position = point1 + Radials1[i];
-                    }
-                }
-
-                public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
-                {
-                    System.Diagnostics.Debug.Assert(numVertices > 1);
-                    if (Settings.ShowVectors)
-                    {
-#if false
-                        for (int n = 1; n < numVertices; n++)
-                        {
-                            Buffer[Index].Color = color;
-                            Buffer[Index].Position = vertices[n - 1];
-                            Buffer[Index++].Position.Z -= 1f; // move lines slightly towards view to help avoid z-buffering issues
-
-                            Buffer[Index].Color = color;
-                            Buffer[Index].Position = vertices[n];
-                            Buffer[Index++].Position.Z -= 1f; // move lines slightly towards view to help avoid z-buffering issues
-                        }
-                        NumPrimitives += numVertices - 1;
-                        NumVectors += numVertices - 1;
-#else
-                        for (int n = 1; n < numVertices; n++)
-                            AddCylinder(vertices[n - 1], vertices[n], color);
-                        NumVectors += numVertices - 1;
-                        NumPrimitives += 4 * NumSides * (numVertices - 1);
 #endif
-                    }
-                }
-            }
+                    System.Diagnostics.Debug.Assert(numVertices > 0);
 
-            /// <summary>
-            /// A primitive batch that renders polygons
-            /// </summary>
-            public class Polygon : Primitive
-            {
-                public Polygon(MathboxRenderer mathboxRenderer) : base(mathboxRenderer, Mathbox.RenderMode.Polygon) { }
-
-                public int NumPolygons { get; private set; }
-
-                public override void Reset()
-                {
-                    base.Reset();
-                    NumPolygons = 0;
-                }
-
-                public override void AddPrimitive(Vector3[] vertices, int numVertices, Color color)
-                {
-                    System.Diagnostics.Debug.Assert(numVertices > 2);
-
-                    if (Settings.ShowPolygons)
+                    if (Settings.ShowDots)
                     {
-                        // turn the polygons into a triangle fan
-                        for (int n = 2; n < numVertices; n++)
+                        for (int n = 0; n < numVertices; n++)
                         {
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[0];
-
-                            Buffer[Index].Color = color;
-                            Buffer[Index++].Position = vertices[n - 1];
-
+                            float dist = Math.Abs(vertices[n].Z - MathboxRenderer.camPosition.Z) / 256;
                             Buffer[Index].Color = color;
                             Buffer[Index++].Position = vertices[n];
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
 
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Right;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Right + dist * Vector3.Down;
+                            Buffer[Index].Color = color;
+                            Buffer[Index++].Position = vertices[n] + dist * Vector3.Down;
                         }
-                        NumPrimitives += numVertices - 2;
-                        NumPolygons++;
+                        NumPrimitives += numVertices * 2;
+                        NumDots += numVertices;
                     }
+#if DEBUG
+                }
+                catch
+                {
+                    throw new Exception("Primitive buffer is too small");
+                }
+#endif
+            }
+
+
+            void AddCylinder(Vector3 point1, Vector3 point2, Color color)
+            {
+                float radius1 = CylinderDiameter / 2 * point1.Z / 512;
+                float radius2 = CylinderDiameter / 2 * point2.Z / 512;
+
+                Vector3 axis = point2 - point1;
+
+                // Get two vectors perpendicular to the axis.
+                Vector3 v1;
+                if ((axis.Z < -0.01) || (axis.Z > 0.01))
+                    v1 = new Vector3(axis.Z, axis.Z, -axis.X - axis.Y);
+                else
+                    v1 = new Vector3(-axis.Y - axis.Z, axis.X, axis.X);
+                v1.Normalize();
+                Vector3 v2 = Vector3.Cross(v1, axis); v2.Normalize();
+                Vector3 axis_norm = axis; axis_norm.Normalize();
+
+                // Make the vectors have length radius.
+                Vector3 v3 = axis_norm * radius1;
+                Vector3 v4 = axis_norm * radius2;
+
+                for (int i = 0; i < CylinderSides; i++)
+                {
+                    double theta = i * (2 * Math.PI / CylinderSides);
+                    Radials1[i] = (float)Math.Cos(theta) * v1 * radius1 + (float)Math.Sin(theta) * v2 * radius1;
+                    Radials2[i] = (float)Math.Cos(theta) * v1 * radius2 + (float)Math.Sin(theta) * v2 * radius2;
+                }
+
+                for (int prev = CylinderSides - 1, i = 0; i < CylinderSides; prev = i++)
+                {
+                    //Trace.WriteLine($"{Index}, {NumVectors}");
+                    // end caps
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point1 - v3;
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point1 + Radials1[prev];
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point1 + Radials1[i];
+
+                    // end caps
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point2 + v4;
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point2 + Radials2[prev];
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point2 + Radials2[i];
+
+                    // sides
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point1 + Radials1[prev];
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point1 + Radials1[i];
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point2 + Radials2[prev];
+
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point2 + Radials2[prev];
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point1 + Radials1[i];
+                    Buffer[Index].Color = color;
+                    Buffer[Index++].Position = point2 + Radials2[i];
+                }
+            }
+
+            void AddVectorPrimitive(Vector3[] vertices, int numVertices, Color color)
+            {
+                System.Diagnostics.Debug.Assert(numVertices > 1);
+                if (Settings.ShowVectors)
+                {
+                    for (int n = 1; n < numVertices; n++)
+                        AddCylinder(vertices[n - 1], vertices[n], color);
+                    NumVectors += numVertices - 1;
+                    NumPrimitives += 4 * CylinderSides * (numVertices - 1);
+                }
+            }
+
+            void AddPolygonPrimitive(Vector3[] vertices, int numVertices, Color color)
+            {
+                System.Diagnostics.Debug.Assert(numVertices > 2);
+
+                if (Settings.ShowPolygons)
+                {
+                    // turn the polygons into a triangle fan
+                    for (int n = 2; n < numVertices; n++)
+                    {
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = vertices[0];
+
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = vertices[n - 1];
+
+                        Buffer[Index].Color = color;
+                        Buffer[Index++].Position = vertices[n];
+
+                    }
+                    NumPrimitives += numVertices - 2;
+                    NumPolygons++;
                 }
             }
         }
@@ -490,20 +428,14 @@ namespace I_Robot
             /// <summary>
             /// Adds a new primitive to the DisplayList being assembled
             /// </summary>
+            /// <param name="renderMode"></param>
             /// <param name="vertices"></param>
             /// <param name="numVertices"></param>
             /// <param name="color"></param>
-            /// <param name="renderMode"></param>
-            public void AddPrimitive(Vector3[] vertices, int numVertices, Color color, Mathbox.RenderMode renderMode)
+            public void AddPrimitive(Mathbox.RenderMode renderMode, Vector3[] vertices, int numVertices, Color color)
             {
-                if (renderMode == Mathbox.RenderMode.Dot || numVertices == 1)
-                    WIP.Dots.AddPrimitive(vertices, numVertices, color);
-                else if (renderMode == Mathbox.RenderMode.Vector || numVertices == 2)
-                    WIP.Vectors.AddPrimitive(vertices, numVertices, color);
-                else if (numVertices >= 3)
-                    WIP.Polygons.AddPrimitive(vertices, numVertices, color);
+                WIP.AddPrimitive(renderMode, vertices, numVertices, color);
             }
-
         }
     }
 }
