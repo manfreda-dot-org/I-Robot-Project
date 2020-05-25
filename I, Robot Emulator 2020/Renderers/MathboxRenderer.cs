@@ -700,11 +700,12 @@ namespace I_Robot
         readonly ObjectRenderer Object;
         readonly PlayfieldRenderer Playfield;
 
-        Vector3 camTarget;
-        public Vector3 camPosition { get; private set; }
-        Matrix projectionMatrix;
-        Matrix viewMatrix;
-        Matrix worldMatrix;
+
+        public readonly Vector3 camTarget;
+        public readonly Vector3 camPosition;
+        public readonly Matrix projectionMatrix;
+        public readonly Matrix viewMatrix;
+        public readonly Matrix worldMatrix;
         BasicEffect basicEffect;
 
         MathboxRenderer(Machine machine, ScreenManager screenManager)
@@ -749,9 +750,8 @@ namespace I_Robot
                     RenderTargetUsage.PreserveContents);
             }
 
-            //Setup Camera
-            camTarget = new Vector3(0f, 0f, 1f);
-            camPosition = new Vector3(0f, 0f, 0f);
+            camTarget = new Vector3(0f, 0f, 0f);
+            camPosition = new Vector3(0f, 0f, -1f);
 
             double scaleToMonitor = Emulation.Machine.MonitorAspectRatio / Emulation.Machine.NativeAspectRatio;
 
@@ -760,8 +760,12 @@ namespace I_Robot
                 (float)(Game.GraphicsDevice.Viewport.AspectRatio / scaleToMonitor),
                 0.1f,
                 65536f);
-            viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up); // Y up
-            worldMatrix = Matrix.CreateWorld(camTarget, Vector3.Forward, Vector3.Down);
+
+            // it's important to move the projection matrix down a bit, this matches what I, Robot seems to do
+            projectionMatrix = projectionMatrix * Matrix.CreateTranslation(new Vector3(0, -0.1f, 0));
+            viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
+            worldMatrix = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Down);
+
             basicEffect = new BasicEffect(Game.GraphicsDevice);
             basicEffect.Alpha = 1f;
             basicEffect.VertexColorEnabled = true; // Want to see the colors of the vertices, this needs to be on
@@ -778,7 +782,7 @@ namespace I_Robot
                 b.Dispose();
         }
 
-#region HELPER
+        #region HELPER
 
         Vector3 GetVectorAt(UInt16 address)
         {
@@ -814,9 +818,9 @@ namespace I_Robot
                 address = 0x15;
             WorldRotation = GetMatrix4At(address);
         }
-#endregion
+        #endregion
 
-#region RASTERIZER
+        #region RASTERIZER
 
         void StartRender()
         {
@@ -854,9 +858,9 @@ namespace I_Robot
             D3DTS_WORLD = rotation * Matrix.CreateTranslation(position);
         }
 
-#endregion
+        #endregion
 
-#region EMULATOR INTERFACE
+        #region EMULATOR INTERFACE
 
         bool IRasterizer.EXT_DONE => mEXT_DONE;
 
@@ -888,9 +892,9 @@ namespace I_Robot
 
         void IRasterizer.UnknownCommand() { }
 
-#endregion
+        #endregion
 
-#region GAME SCREEN
+        #region GAME SCREEN
 
         /// <summary>
         /// Renders any queued display lists
@@ -908,16 +912,12 @@ namespace I_Robot
             }
 
             while (DisplayListManager.GetNext(out DisplayList? displayList) && displayList != null)
-            { 
+            {
                 if (PauseOnNextRender)
                 {
                     PauseOnNextRender = false;
                     Machine.Paused = true;
                 }
-
-                viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
-                //                viewMatrix = Matrix.CreateTranslation(0, -26f / 128, 0) * viewMatrix;
-
 
                 graphicsDevice.SetRenderTarget(SceneBuffer);
                 graphicsDevice.DepthStencilState = DepthStencilState.Default;
@@ -1007,6 +1007,6 @@ namespace I_Robot
             ScreenManager.SpriteBatch.End();
         }
 
-#endregion
+        #endregion
     }
 }
