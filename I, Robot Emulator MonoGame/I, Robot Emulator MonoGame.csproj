@@ -12,7 +12,16 @@
     <Configurations>Debug;Release;Trace;Emulator Trace</Configurations>
     <Copyright>Copyright 2020 John Manfreda, All rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/manfreda-dot-org/I-Robot-Project</PackageProjectUrl>
-    <Version>0.0.99</Version>
+    <Version>1.0.0</Version>
+    <PackageId>I, Robot 2020</PackageId>
+    <Authors>John Manfreda</Authors>
+    <Company />
+    <PackageIcon>irobot.png</PackageIcon>
+    <Product>I, Robot 2020</Product>
+    <Description>High-resolution emulation for the 1984 Atari coin-op "I, Robot"</Description>
+    <PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+    <AssemblyName>I, Robot 2020</AssemblyName>
+    <ApplicationIcon>irobot.ico</ApplicationIcon>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -71,15 +80,22 @@
   <ItemGroup>
     <Content Include="Content\blank.png" />
     <Content Include="Content\gradient.png" />
-    <Content Include="Content\stars.png" />
   </ItemGroup>
 
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </MonoGameContentReference>
+    <None Include="..\LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
     <None Include="Content\gamefont.spritefont" />
     <None Include="Content\menufont.spritefont" />
+    <None Include="irobot.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

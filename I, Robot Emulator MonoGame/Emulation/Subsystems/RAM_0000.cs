@@ -31,6 +31,12 @@ namespace I_Robot.Emulation
         {
         }
 
+        public byte this[int index]
+        {
+            get => RAM[index];
+            set => RAM[index] = value;
+        }
+
         public override void Dispose()
         {
         }

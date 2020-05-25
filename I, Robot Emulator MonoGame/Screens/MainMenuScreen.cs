@@ -32,6 +32,7 @@ namespace I_Robot
             MenuItems.Add(new MenuItem("GAME    OPTIONS", OptionsMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("RENDERING", RenderingMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("EMULATION", EmulationMenuSelected, 0.5f));
+            MenuItems.Add(new MenuItem("CHEATS", CheatsMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem("RESET    GAME", OnResetMachine, 1));
             MenuItems.Add(new MenuItem("QUIT", QuitMenuSelected, 1));
         }
@@ -59,6 +60,12 @@ namespace I_Robot
         {
             ScreenManager.AddScreen(new EmulationMenuScreen(ScreenManager), e.PlayerIndex);
         }
+
+        void CheatsMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            ScreenManager.AddScreen(new CheatsScreen(ScreenManager), e.PlayerIndex);
+        }
+
 
         void OnResetMachine(object? sender, PlayerIndexEventArgs e)
         {

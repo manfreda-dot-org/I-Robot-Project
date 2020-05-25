@@ -263,6 +263,8 @@ namespace I_Robot.Emulation
         public readonly Registers Registers;
         public readonly VideoProcessor VideoProcessor;
 
+        public readonly Cheats Cheats;
+
         public bool Paused = false;
 
         Int32 CyclesToRun = 0;
@@ -346,6 +348,8 @@ namespace I_Robot.Emulation
             // create a new rasterizer for this machine
             // must be done after subsystems are loaded
             Rasterizer = rasterizerFactory.CreateRasterizer(this);
+
+            Cheats = new Cheats(this);
 
             // setup a periodic callback from the 6809 engine to update scanline counter
             ScanlineCallback = new M6809E.PeriodicDelegate(() =>
@@ -460,6 +464,8 @@ namespace I_Robot.Emulation
                     }
                     else
                         CyclesToRun = (Int32)CPU_CYCLES_PER_VIDEO_FRAME;
+
+                    Cheats.Update();
 
                     // execute 6809
                     while (CyclesToRun > 0)
