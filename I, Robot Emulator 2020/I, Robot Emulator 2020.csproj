@@ -12,7 +12,7 @@
     <Configurations>Debug;Release;Trace;Emulator Trace</Configurations>
     <Copyright>Copyright 2020 John Manfreda, All rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/manfreda-dot-org/I-Robot-Project</PackageProjectUrl>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <PackageId>I, Robot 2020</PackageId>
     <Authors>John Manfreda</Authors>
     <Company />
