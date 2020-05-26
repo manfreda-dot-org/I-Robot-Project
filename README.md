@@ -14,7 +14,7 @@ anti-aliasing.
 For comparison here is the original game:
 ![3](https://user-images.githubusercontent.com/64547232/82914852-0215e700-9f3e-11ea-8869-3ad3ff732ab4.png)
 
-And here is the equivalent in high res
+And here is the equivalent in high-res ultra-widescreen mode
 ![image (1)](https://user-images.githubusercontent.com/64547232/82914929-18bc3e00-9f3e-11ea-89c8-36abc6d278e2.png)
 
 Another comparison
