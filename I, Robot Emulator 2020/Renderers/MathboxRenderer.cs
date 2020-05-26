@@ -13,15 +13,13 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
-
+#define WIDESCREEN_STARS
 using GameManagement;
 using I_Robot.Emulation;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SharpDX.DXGI;
 using System;
 using System.Diagnostics;
-using System.Security.Cryptography;
 using static I_Robot.Emulation.Mathbox;
 using Color = Microsoft.Xna.Framework.Color;
 using Matrix = Microsoft.Xna.Framework.Matrix;
@@ -141,7 +139,11 @@ namespace I_Robot
             readonly MathboxRenderer Parent;
             readonly DisplayList.Manager DisplayListManager;
             readonly UInt16[] Memory;
-            readonly Vector3[] Vertices = new Vector3[400]; // 200 is largest I've seen
+            readonly Vector3[] Vertices = new Vector3[500]; // 200 is largest I've seen
+
+#if WIDESCREEN_STARS
+            readonly Vector3[] Stars = new Vector3[500];
+#endif
 
             UInt16 VertexTableAddr;
             UInt16 PrimitiveListAddress;
@@ -154,6 +156,38 @@ namespace I_Robot
                 Parent = mathboxRenderer;
                 DisplayListManager = Parent.DisplayListManager;
                 Memory = Parent.Memory;
+
+#if WIDESCREEN_STARS
+                // load 123 stars from ROM starfield
+                byte[] table = Parent.Machine.Mathbox.ROM[2];
+                for (int n = 0; n < 123; n++)
+                {
+                    int addr = 0x3140 + n * 8;
+                    Int16 x = (Int16)(table[addr & 0x1FFF] * 256 + table[(addr+1) & 0x1FFF]); addr += 2;
+                    Int16 y = (Int16)(table[addr & 0x1FFF] * 256 + table[(addr + 1) & 0x1FFF]); addr += 2;
+                    Int16 z = (Int16)(table[addr & 0x1FFF] * 256 + table[(addr + 1) & 0x1FFF]); addr += 2;
+                    Stars[n] = new Vector3(x, y, z);
+                }
+
+                // fill in the blanks with some more random stars
+                PRNG r = new PRNG(0xDEAD);
+                for (int n=123; n<Stars.Length; )
+                {
+                    const int size = 10000;
+                    double theta = 2 * Math.PI * r.NextDouble;
+                    double phi = Math.Acos(1 - 2 * r.NextDouble);
+                    double x = size * Math.Sin(phi) * Math.Cos(theta);
+                    double y = size * Math.Sin(phi) * Math.Sin(theta);
+                    double z = size * Math.Abs(Math.Cos(phi));
+                    if (x < -3000 || x > 3500)
+                    {
+                        Vector3 v = new Vector3((float)x, (float)y, (float)z);
+                        v.Normalize();
+                        v *= 10000;
+                        Stars[n++] = v;
+                    }
+                }
+#endif
             }
 
 
@@ -238,6 +272,19 @@ namespace I_Robot
                     }
 
                     Parent.SetWorldMatrix(ref Parent.WorldPosition, ref Parent.WorldRotation);
+
+#if WIDESCREEN_STARS
+                    if (PrimitiveListAddress >= 0x4AE8 && PrimitiveListAddress <= 0x4B44)
+                    {
+                        for (int n = 0; n < Stars.Length; n++)
+                        {
+                            Vertices[n] = Vector3.Transform(Stars[n], Parent.D3DTS_WORLD);
+                        }
+
+                        DisplayListManager.AddPrimitive(Mathbox.RenderMode.Dot, Vertices, Stars.Length, Parent.GetColor(7));
+                        return;
+                    }
+#endif
 
                     // parese the surfaces in this object
                     ParsePrimitiveList(PrimitiveListAddress);
@@ -782,7 +829,7 @@ namespace I_Robot
                 b.Dispose();
         }
 
-        #region HELPER
+#region HELPER
 
         Vector3 GetVectorAt(UInt16 address)
         {
@@ -818,9 +865,9 @@ namespace I_Robot
                 address = 0x15;
             WorldRotation = GetMatrix4At(address);
         }
-        #endregion
+#endregion
 
-        #region RASTERIZER
+#region RASTERIZER
 
         void StartRender()
         {
@@ -858,9 +905,9 @@ namespace I_Robot
             D3DTS_WORLD = rotation * Matrix.CreateTranslation(position);
         }
 
-        #endregion
+#endregion
 
-        #region EMULATOR INTERFACE
+#region EMULATOR INTERFACE
 
         bool IRasterizer.EXT_DONE => mEXT_DONE;
 
@@ -892,9 +939,9 @@ namespace I_Robot
 
         void IRasterizer.UnknownCommand() { }
 
-        #endregion
+#endregion
 
-        #region GAME SCREEN
+#region GAME SCREEN
 
         /// <summary>
         /// Renders any queued display lists
@@ -1007,6 +1054,6 @@ namespace I_Robot
             ScreenManager.SpriteBatch.End();
         }
 
-        #endregion
+#endregion
     }
 }
