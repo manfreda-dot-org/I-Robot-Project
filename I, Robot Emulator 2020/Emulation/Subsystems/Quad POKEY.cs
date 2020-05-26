@@ -43,7 +43,7 @@ namespace I_Robot.Emulation
         // by 0.127%.  (More than likely, an actual unit will vary by this much!)
 
         const int POKEY_FREQ = POKEY.FREQ_17_APPROX;
-        const int PLAYBACK_FREQ_HZ = POKEY_FREQ / 40;
+        const int PLAYBACK_FREQ_HZ = 44100;
 
         /// <summary>
         /// POKEY emulation
