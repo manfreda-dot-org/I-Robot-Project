@@ -11,6 +11,14 @@ This is my attempt to make the "definitive" high-resolution version of the
 emulator.  This version makes full use of modern graphics card features and
 anti-aliasing.
 
+For comparison here is the original game:
+![original](https://user-images.githubusercontent.com/64547232/82910905-34711580-9f39-11ea-95c3-d8452f62ce57.png)
+
+And here is the equivalent in high res
+![image](https://user-images.githubusercontent.com/64547232/82911580-10620400-9f3a-11ea-8b2f-b85790882d3e.png)
+
+
+HACKS:
 A number of cheats / hacks have been built into the game.  Check the menus.
 
 
