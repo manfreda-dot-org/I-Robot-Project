@@ -12,15 +12,15 @@ emulator.  This version makes full use of modern graphics card features and
 anti-aliasing.
 
 For comparison here is the original game:
-![original](https://user-images.githubusercontent.com/64547232/82910905-34711580-9f39-11ea-95c3-d8452f62ce57.png)
-
-And here is the equivalent in high res
-![image](https://user-images.githubusercontent.com/64547232/82911580-10620400-9f3a-11ea-8b2f-b85790882d3e.png)
-
-Another comparison
 ![original2](https://user-images.githubusercontent.com/64547232/82914362-6b492a80-9f3d-11ea-95b3-f9c68bde6dcb.png)
 
-![image (1)](https://user-images.githubusercontent.com/64547232/82911896-6c2c8d00-9f3a-11ea-9353-c81b0ce3864a.png)
+And here is the equivalent in high res
+![3](https://user-images.githubusercontent.com/64547232/82914852-0215e700-9f3e-11ea-8869-3ad3ff732ab4.png)
+
+Another comparison
+![original](https://user-images.githubusercontent.com/64547232/82910905-34711580-9f39-11ea-95c3-d8452f62ce57.png)
+
+![image](https://user-images.githubusercontent.com/64547232/82911580-10620400-9f3a-11ea-8b2f-b85790882d3e.png)
 
 
 HACKS:
