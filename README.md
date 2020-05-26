@@ -17,6 +17,11 @@ For comparison here is the original game:
 And here is the equivalent in high res
 ![image](https://user-images.githubusercontent.com/64547232/82911580-10620400-9f3a-11ea-8b2f-b85790882d3e.png)
 
+Another comparison
+![original2](https://user-images.githubusercontent.com/64547232/82914362-6b492a80-9f3d-11ea-95b3-f9c68bde6dcb.png)
+
+![image (1)](https://user-images.githubusercontent.com/64547232/82911896-6c2c8d00-9f3a-11ea-9353-c81b0ce3864a.png)
+
 
 HACKS:
 A number of cheats / hacks have been built into the game.  Check the menus.
