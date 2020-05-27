@@ -1,7 +1,7 @@
 ![I, Robot](https://user-images.githubusercontent.com/64547232/82836070-d5a59080-9e93-11ea-99b8-5d6c96c7680a.png)
 
-<h1>I, Robot 2020
-<h2>Version 1.02
+# I, Robot 2020
+## Version 1.02
 
 https://github.com/manfreda-dot-org/I-Robot-Project
 
@@ -11,7 +11,7 @@ This is my attempt to make the "definitive" high-resolution version of the
 emulator.  This version makes full use of modern graphics card features and
 anti-aliasing.
 
-<h3>Comparisons
+### Comparisons
   
 For comparison here is the original game:
 ![original](https://user-images.githubusercontent.com/64547232/83023033-6302f500-9ffa-11ea-869d-3b4e6bd63ba9.png)
@@ -27,18 +27,18 @@ Yet another
 ![widescreen3](https://user-images.githubusercontent.com/64547232/82911580-10620400-9f3a-11ea-8b2f-b85790882d3e.png)
 
 
-<h3>HACKS:
+### HACKS:
   
 A number of cheats / hacks have been built into the game.  Check the menus.
 
 
-<h3>ROMS:
+### ROMS:
 
 You will need a copy of the original I, Robot ROMs to use this emulator. The standard MAME ROMset can be used.  Place your ROMs in a file called "irobot.zip" and place in the same directory as the emulator.
 
-<h3>CONTROLS:
+### CONTROLS:
 
-<h4>Keyboard commands
+#### Keyboard controls
   
 * left-shift / left-control: fire button
 * 1: start 1 button
@@ -47,7 +47,7 @@ You will need a copy of the original I, Robot ROMs to use this emulator. The sta
 * 6: insert right coin
 * 7: insert aux coin
 
-<h4>Advanced commands
+#### Advanced commands
 
 * Escape: open game menu
 * Tab: toggle test switch
