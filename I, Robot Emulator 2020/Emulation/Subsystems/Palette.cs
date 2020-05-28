@@ -1,4 +1,4 @@
-﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// Copyright 2020 by John Manfreda. All Rights Reserved.
 // https://www.manfreda.org/
 //
 // This program is free software: you can redistribute it and/or modify
@@ -45,12 +45,17 @@ namespace I_Robot.Emulation
                 // Address bit 0 = LSB of intensity
                 // Address bit 1-6 = color table index
                 // Address bit 7 = unused
+                //
+                // NOTE: data and address are written inverted
+
+                const int max_color = 3;
+                const int max_intensity = 7;
+                const float scale = 255.5f / max_color / max_intensity;
 
                 data = (byte)(~data);
 
                 int index = (address >> 1) & 0x3F;
-
-                byte i = (byte)((((data & 0x03) << 1) + ((byte)(~address) & 1) + 1) * 8);
+                float i = (((data & 0x03) << 1) + ((~address) & 1)) * scale;
                 byte r = (byte)(((data >> 6) & 3) * i);
                 byte g = (byte)(((data >> 4) & 3) * i);
                 byte b = (byte)(((data >> 2) & 3) * i);
