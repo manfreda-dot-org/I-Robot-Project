@@ -1,7 +1,7 @@
 ![I, Robot](https://user-images.githubusercontent.com/64547232/82836070-d5a59080-9e93-11ea-99b8-5d6c96c7680a.png)
 
 # I, Robot 2020
-## Version 1.02
+## Version 1.03
 
 https://github.com/manfreda-dot-org/I-Robot-Project
 
