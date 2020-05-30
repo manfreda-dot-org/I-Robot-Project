@@ -48,18 +48,15 @@ namespace I_Robot.Emulation
                 //
                 // NOTE: data and address are written inverted
 
-                const int max_color = 3;
-                const int max_intensity = 7;
-                const float scale = 255.5f / max_color / max_intensity;
-
                 data = (byte)(~data);
 
-                int index = (address >> 1) & 0x3F;
-                float i = (((data & 0x03) << 1) + ((~address) & 1)) * scale;
-                byte r = (byte)(((data >> 6) & 3) * i);
-                byte g = (byte)(((data >> 4) & 3) * i);
-                byte b = (byte)(((data >> 2) & 3) * i);
-                Color[index] = new Color(r, g, b);
+                // color = 255 * (rgb / 3) * (i / 7)
+                float i = (((data & 0x03) << 1) + ((~address) & 1));
+                byte r = (byte)(255 * ((data >> 6) & 3) * i / 21);
+                byte g = (byte)(255 * ((data >> 4) & 3) * i / 21);
+                byte b = (byte)(255 * ((data >> 2) & 3) * i / 21);
+
+                Color[(address >> 1) & 0x3F] = new Color(r, g, b);
             });
         }
 
