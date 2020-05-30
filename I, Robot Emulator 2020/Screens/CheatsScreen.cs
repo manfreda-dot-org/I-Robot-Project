@@ -47,6 +47,7 @@ namespace I_Robot
             MenuItems.Add(new MenuItem(OneShotMeteorsText, OneShotMeteorsMenuSelected));
             MenuItems.Add(new MenuItem(NoRedTilesRemainText, NoRedTilesRemainMenuSelected));
             MenuItems.Add(new MenuItem(JumpsCreateBridgesText, JumpsCreateBridgesMenuSelected));
+            MenuItems.Add(new MenuItem(NoSawsInPyramidText, NoSawsInPyramidMenuSelected));
             MenuItems.Add(new MenuItem(UnlimitedTransportersText, UnlimitedTransportersMenuSelected));
             MenuItems.Add(new MenuItem(UnlimitedDoodleCityText, UnlimitedDoodleCityMenuSelected));
             MenuItems.Add(new MenuItem(PlayfieldRenderModeText, PlayfieldRenderModeMenuSelected));
@@ -60,10 +61,10 @@ namespace I_Robot
         string UnlimitedLivesText => $"LIVES:    {(Machine.Cheats.UnlimitedLives ? "UNLIMITED" : "NORMAL")}";
         string UnlimitedDoodleCityText => $"DOODLE    TIME:    {(Machine.Cheats.UnlimitedDoodleCity ? "FOREVER" : "NORMAL")}";
         string PlayfieldRenderModeText => $"PLAYFIELD    RENDERING:    {RenderingType[Machine.Cheats.PlayfieldRenderMode]}";
-        string RapidFireText => $"RAPID    FIRE:    {(Machine.Cheats.RapidFire ? "FAST" : "NORMAL")}";
+        string RapidFireText => $"RAPID    FIRE:    {(Machine.Cheats.RapidFire ? "FAST" : "DISABLED")}";
         string BulletStormText => $"BULLET    STORM:    {(Machine.Cheats.BulletStorm ? "ENABLED" : "DISABLED")}";
         string OneShotMeteorsText => $"DESTROY    METEORS:    {(Machine.Cheats.OneShotKillsMeteors ? "ONE    SHOT" : "NORMAL")}";
-
+        string NoSawsInPyramidText => $"PYRAMID    SAWS:    {(Machine.Cheats.NoSawsInsidePyramid? "DISABLED" : "ENABLED")}";
 
 
         void JumpsCreateBridgesMenuSelected(object? sender, PlayerIndexEventArgs e)
@@ -121,6 +122,12 @@ namespace I_Robot
         {
             Machine.Cheats.OneShotKillsMeteors = !Machine.Cheats.OneShotKillsMeteors;
             if (sender is MenuItem item) item.Text = OneShotMeteorsText;
+        }
+
+        void NoSawsInPyramidMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            Machine.Cheats.NoSawsInsidePyramid = !Machine.Cheats.NoSawsInsidePyramid;
+            if (sender is MenuItem item) item.Text = NoSawsInPyramidText;
         }
     }
 }

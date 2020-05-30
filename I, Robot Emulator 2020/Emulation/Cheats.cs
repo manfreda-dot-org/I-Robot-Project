@@ -32,6 +32,7 @@ namespace I_Robot.Emulation
         public bool RapidFire = false;
         bool mBulletStorm = false;
         bool mOneShotKillsMeteors = false;
+        bool mNoSawsInsidePyramid = false;
 
         public Cheats(Machine machine)
         {
@@ -72,6 +73,22 @@ namespace I_Robot.Emulation
                         Machine.ProgROM.ROM_6000[0xDB24 - 0x6000] = 0x00;
                     else
                         Machine.ProgROM.ROM_6000[0xDB24 - 0x6000] = 0x1A;
+                }
+            }
+        }
+
+        public bool NoSawsInsidePyramid
+        {
+            get => mNoSawsInsidePyramid;
+            set
+            {
+                if (mNoSawsInsidePyramid != value)
+                {
+                    mNoSawsInsidePyramid = value;
+                    if (value)
+                        Machine.ProgROM.ROM_6000[0x70BB - 0x6000] = 0x39;
+                    else
+                        Machine.ProgROM.ROM_6000[0x70BB - 0x6000] = 0xBD;
                 }
             }
         }
