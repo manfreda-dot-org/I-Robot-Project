@@ -14,10 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
-using System;
-using System.Runtime.CompilerServices;
-using System.Windows.Documents;
-
 namespace I_Robot.Emulation
 {
     /// <summary>
@@ -35,6 +31,7 @@ namespace I_Robot.Emulation
         public byte PlayfieldRenderMode = 0;
         public bool RapidFire = false;
         bool mBulletStorm = false;
+        bool mOneShotKillsMeteors = false;
 
         public Cheats(Machine machine)
         {
@@ -59,6 +56,22 @@ namespace I_Robot.Emulation
                         Machine.ProgROM.ROM_6000[0xD1CE - 0x6000] = 3;
                         Machine.ProgROM.ROM_6000[0xE473 - 0x6000] = 3;
                     }
+                }
+            }
+        }
+
+        public bool OneShotKillsMeteors
+        {
+            get => mOneShotKillsMeteors;
+            set
+            {
+                if (mOneShotKillsMeteors != value)
+                {
+                    mOneShotKillsMeteors = value;
+                    if (value)
+                        Machine.ProgROM.ROM_6000[0xDB24 - 0x6000] = 0x00;
+                    else
+                        Machine.ProgROM.ROM_6000[0xDB24 - 0x6000] = 0x1A;
                 }
             }
         }
@@ -96,8 +109,6 @@ namespace I_Robot.Emulation
 
 
 
-            // 1 shot destroys meteors
-            Machine.ProgROM.ROM_6000[0xDB24 - 0x6000] = 0x0;
             // no saucers
             Machine.ProgROM.ROM_6000[0xDCF1 - 0x6000] = 0x0;
 #endif

@@ -41,16 +41,18 @@ namespace I_Robot
             Machine = m;
 
             // Create our menu items
+            MenuItems.Add(new MenuItem(UnlimitedLivesText, UnlimitedLivesMenuSelected));
             MenuItems.Add(new MenuItem(RapidFireText, RapidFireMenuSelected));
             MenuItems.Add(new MenuItem(BulletStormText, BulletStormMenuSelected));
-            MenuItems.Add(new MenuItem(JumpsCreateBridgesText, JumpsCreateBridgesMenuSelected));
+            MenuItems.Add(new MenuItem(OneShotMeteorsText, OneShotMeteorsMenuSelected));
             MenuItems.Add(new MenuItem(NoRedTilesRemainText, NoRedTilesRemainMenuSelected));
+            MenuItems.Add(new MenuItem(JumpsCreateBridgesText, JumpsCreateBridgesMenuSelected));
             MenuItems.Add(new MenuItem(UnlimitedTransportersText, UnlimitedTransportersMenuSelected));
-            MenuItems.Add(new MenuItem(UnlimitedLivesText, UnlimitedLivesMenuSelected));
             MenuItems.Add(new MenuItem(UnlimitedDoodleCityText, UnlimitedDoodleCityMenuSelected));
             MenuItems.Add(new MenuItem(PlayfieldRenderModeText, PlayfieldRenderModeMenuSelected));
             MenuItems.Add(new MenuItem("BACK", OnCancel, 1));
         }
+
 
         string JumpsCreateBridgesText => $"JUMPS    CREATE    BRIDGES:    {(Machine.Cheats.JumpsCreateBridges ? "YES" : "NO")}";
         string NoRedTilesRemainText => $"NO    RED    TILES    REMAIN:    {(Machine.Cheats.NoRedTilesRemain ? "YES" : "NO")}";
@@ -60,6 +62,7 @@ namespace I_Robot
         string PlayfieldRenderModeText => $"PLAYFIELD    RENDERING:    {RenderingType[Machine.Cheats.PlayfieldRenderMode]}";
         string RapidFireText => $"RAPID    FIRE:    {(Machine.Cheats.RapidFire ? "FAST" : "NORMAL")}";
         string BulletStormText => $"BULLET    STORM:    {(Machine.Cheats.BulletStorm ? "ENABLED" : "DISABLED")}";
+        string OneShotMeteorsText => $"DESTROY    METEORS:    {(Machine.Cheats.OneShotKillsMeteors ? "ONE    SHOT" : "NORMAL")}";
 
 
 
@@ -112,6 +115,12 @@ namespace I_Robot
         {
             Machine.Cheats.BulletStorm = !Machine.Cheats.BulletStorm;
             if (sender is MenuItem item) item.Text = BulletStormText;
+        }
+
+        void OneShotMeteorsMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            Machine.Cheats.OneShotKillsMeteors = !Machine.Cheats.OneShotKillsMeteors;
+            if (sender is MenuItem item) item.Text = OneShotMeteorsText;
         }
     }
 }
