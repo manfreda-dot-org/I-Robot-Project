@@ -41,6 +41,7 @@ namespace I_Robot
             Machine = m;
 
             // Create our menu items
+            MenuItems.Add(new MenuItem(RapidFireText, RapidFireMenuSelected));
             MenuItems.Add(new MenuItem(JumpsCreateBridgesText, JumpsCreateBridgesMenuSelected));
             MenuItems.Add(new MenuItem(NoRedTilesRemainText, NoRedTilesRemainMenuSelected));
             MenuItems.Add(new MenuItem(UnlimitedTransportersText, UnlimitedTransportersMenuSelected));
@@ -56,6 +57,7 @@ namespace I_Robot
         string UnlimitedLivesText => $"LIVES:    {(Machine.Cheats.UnlimitedLives ? "UNLIMITED" : "NORMAL")}";
         string UnlimitedDoodleCityText => $"DOODLE    TIME:    {(Machine.Cheats.UnlimitedDoodleCity ? "FOREVER" : "NORMAL")}";
         string PlayfieldRenderModeText => $"PLAYFIELD    RENDERING:    {RenderingType[Machine.Cheats.PlayfieldRenderMode]}";
+        string RapidFireText => $"RAPID    FIRE:    {(Machine.Cheats.RapidFire ? "FAST" : "NORMAL")}";
 
 
 
@@ -96,6 +98,12 @@ namespace I_Robot
                 m = 0;
             Machine.Cheats.PlayfieldRenderMode = (byte)m;
             if (sender is MenuItem item) item.Text = PlayfieldRenderModeText;
+        }
+
+        void RapidFireMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            Machine.Cheats.RapidFire = !Machine.Cheats.RapidFire;
+            if (sender is MenuItem item) item.Text = RapidFireText;
         }
     }
 }

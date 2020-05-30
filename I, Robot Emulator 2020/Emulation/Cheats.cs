@@ -1,4 +1,4 @@
-﻿// Copyright 2020 by John Manfreda. All Rights Reserved.
+// Copyright 2020 by John Manfreda. All Rights Reserved.
 // https://www.manfreda.org/
 //
 // This program is free software: you can redistribute it and/or modify
@@ -33,6 +33,7 @@ namespace I_Robot.Emulation
         public bool UnlimitedLives = false;
         public bool UnlimitedDoodleCity = false;
         public byte PlayfieldRenderMode = 0;
+        public bool RapidFire = false;
 
         public Cheats(Machine machine)
         {
@@ -58,6 +59,9 @@ namespace I_Robot.Emulation
 
             if (PlayfieldRenderMode > 0)
                 Machine.RAM_0000[0x3D5] = PlayfieldRenderMode;
+
+            if (RapidFire)
+                Machine.RAM_0000[0x625] = 0;
         }
     }
 }
