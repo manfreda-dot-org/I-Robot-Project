@@ -38,7 +38,7 @@ namespace I_Robot.Emulation
             new PinnedBuffer<byte>(0x2000) };
 
         // 6000 - FFFF
-        readonly PinnedBuffer<byte> ROM_6000 = new PinnedBuffer<byte>(0x10000 - 0x6000);
+        public readonly PinnedBuffer<byte> ROM_6000 = new PinnedBuffer<byte>(0x10000 - 0x6000);
 
         byte mBankSelect = 0xFF;
 
