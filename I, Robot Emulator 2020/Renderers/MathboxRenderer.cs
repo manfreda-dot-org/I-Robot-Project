@@ -239,12 +239,12 @@ namespace I_Robot
                     Mathbox.ObjectInstruction opcode = Memory[address + 3];
 
                     // load camera matrix
-                    if (opcode.LoadViewMatrix)
+                    if (!opcode.SkipObjectRotation)
                         Parent.LoadViewMatrix(Memory[address + 4]);
 
                     // Get new primitive list address and rotation matrix if they exist
                     int childAddr = address + 5;
-                    if (opcode.LoadPrimitiveListAddressAndRotationMatrix)
+                    if (!opcode.UsePreviousObjectPointsAndFaces)
                     {
                         PrimitiveListAddress = Memory[address + 6];
                         if (PrimitiveListAddress >= 0x8000)

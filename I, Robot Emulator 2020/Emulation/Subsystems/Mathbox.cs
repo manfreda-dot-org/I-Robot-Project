@@ -98,8 +98,24 @@ namespace I_Robot.Emulation
         {
             readonly UInt16 Value;
 
-            public bool LoadViewMatrix => ((Value & 0x4000) == 0);
-            public bool LoadPrimitiveListAddressAndRotationMatrix => ((Value & 0x0800) == 0);
+            /// <summary>
+            /// if true, matrix multiply is skipped, allowing hardware to save serious time
+            /// </summary>
+            public bool SkipObjectRotation => ((Value & 0x4000) != 0);
+
+            /// <summary>
+            /// if true, viewer is not rotated
+            /// </summary>
+            public bool SkipViewRotation => ((Value & 0x1000) != 0);
+
+            /// <summary>
+            /// if true, use previous object's points and faces
+            /// </summary>
+            public bool UsePreviousObjectPointsAndFaces => ((Value & 0x0800) != 0);
+
+            /// <summary>
+            /// if true, [X,Y,Z] is an offset from previous object's center
+            /// </summary>
             public bool ObjectPositionIsRelative => ((Value & 0x0400) != 0);
 
             private ObjectInstruction(UInt16 value) { Value = value; }
