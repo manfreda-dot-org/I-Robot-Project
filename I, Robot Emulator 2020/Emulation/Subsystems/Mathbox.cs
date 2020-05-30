@@ -181,15 +181,17 @@ namespace I_Robot.Emulation
 
         /// <summary>
         /// enumeration of commands that are recognized by the Mathbox
+        /// if BIT 15 is set, then this vectors to a mathbox routine
+        /// if BIT 15 is clear, then this is a mathbox relative address for an object to render
         /// </summary>
-        public enum COMMAND : UInt16
+        public enum COMMAND_VECTOR : UInt16
         {
-            START_PLAYFIELD = 0x8400,
-            UNKNOWN = 0x8600,
+            GENERATE_TERRAIN = 0x8400,
+            GENERATE_TERRAIN_REENTRANT = 0x8600,
             ROLL = 0x8800,
             YAW = 0x9000,
             PITCH = 0xA000,
-            MATRIX_MULTIPLY = 0xC000,
+            CONCATENATE = 0xC000,
         }
 
         /// <summary>
@@ -407,53 +409,58 @@ namespace I_Robot.Emulation
                 {
                     mMATH_START = value;
 
-#if false
-                    if (!value)
-                        EmulatorTrace("MATH_START = false");
-#endif
-
                     // if signal is going from 0 --> 1
                     if (value)
                     {
-                        // start execution
-                        // command is in first mathbox address
-                        switch ((COMMAND)Memory[0])
+                        // get the command vector
+                        UInt16 vector = Memory[0];
+
+                        // if vector BIT15 is clear, then this is the addrss of an object to render
+                        if (vector <= 0x7FFF)
                         {
-                            case COMMAND.START_PLAYFIELD:
-                                EmulatorTrace("MATH_START(START_PLAYFIELD)");
-                                // route to interpreter
-                                Machine.Rasterizer.RasterizePlayfield();
-                                break;
-                            case COMMAND.UNKNOWN:
-                                EmulatorTrace("MATH_START(UNKNOWN)");
-                                // route to interpreter
-                                Machine.Rasterizer.UnknownCommand();
-                                break;
-                            case COMMAND.ROLL:
-                                EmulatorTrace("MATH_START(ROLL)");
-                                // native interpretation
-                                Roll((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
-                                break;
-                            case COMMAND.YAW:
-                                EmulatorTrace("MATH_START(YAW)");
-                                // native interpretation
-                                Yaw((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
-                                break;
-                            case COMMAND.PITCH:
-                                EmulatorTrace("MATH_START(PITCH)");
-                                // native interpretation
-                                Pitch((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
-                                break;
-                            case COMMAND.MATRIX_MULTIPLY:
-                                EmulatorTrace("MATH_START(MULTIPLY)");
-                                // native interpretation
-                                MatrixMultiply((Matrix*)&Memory[Memory[0x7B]], (Matrix*)&Memory[Memory[0x7C]], (Matrix*)&Memory[Memory[0x7D]]);
-                                break;
-                            default:
-                                EmulatorTrace($"MATH_START({Memory[0].HexString()})");
-                                // route to interpreter
-                                Machine.Rasterizer.RasterizeObject(Memory[0]);
-                                break;
+                            EmulatorTrace($"MATH_START({vector.HexString()})");
+                            // route to interpreter
+                            Machine.Rasterizer.RasterizeObject(vector);
+                        }
+                        else
+                        {
+                            // this is a vector to a command in the mathbox
+                            switch ((COMMAND_VECTOR)vector)
+                            {
+                                case COMMAND_VECTOR.GENERATE_TERRAIN:
+                                    EmulatorTrace("MATH_START(GENERATE_TERRAIN)");
+                                    // route to interpreter
+                                    Machine.Rasterizer.GenerateTerrain();
+                                    break;
+                                case COMMAND_VECTOR.GENERATE_TERRAIN_REENTRANT:
+                                    EmulatorTrace("MATH_START(GENERATE_TERRAIN_REENTRANT)");
+                                    // route to interpreter
+                                    Machine.Rasterizer.GenerateTerrainReentrant();
+                                    break;
+                                case COMMAND_VECTOR.ROLL:
+                                    EmulatorTrace("MATH_START(ROLL)");
+                                    // native interpretation
+                                    Roll((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
+                                    break;
+                                case COMMAND_VECTOR.YAW:
+                                    EmulatorTrace("MATH_START(YAW)");
+                                    // native interpretation
+                                    Yaw((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
+                                    break;
+                                case COMMAND_VECTOR.PITCH:
+                                    EmulatorTrace("MATH_START(PITCH)");
+                                    // native interpretation
+                                    Pitch((Matrix*)&Memory[Memory[6]], (Int16)Memory[7], (Int16)Memory[8]);
+                                    break;
+                                case COMMAND_VECTOR.CONCATENATE:
+                                    EmulatorTrace("MATH_START(CONCATENATE)");
+                                    // native interpretation
+                                    MatrixMultiply((Matrix*)&Memory[Memory[0x7B]], (Matrix*)&Memory[Memory[0x7C]], (Matrix*)&Memory[Memory[0x7D]]);
+                                    break;
+                                default:
+                                    EmulatorTrace($"****** ILLEGAL MATH_START({vector.HexString()}) ******");
+                                    break;
+                            }
                         }
 
                         // signal mathbox completion to CPU

@@ -15,12 +15,12 @@
 // along with this program.If not, see<https://www.gnu.org/licenses/>.
 
 using System;
-using System.Windows.Documents;
 
 namespace I_Robot.Emulation
 {
     /// <summary>
-    /// Interface to a rasterizer that can interpert I Robot Mathbox commands and build a rasterizable display list
+    /// Interface to a rasterizer that can interpert I Robot Mathbox commands and rasterize the display list
+    /// Interface used to separate emulator from OS native graphics routines, etc
     /// </summary>
     public interface IRasterizer : IDisposable
     {
@@ -39,14 +39,16 @@ namespace I_Robot.Emulation
         
         /// <summary>
         /// Called when game program asserts ERASE
+        /// Indicates that the selected bitmap must be zereoed out
         /// </summary>
-        /// <param name="BUFSEL">buffer to erase</param>
+        /// <param name="BUFSEL">bitmap buffer to erase</param>
         void ERASE(bool BUFSEL);
 
         /// <summary>
         /// Called when game program asserts EXT_START
+        /// Indicates that the video process should start rasterizing to the selected bitmap
         /// </summary>
-        /// <param name="BUFSEL">buffer to render to</param>
+        /// <param name="BUFSEL">bitmap buffer to render into</param>
         void EXT_START(bool BUFSEL);
 
         /// <summary>
@@ -57,17 +59,17 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Rasterizes the object at the given address, using the current lighting vector, camera vector, etc
         /// </summary>
-        /// <param name="address"></param>
+        /// <param name="address">linear address in mathbox memory map from 0000 - 7FFF</param>
         void RasterizeObject(UInt16 address);
 
         /// <summary>
-        /// This command kicks off playfield rasterization
+        /// This command kicks off terrain generation
         /// </summary>
-        void RasterizePlayfield();
+        void GenerateTerrain();
 
         /// <summary>
-        /// This command performas an unknown function, likely related to rasterization of playfield
+        /// This command re-generates current terrain (assumes that GenerateTerrain() has already been called)
         /// </summary>
-        void UnknownCommand();
+        void GenerateTerrainReentrant();
     }
 }

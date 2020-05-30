@@ -55,15 +55,15 @@ namespace I_Robot
         // special addresses in mathbox memory
         const UInt16 VIEW_POSITION_ADDRESS = 0x12;
         const UInt16 LIGHT_ADDRESS = 0x44;
-        const UInt16 PLAYFIELD_OBJECT_LIST_ADDRESS = 0x6B;
-        const UInt16 PLAYFIELD_Z_MAX = 0x6C;
-        const UInt16 PLAYFIELD_Z_MIN = 0x6D;
-        const UInt16 PLAYFIELD_ROWS_BASE_ADDRESS = 0x70;
-        const UInt16 PLAYFIELD_RENDERING_MODE = 0x72;
-        const UInt16 PLAYFIELD_X = 0x74;
-        const UInt16 PLAYFIELD_Z_FRAC = 0x75;
-        const UInt16 PLAYFIELD_X_OFFSET = 0x76;
-        const UInt16 PLAYFIELD_Z_OFFSET = 0x77;
+        const UInt16 TERRAIN_OBJECT_LIST_ADDRESS = 0x6B;
+        const UInt16 TERRAIN_Z_MAX = 0x6C;
+        const UInt16 TERRAIN_Z_MIN = 0x6D;
+        const UInt16 TERRAIN_BASE_ADDRESS = 0x70;
+        const UInt16 TERRAIN_RENDERING_MODE = 0x72;
+        const UInt16 TERRAIN_X = 0x74;
+        const UInt16 TERRAIN_Z_FRAC = 0x75;
+        const UInt16 TERRAIN_X_OFFSET = 0x76;
+        const UInt16 TERRAIN_Z_OFFSET = 0x77;
 
         class TimeAccumulator
         {
@@ -417,7 +417,7 @@ namespace I_Robot
 
         }
 
-        class PlayfieldRenderer
+        class TerrainRenderer
         {
             readonly MathboxRenderer Parent;
             readonly DisplayList.Manager DisplayListManager;
@@ -443,7 +443,7 @@ namespace I_Robot
 
             readonly RowInfo Row = new RowInfo();
 
-            public PlayfieldRenderer(MathboxRenderer mathboxRenderer)
+            public TerrainRenderer(MathboxRenderer mathboxRenderer)
             {
                 Parent = mathboxRenderer;
                 Memory = Parent.Memory;
@@ -453,8 +453,8 @@ namespace I_Robot
             public void Rasterize()
             {
                 // locate the tile table in memory
-                System.Diagnostics.Debug.Assert(Memory[PLAYFIELD_ROWS_BASE_ADDRESS] == 0xE00);
-                TileTableBaseAddress = Memory[PLAYFIELD_ROWS_BASE_ADDRESS]; // always 0x0E00
+                System.Diagnostics.Debug.Assert(Memory[TERRAIN_BASE_ADDRESS] == 0xE00);
+                TileTableBaseAddress = Memory[TERRAIN_BASE_ADDRESS]; // always 0x0E00
 
                 Parent.StartRender();
 
@@ -462,25 +462,25 @@ namespace I_Robot
                 Parent.LoadViewPosition();
                 Parent.LoadViewMatrix(0x15);
                 Rotation = Parent.ViewRotation;
-                Parent.SetWorldMatrix(ref Parent.Playfield.Rotation);
+                Parent.SetWorldMatrix(ref Parent.Terrain.Rotation);
 
                 // determine rendering method (dot/vector/polygon)
-                switch (Memory[PLAYFIELD_RENDERING_MODE])
+                switch (Memory[TERRAIN_RENDERING_MODE])
                 {
                     case 0x0000: renderMode = Mathbox.RenderMode.Polygon; break;
                     case 0x0100: renderMode = Mathbox.RenderMode.Vector; break;
                     default: renderMode = Mathbox.RenderMode.Dot; break;
                 }
 
-                // get address of playfield object buffer
-                ObjectList = Memory[PLAYFIELD_OBJECT_LIST_ADDRESS];
+                // get address of terrain object buffer
+                ObjectList = Memory[TERRAIN_OBJECT_LIST_ADDRESS];
 
-                Int16 z_max = (Int16)Memory[PLAYFIELD_Z_MAX];
-                Int16 z_min = (Int16)Memory[PLAYFIELD_Z_MIN];
-                Int16 x = (Int16)Memory[PLAYFIELD_X];
-                Int16 z_frac = (Int16)Memory[PLAYFIELD_Z_FRAC];
-                Int16 x_offset = (Int16)Memory[PLAYFIELD_X_OFFSET];
-                Int16 z_offset = (Int16)Memory[PLAYFIELD_Z_OFFSET];
+                Int16 z_max = (Int16)Memory[TERRAIN_Z_MAX];
+                Int16 z_min = (Int16)Memory[TERRAIN_Z_MIN];
+                Int16 x = (Int16)Memory[TERRAIN_X];
+                Int16 z_frac = (Int16)Memory[TERRAIN_Z_FRAC];
+                Int16 x_offset = (Int16)Memory[TERRAIN_X_OFFSET];
+                Int16 z_offset = (Int16)Memory[TERRAIN_Z_OFFSET];
 
                 // locate left front tile corner (x1,y1,z1)
                 //         +-------+
@@ -498,19 +498,19 @@ namespace I_Robot
                     -Parent.ViewPosition.Y,
                     z_max * 128 - z_frac);
 
-                // render each row in the playfield
+                // render each row in the terrain
                 int row = z_offset / 16 + z_max; // first absolute row to be rendered
                 Row.Count = z_max - z_min + 1; // number of rows to display
                 while (Row.Count-- > 0)
                 {
-                    DrawPlayfieldRow(row-- & 31, corner);
+                    DrawTerrainRow(row-- & 31, corner);
                     corner.Z -= Tile.DEPTH_Z; // move to next row along the Z axis
                 }
 
                 Parent.EndRender();
             }
 
-            void DrawPlayfieldRow(int row, Vector3 corner)
+            void DrawTerrainRow(int row, Vector3 corner)
             {
                 // Get address of the three rows that determine how tiles
                 // in the current row are drawn
@@ -533,7 +533,7 @@ namespace I_Robot
                     int n = 1;
                     while (corner.X < -Mathbox.Tile.WIDTH_X && TilesLeft > 0)
                     {
-                        DrawPlayfieldTile(n++, corner);
+                        DrawTerrainColumn(n++, corner);
                         corner.X += Mathbox.Tile.WIDTH_X;
                         TilesLeft--;
                     }
@@ -547,7 +547,7 @@ namespace I_Robot
                     int n = 15;
                     while (TilesLeft-- > 0)
                     {
-                        DrawPlayfieldTile(n--, corner);
+                        DrawTerrainColumn(n--, corner);
                         corner.X -= Mathbox.Tile.WIDTH_X;
                     }
                 }
@@ -605,7 +605,7 @@ namespace I_Robot
                 }
             }
 
-            void DrawPlayfieldTile(int index, Vector3 corner)
+            void DrawTerrainColumn(int index, Vector3 corner)
             {
                 // local tile map (we are rendering tile A)
                 //  TileF   TileD   TileC
@@ -745,7 +745,7 @@ namespace I_Robot
 
         readonly DisplayList.Manager DisplayListManager;
         readonly ObjectRenderer Object;
-        readonly PlayfieldRenderer Playfield;
+        readonly TerrainRenderer Terrain;
 
 
         public readonly Vector3 camTarget;
@@ -767,7 +767,7 @@ namespace I_Robot
 
             DisplayListManager = new DisplayList.Manager(this);
             Object = new ObjectRenderer(this);
-            Playfield = new PlayfieldRenderer(this);
+            Terrain = new TerrainRenderer(this);
 
             // create our scene buffer
             // this buffer has a z-buffer
@@ -935,9 +935,9 @@ namespace I_Robot
 
         void IRasterizer.RasterizeObject(UInt16 address) => Object.RasterizeObject(address);
 
-        void IRasterizer.RasterizePlayfield() => Playfield.Rasterize();
+        void IRasterizer.GenerateTerrain() => Terrain.Rasterize();
 
-        void IRasterizer.UnknownCommand() { }
+        void IRasterizer.GenerateTerrainReentrant() { }
 
 #endregion
 
