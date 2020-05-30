@@ -22,9 +22,7 @@ using System;
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.Diagnostics;
-using System.Runtime.CompilerServices;
 
 namespace I_Robot
 {
@@ -298,10 +296,20 @@ namespace I_Robot
                 System.Diagnostics.Debug.Assert(numVertices > 1);
                 if (Settings.ShowVectors)
                 {
-                    for (int n = 1; n < numVertices; n++)
-                        AddCylinder(vertices[n - 1], vertices[n], color);
-                    NumVectors += numVertices - 1;
-                    NumPrimitives += 4 * CylinderSides * (numVertices - 1);
+                    // close the object by drawing a line between the first and last points
+                    Vector3 prev = vertices[numVertices - 1];
+
+                    // is this a single line segment (not polyline)
+                    if (numVertices == 2)
+                        numVertices--;
+
+                    for (int n = 0; n < numVertices; n++)
+                    {
+                        AddCylinder(prev, vertices[n], color);
+                        prev = vertices[n];
+                    }
+                    NumVectors += numVertices;
+                    NumPrimitives += 4 * CylinderSides * numVertices;
                 }
             }
 
