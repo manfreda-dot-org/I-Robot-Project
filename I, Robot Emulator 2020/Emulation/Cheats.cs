@@ -34,14 +34,75 @@ namespace I_Robot.Emulation
         public bool UnlimitedDoodleCity = false;
         public byte PlayfieldRenderMode = 0;
         public bool RapidFire = false;
+        bool mBulletStorm = false;
 
         public Cheats(Machine machine)
         {
             Machine = machine;
         }
 
+        public bool BulletStorm
+        {
+            get => mBulletStorm;
+            set
+            {
+                if (mBulletStorm != value)
+                {
+                    mBulletStorm = value;
+                    if (value)
+                    {
+                        Machine.ProgROM.ROM_6000[0xD1CE - 0x6000] = 10;
+                        Machine.ProgROM.ROM_6000[0xE473 - 0x6000] = 10;
+                    }
+                    else
+                    {
+                        Machine.ProgROM.ROM_6000[0xD1CE - 0x6000] = 3;
+                        Machine.ProgROM.ROM_6000[0xE473 - 0x6000] = 3;
+                    }
+                }
+            }
+        }
+
+
         public void Update()
         {
+#if false
+            Machine.ProgROM.ROM_6000[0xD1BF - 0x6000] = 11;
+            Machine.ProgROM.ROM_6000[0xD206 - 0x6000] = 0x80;
+            Machine.ProgROM.ROM_6000[0xE4A5 - 0x6000] = 0x03;
+            
+            Machine.ProgROM.ROM_6000[0xb264 - 0x6000] = 0x90;
+            Machine.ProgROM.ROM_6000[0xb266 - 0x6000] = 0x70;
+            Machine.ProgROM.ROM_6000[0xb268 - 0x6000] = 0x90;
+            Machine.ProgROM.ROM_6000[0xb26A - 0x6000] = 0x70;
+            Machine.ProgROM.ROM_6000[0xb26E - 0x6000] = 0x90;
+            Machine.ProgROM.ROM_6000[0xb270 - 0x6000] = 0x70;
+
+            Machine.ProgROM.ROM_6000[0xb288 - 0x6000] = 0xA0;
+            Machine.ProgROM.ROM_6000[0xb28A - 0x6000] = 0x70;
+            Machine.ProgROM.ROM_6000[0xb28C - 0x6000] = 0x90;
+            Machine.ProgROM.ROM_6000[0xb28E - 0x6000] = 0x70;
+            Machine.ProgROM.ROM_6000[0xb292 - 0x6000] = 0x90;
+            Machine.ProgROM.ROM_6000[0xb294 - 0x6000] = 0x70;
+
+            // allow space out of bounds
+            Machine.ProgROM.ROM_6000[0xDF7E - 0x6000] = 0x20; // BRA
+            Machine.ProgROM.ROM_6000[0xDF88 - 0x6000] = 0x20; // BRA
+
+            // always safe landing
+            Machine.ProgROM.ROM_6000[0xE027 - 0x6000] = 0x00;
+            Machine.ProgROM.ROM_6000[0xE02D - 0x6000] = 0x00;
+            Machine.ProgROM.ROM_6000[0xE03D - 0x6000] = 0x20; // BRA
+
+
+
+            // 1 shot destroys meteors
+            Machine.ProgROM.ROM_6000[0xDB24 - 0x6000] = 0x0;
+            // no saucers
+            Machine.ProgROM.ROM_6000[0xDCF1 - 0x6000] = 0x0;
+#endif
+
+
             if (!JumpsCreateBridges)
                 Machine.RAM_0000[0x288] |= 0x10;
 

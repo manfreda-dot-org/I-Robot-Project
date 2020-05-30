@@ -42,6 +42,7 @@ namespace I_Robot
 
             // Create our menu items
             MenuItems.Add(new MenuItem(RapidFireText, RapidFireMenuSelected));
+            MenuItems.Add(new MenuItem(BulletStormText, BulletStormMenuSelected));
             MenuItems.Add(new MenuItem(JumpsCreateBridgesText, JumpsCreateBridgesMenuSelected));
             MenuItems.Add(new MenuItem(NoRedTilesRemainText, NoRedTilesRemainMenuSelected));
             MenuItems.Add(new MenuItem(UnlimitedTransportersText, UnlimitedTransportersMenuSelected));
@@ -58,6 +59,7 @@ namespace I_Robot
         string UnlimitedDoodleCityText => $"DOODLE    TIME:    {(Machine.Cheats.UnlimitedDoodleCity ? "FOREVER" : "NORMAL")}";
         string PlayfieldRenderModeText => $"PLAYFIELD    RENDERING:    {RenderingType[Machine.Cheats.PlayfieldRenderMode]}";
         string RapidFireText => $"RAPID    FIRE:    {(Machine.Cheats.RapidFire ? "FAST" : "NORMAL")}";
+        string BulletStormText => $"BULLET    STORM:    {(Machine.Cheats.BulletStorm ? "ENABLED" : "DISABLED")}";
 
 
 
@@ -104,6 +106,12 @@ namespace I_Robot
         {
             Machine.Cheats.RapidFire = !Machine.Cheats.RapidFire;
             if (sender is MenuItem item) item.Text = RapidFireText;
+        }
+
+        void BulletStormMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            Machine.Cheats.BulletStorm = !Machine.Cheats.BulletStorm;
+            if (sender is MenuItem item) item.Text = BulletStormText;
         }
     }
 }
