@@ -45,7 +45,7 @@ namespace I_Robot
             SpriteBatch.Begin();
             SpriteBatch.DrawString(
                 MenuFont, 
-                $"v1.03   Copyright 2020 John Manfreda    lordfrito@manfreda.org", 
+                $"v1.04   Copyright 2020 John Manfreda    lordfrito@manfreda.org", 
                 new Vector2(50, ScreenManager.GraphicsDevice.Viewport.Height - MenuFont.LineSpacing), 
                 Color.CornflowerBlue, 
                 0, 
