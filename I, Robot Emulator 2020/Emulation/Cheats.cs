@@ -33,6 +33,7 @@ namespace I_Robot.Emulation
         bool mBulletStorm = false;
         bool mOneShotKillsMeteors = false;
         bool mNoSawsInsidePyramid = false;
+        bool mRomDebugMode = false;
 
         public Cheats(Machine machine)
         {
@@ -93,6 +94,21 @@ namespace I_Robot.Emulation
             }
         }
 
+        public bool RomDebugMode
+        {
+            get => mRomDebugMode;
+            set
+            {
+                if (mRomDebugMode != value)
+                {
+                    mRomDebugMode = value;
+                    if (value)
+                        Machine.ProgROM.ROM_6000[0x65C5 - 0x6000] = 0xFF;
+                    else
+                        Machine.ProgROM.ROM_6000[0x65C5 - 0x6000] = 0x00;
+                }
+            }
+        }
 
         public void Update()
         {

@@ -16,8 +16,6 @@
 
 using GameManagement;
 using I_Robot.Emulation;
-using SharpDX.DXGI;
-using System.Runtime.InteropServices;
 
 namespace I_Robot
 {
@@ -28,18 +26,11 @@ namespace I_Robot
     /// </summary>
     class CheatsScreen : MenuScreen
     {
-        readonly Machine Machine;
-
         readonly string[] RenderingType = new string[] { "POLYGON", "WIREFRAME", "DOTS" };
 
         public CheatsScreen(ScreenManager screenManager)
             : base(screenManager, "CHEATS")
         {
-            Machine? m = (Game as I_Robot.Game)?.Machine;
-            if (m == null)
-                throw new System.Exception();
-            Machine = m;
-
             // Create our menu items
             MenuItems.Add(new MenuItem(UnlimitedLivesText, UnlimitedLivesMenuSelected));
             MenuItems.Add(new MenuItem(RapidFireText, RapidFireMenuSelected));

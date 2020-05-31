@@ -28,6 +28,7 @@ namespace I_Robot
         {
             // create our menu entries
             MenuItems.Add(new MenuItem(TestSwitchText, TestSwitchMenuEntrySelected));
+            MenuItems.Add(new MenuItem(RomDebugText, RomDebugModeMenuSelected));
             MenuItems.Add(new MenuItem(SpeedThrottleText, SpeedThrottleMenuSelected, 0.5f));
             MenuItems.Add(new MenuItem(ShowFPSText, ShowFPSMenuSelected, 0.5f));
             MenuItems.Add(LeftCounterHeading = new MenuHeading(LeftCounterText, 1));
@@ -37,6 +38,7 @@ namespace I_Robot
         }
 
         string TestSwitchText => $"TEST    MODE:    {(Settings.TestSwitch ? "ENABLED" : "DISABLED")}";
+        string RomDebugText => $"IROBOT    DEBUG    MODE:    {(Machine.Cheats.RomDebugMode ? "ENABLED" : "DISABLED")}";
         string ShowFPSText => $"FPS:    {(Settings.ShowFPS ? "SHOW" : "HIDE")}";
         string SpeedThrottleText => $"SPEED    THROTTLING:    {(Settings.SpeedThrottle ? "ENABLED" : "DISABLED")}";
         string LeftCounterText => $"LEFT     COIN     COUNTER    {Settings.LeftCoinCounter}";
@@ -46,6 +48,12 @@ namespace I_Robot
         {
             Settings.TestSwitch = !Settings.TestSwitch;
             if (sender is MenuItem item) item.Text = TestSwitchText;
+        }
+
+        void RomDebugModeMenuSelected(object? sender, PlayerIndexEventArgs e)
+        {
+            Machine.Cheats.RomDebugMode = !Machine.Cheats.RomDebugMode;
+            if (sender is MenuItem item) item.Text = RomDebugText;
         }
 
         void SpeedThrottleMenuSelected(object? sender, PlayerIndexEventArgs e)
