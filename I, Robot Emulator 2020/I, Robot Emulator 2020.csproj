@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFramework>net7.0-windows7.0</TargetFramework>
     <RootNamespace>I_Robot</RootNamespace>
     <UseWPF>true</UseWPF>
     <Platforms>AnyCPU;x86</Platforms>
