@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Content.Builder.targets" />
   <Import Project="$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\MonoGame\v3.0\MonoGame.Common.props')" />
 
@@ -135,7 +135,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy &quot;C:\Users\lordfrito\source\repos\I, Robot Project\M6809E dll\Release\M6809E.dll&quot; &quot;$(TargetDir)&quot;&#xD;&#xA;" />
+    <Exec Command="xcopy /y &quot;$(SolutionDir)M6809E dll\Release\M6809E.dll&quot;  &quot;$(ProjectDir)$(OutDir)&quot;" />
   </Target>
 
 </Project>

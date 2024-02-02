@@ -753,7 +753,7 @@ namespace I_Robot
         public readonly Matrix projectionMatrix;
         public readonly Matrix viewMatrix;
         public readonly Matrix worldMatrix;
-        BasicEffect basicEffect;
+        readonly BasicEffect basicEffect;
 
         MathboxRenderer(Machine machine, ScreenManager screenManager)
         {

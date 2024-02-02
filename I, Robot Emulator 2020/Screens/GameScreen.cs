@@ -168,14 +168,15 @@ namespace I_Robot
                 Machine.Reset(Emulation.Machine.RESET_TYPE.USER);
             if (Keyboard.HasBeenPressed(Keys.F7))
             {
+                // JPM save states not working
                 if (Keyboard.IsPressed(Keys.LeftShift) || Keyboard.IsPressed(Keys.RightShift))
                 {
                     // save state
                     using (FileStream stream = new FileStream("irobot.sav", FileMode.Create))
                     {
-                        IFormatter formatter = new BinaryFormatter();
-                        formatter.Serialize(stream, Machine);
-                        stream.Close();
+                        //IFormatter formatter = new BinaryFormatter();
+                        //formatter.Serialize(stream, Machine);
+                        //stream.Close();
                     }
                 }
                 else
