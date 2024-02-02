@@ -25,14 +25,9 @@ namespace I_Robot
     /// Nothing special, other than it ensures the same playback sequence every time
     /// Useful for procedural generation stuff
     /// </summary>
-    public class PRNG
+    public class PRNG(UInt16 seed)
     {
-        UInt16 Seed = 0xB00B;
-
-        public PRNG(UInt16 seed)
-        {
-            Seed = seed;
-        }
+        UInt16 Seed = seed;
 
         public UInt16 Next16 => (UInt16)((Next8 << 8) + Next8);
 

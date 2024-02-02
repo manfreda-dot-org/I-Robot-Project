@@ -27,7 +27,7 @@ namespace I_Robot.Emulation
         /// <summary>
         /// Interface for a factory that can create a rasterizer for the emulator.
         /// </summary>
-        public interface Factory
+        public interface IFactory
         {
             /// <summary>
             /// Creates a rasterizer for the given machine

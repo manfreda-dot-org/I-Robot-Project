@@ -25,8 +25,8 @@ namespace I_Robot
     unsafe public class M6809E : ISerializable, IDisposable
     {
         // unused page of data to route null writes to
-        static PinnedBuffer<byte> Null64k = new PinnedBuffer<byte>(0x10000);
-        static public byte* pNullPage = Null64k;
+        static readonly PinnedBuffer<byte> Null64k = new(0x10000);
+        static public readonly byte* pNullPage = Null64k;
 
         [DllImport("kernel32.dll")] static extern void RtlZeroMemory(IntPtr dst, int length);
 
@@ -106,12 +106,12 @@ namespace I_Robot
 
         #endregion
 
-        class PageReadPointerManager
+        class PageReadPointerManager(IntPtr state)
         {
             [DllImport("M6809E.dll")] static extern byte* Get_6809_PageReadPointer(IntPtr state, byte page);
             [DllImport("M6809E.dll")] static extern void Set_6809_PageReadPointer(IntPtr state, byte page, byte* ptr);
-            readonly IntPtr State;
-            public PageReadPointerManager(IntPtr state) { State = state; }
+            readonly IntPtr State = state;
+
             public byte* this[byte page]
             {
                 get { return Get_6809_PageReadPointer(State, page); }
@@ -132,12 +132,11 @@ namespace I_Robot
             }
         }
 
-        class PageReadFunctionManager
+        class PageReadFunctionManager(IntPtr State)
         {
             [DllImport("M6809E.dll")] static extern ReadDelegate? Get_6809_PageReadFunction(IntPtr state, byte page);
             [DllImport("M6809E.dll")] static extern void Set_6809_PageReadFunction(IntPtr state, byte page, ReadDelegate? fptr);
-            readonly IntPtr State;
-            public PageReadFunctionManager(IntPtr state) { State = state; }
+
             public ReadDelegate? this[byte page]
             {
                 get { return Get_6809_PageReadFunction(State, page); }
@@ -145,13 +144,11 @@ namespace I_Robot
             }
         }
 
-        class PageWriteFunctionManager
+        class PageWriteFunctionManager(IntPtr State)
         {
             [DllImport("M6809E.dll")] static extern WriteDelegate? Get_6809_PageWriteFunction(IntPtr state, byte page);
             [DllImport("M6809E.dll")] static extern void Set_6809_PageWriteFunction(IntPtr state, byte page, WriteDelegate? fptr);
 
-            readonly IntPtr State;
-            public PageWriteFunctionManager(IntPtr state) { State = state; }
             public WriteDelegate? this[byte page]
             {
                 get { return Get_6809_PageWriteFunction(State, page); }

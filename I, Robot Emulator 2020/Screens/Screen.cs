@@ -29,7 +29,7 @@ namespace I_Robot
         public Screen(ScreenManager screenManager)
             : base(screenManager)
         {
-            if (!(screenManager.Game is I_Robot.Game game))
+            if (screenManager.Game is not I_Robot.Game game)
                 throw new System.Exception();
             Game = game;
             Machine = Game.Machine;

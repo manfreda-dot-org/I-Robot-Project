@@ -36,16 +36,11 @@ namespace I_Robot
     /// </summary>
     unsafe public class MathboxRenderer : IRasterizer
     {
-        public class Factory : IRasterizer.Factory
+        public class Factory(ScreenManager screenManager) : IRasterizer.IFactory
         {
-            readonly ScreenManager ScreenManager;
+            readonly ScreenManager ScreenManager = screenManager;
 
-            public Factory(ScreenManager screenManager)
-            {
-                ScreenManager = screenManager;
-            }
-
-            IRasterizer IRasterizer.Factory.CreateRasterizer(Machine machine)
+            IRasterizer IRasterizer.IFactory.CreateRasterizer(Machine machine)
             {
                 // All of our screens have empty constructors so we can just use Activator
                 return new MathboxRenderer(machine, ScreenManager);
@@ -67,7 +62,7 @@ namespace I_Robot
 
         class TimeAccumulator
         {
-            Stopwatch Stopwatch = new Stopwatch();
+            readonly Stopwatch Stopwatch = new();
 
             long Base = 0;
 
@@ -100,7 +95,7 @@ namespace I_Robot
         readonly Machine Machine;
         readonly UInt16[] Memory; // Pointer to Mathbox memory
 
-        readonly TimeAccumulator Timer = new TimeAccumulator();
+        readonly TimeAccumulator Timer = new();
         int TotalDots = 0;
         int TotalVectors = 0;
         int TotalPolygons = 0;
@@ -117,7 +112,7 @@ namespace I_Robot
         readonly RenderTarget2D SceneBuffer;
 
         // BUFSEL controls which buffer is being rendered to and which is being displayed
-        bool BUFSEL = false;
+        readonly bool BUFSEL = false;
         RenderTarget2D ScreenBuffer => ScreenBuffers[BUFSEL ? 0 : 1];
         public Texture2D Texture => ScreenBuffer;
 
@@ -170,7 +165,7 @@ namespace I_Robot
                 }
 
                 // fill in the blanks with some more random stars
-                PRNG r = new PRNG(0xDEAD);
+                PRNG r = new(0xDEAD);
                 for (int n=123; n<Stars.Length; )
                 {
                     const int size = 10000;
@@ -181,7 +176,7 @@ namespace I_Robot
                     double z = size * Math.Abs(Math.Cos(phi));
                     if (x < -3000 || x > 3500)
                     {
-                        Vector3 v = new Vector3((float)x, (float)y, (float)z);
+                        Vector3 v = new((float)x, (float)y, (float)z);
                         v.Normalize();
                         v *= 10000;
                         Stars[n++] = v;
@@ -441,7 +436,7 @@ namespace I_Robot
             UInt16 ObjectList;
             int TileTableBaseAddress;
 
-            readonly RowInfo Row = new RowInfo();
+            readonly RowInfo Row = new();
 
             public TerrainRenderer(MathboxRenderer mathboxRenderer)
             {
@@ -568,16 +563,9 @@ namespace I_Robot
                 }
             }
 
-            struct TILE_HEIGHT
+            struct TILE_HEIGHT(float _a, float _b, float _c, float _d)
             {
-                public float a, b, c, d;
-                public TILE_HEIGHT(float _a, float _b, float _c, float _d)
-                {
-                    a = _a;
-                    b = _b;
-                    c = _c;
-                    d = _d;
-                }
+                public float a = _a, b = _b, c = _c, d = _d;
             }
 
             TILE_HEIGHT GetTileHeight(Tile a, Tile b, Tile c, Tile d)
@@ -761,7 +749,7 @@ namespace I_Robot
             Memory = Machine.Mathbox.Memory16;
             ScreenManager = screenManager;
 
-            if (!(screenManager.Game is I_Robot.Game game))
+            if (screenManager.Game is not I_Robot.Game game)
                 throw new Exception("VideoInterpreter can only be used with I_Robot.Game");
             Game = game;
 
@@ -809,16 +797,18 @@ namespace I_Robot
                 65536f);
 
             // it's important to move the projection matrix down a bit, this matches what I, Robot seems to do
-            projectionMatrix = projectionMatrix * Matrix.CreateTranslation(new Vector3(0, -0.1f, 0));
+            projectionMatrix *= Matrix.CreateTranslation(new Vector3(0, -0.1f, 0));
             viewMatrix = Matrix.CreateLookAt(camPosition, camTarget, Vector3.Up);
             worldMatrix = Matrix.CreateWorld(Vector3.Zero, Vector3.Forward, Vector3.Down);
 
-            basicEffect = new BasicEffect(Game.GraphicsDevice);
-            basicEffect.Alpha = 1f;
-            basicEffect.VertexColorEnabled = true; // Want to see the colors of the vertices, this needs to be on
-            // Lighting requires normal information which VertexPositionColor does not have
-            // If you want to use lighting and VPC you need to create a custom def
-            basicEffect.LightingEnabled = false;
+            basicEffect = new BasicEffect(Game.GraphicsDevice)
+            {
+                Alpha = 1f,
+                VertexColorEnabled = true, // Want to see the colors of the vertices, this needs to be on
+                                           // Lighting requires normal information which VertexPositionColor does not have
+                                           // If you want to use lighting and VPC you need to create a custom def
+                LightingEnabled = false
+            };
         }
 
 

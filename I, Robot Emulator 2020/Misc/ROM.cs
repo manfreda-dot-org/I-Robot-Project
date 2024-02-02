@@ -50,7 +50,7 @@ namespace I_Robot
             try
             {
 
-                using (MemoryStream memory = new MemoryStream())
+                using (MemoryStream memory = new())
                 {
                     stream.CopyTo(memory);
                     rom = new ROM(memory);
@@ -68,7 +68,7 @@ namespace I_Robot
         {
             try
             {
-                ROM r = new ROM(filename);
+                ROM r = new(filename);
                 rom = r;
                 return true;
             }

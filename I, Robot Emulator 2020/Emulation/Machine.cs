@@ -322,7 +322,7 @@ namespace I_Robot.Emulation
         #endregion
 
 
-        public Machine(RomSet roms, IRasterizer.Factory rasterizerFactory)
+        public Machine(RomSet roms, IRasterizer.IFactory rasterizerFactory)
         {
             Roms = roms;
 

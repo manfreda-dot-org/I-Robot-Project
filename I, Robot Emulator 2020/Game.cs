@@ -31,9 +31,9 @@ namespace I_Robot
     {
         Emulation.Machine? mMachine;
 
-        GraphicsDeviceManager Graphics;
+        readonly GraphicsDeviceManager Graphics;
         public ScreenManager? ScreenManager;
-        ScreenFactory ScreenFactory;
+        readonly ScreenFactory ScreenFactory;
 
         /// <summary>
         /// The main game constructor.
@@ -96,7 +96,7 @@ namespace I_Robot
             if (errMsg != null)
             {
                 string message = $"ROMSET    MISSING\n\n{errMsg}";
-                MessageBoxScreen dialog = new MessageBoxScreen(ScreenManager, message, false);
+                MessageBoxScreen dialog = new(ScreenManager, message, false);
                 ScreenManager.AddScreen(dialog, null);
             }
         }

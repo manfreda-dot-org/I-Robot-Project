@@ -44,14 +44,14 @@ namespace I_Robot
 
         float pauseAlpha;
 
-        InputAction PauseAction;
+        readonly InputAction PauseAction;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         public GameScreen(ScreenManager screenManager) : base(screenManager)
         {
-            if (!(Game.Machine.Rasterizer is MathboxRenderer mathboxRenderer))
+            if (Game.Machine.Rasterizer is not MathboxRenderer mathboxRenderer)
                 throw new Exception();
             MathboxRenderer = mathboxRenderer;
             Alphanumerics = new AlphanumericsRenderer(this);
@@ -74,8 +74,7 @@ namespace I_Robot
 
             if (!instancePreserved)
             {
-                if (Content == null)
-                    Content = new ContentManager(Game.Services, "Content");
+                Content ??= new ContentManager(Game.Services, "Content");
 
                 // A real game would probably have more content than this sample, so
                 // it would take longer to load. We simulate that by delaying for a
@@ -129,8 +128,7 @@ namespace I_Robot
         /// </summary>
         public override void HandleInput(GameTime gameTime, InputState input)
         {
-            if (input == null)
-                throw new ArgumentNullException("input");
+            ArgumentNullException.ThrowIfNull(input);
 
             // Look up inputs for the active player profile.
             int playerIndex = (int)(ControllingPlayer ?? 0);
@@ -145,8 +143,7 @@ namespace I_Robot
             bool gamePadDisconnected = !gamePadState.IsConnected &&
                                        input.GamePadWasConnected[playerIndex];
 
-            PlayerIndex player;
-            if (PauseAction.Evaluate(input, ControllingPlayer, out player) || gamePadDisconnected)
+            if (PauseAction.Evaluate(input, ControllingPlayer, out PlayerIndex player) || gamePadDisconnected)
             {
                 Machine.Paused = true;
                 UnpauseOnActivation = true;
@@ -182,7 +179,7 @@ namespace I_Robot
                 else
                 {
                     // load state
-                    using (FileStream stream = new FileStream("irobot.sav", FileMode.Open))
+                    using (FileStream stream = new("irobot.sav", FileMode.Open))
                     {
                         //                        IFormatter formatter = new BinaryFormatter();
                         //                        Machine = (Machine)formatter.Deserialize(stream);
@@ -215,7 +212,7 @@ namespace I_Robot
             {
                 SpriteBatch.Begin();
 
-                Vector2 pt = new Vector2(10, GraphicsDevice.Viewport.Height - 10 - GameFont.LineSpacing);
+                Vector2 pt = new(10, GraphicsDevice.Viewport.Height - 10 - GameFont.LineSpacing);
 
                 SpriteBatch.DrawString(GameFont, $"Polygons/sec:    {String.Format("{0:n0}", MathboxRenderer.PolygonsPerSecond)}", pt, Color.Yellow);
                 pt.Y -= GameFont.LineSpacing;
@@ -223,7 +220,7 @@ namespace I_Robot
                 pt.Y -= GameFont.LineSpacing;
                 SpriteBatch.DrawString(GameFont, $"Dots/sec:    {String.Format("{0:n0}", MathboxRenderer.DotsPerSecond)}", pt, Color.Yellow);
                 pt.Y -= GameFont.LineSpacing;
-                SpriteBatch.DrawString(GameFont, $"FPS:    {Machine.FPS.ToString("0.00")}", pt, Color.Yellow);
+                SpriteBatch.DrawString(GameFont, $"FPS:    {Machine.FPS:0.00}", pt, Color.Yellow);
                 pt.Y -= GameFont.LineSpacing;
 
 
